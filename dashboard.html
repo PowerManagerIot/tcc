@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Manager - Monitoramento</title>
+    <link rel="icon" type="image/png" href="img/iconsemfundo.png">   
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Power Manager IoT</h1>
+        <p class="subtitle">Monitoramento em tempo real do dispositivo ESP32</p>
+        
+        <div class="login-form" id="loginForm">
+            <h3>Autenticação Requerida</h3>
+            <input type="email" id="email" placeholder="Email" value="powermanageriot@gmail.com">
+            <input type="password" id="password" placeholder="Senha" value="pmiot12*">
+            <button id="loginBtn">Entrar</button>
+            <div id="loginStatus"></div>
+        </div>
+        
+        <div id="mainContent" style="display: none;">
+            <div class="value-container">
+                <h2>Valor Atual do Sensor</h2>
+                <div class="value" id="currentValue">--</div>
+                <div class="timestamp" id="lastUpdate">Última atualização: --</div>
+            </div>
+            
+            <button class="add-device-btn" id="addDeviceBtn">+ Adicionar Dispositivo</button>
+            <div class="smart-devices-limit" id="smartDevicesLimit">
+                Dispositivos inteligentes: 0/8 (máximo permitido)
+            </div>
+            
+            <div class="devices-container" id="devicesContainer">
+                <!-- Dispositivos serão adicionados aqui dinamicamente -->
+            </div>
+            
+            <div class="status" id="connectionStatus">Conectando...</div>
+        </div>
+    </div>
+    
+    <!-- Modal para adicionar dispositivo -->
+    <div id="deviceModal" class="modal">
+        <div class="modal-content">
+            <h2>Adicionar Novo Dispositivo</h2>
+            <input type="text" id="deviceName" placeholder="Nome do Dispositivo">
+            <input type="number" id="deviceNumber" placeholder="Consumo em Watts">
+            <select id="hasButton">
+                <option value="no">Não Inteligente</option>
+                <option value="yes">Inteligente (controlável)</option>
+            </select>
+            <div id="limitWarning" class="limit-warning" style="display: none;">
+                ⚠️ Limite máximo de 8 dispositivos inteligentes atingido! Selecione "Não Inteligente" para continuar.
+            </div>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelBtn">Cancelar</button>
+                <button class="confirm-btn" id="confirmBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação de exclusão -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmar Exclusão</h2>
+            <p>Tem certeza que deseja excluir o dispositivo "<span id="deviceToDeleteName"></span>"?</p>
+            <p style="color: #e74c3c; font-size: 14px;">Esta ação não pode ser desfeita.</p>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelDeleteBtn">Cancelar</button>
+                <button class="confirm-btn" id="confirmDeleteBtn" style="background-color: #e74c3c;">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
