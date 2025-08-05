@@ -52,13 +52,16 @@
 
         .logo {
             padding: 0 2rem;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 12px; /* Espaço entre o logo e o texto */
         }
 
-        .logo h1 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--accent-green);
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain; /* Mantém a proporção da imagem */
         }
 
         .nav-menu {
@@ -440,7 +443,8 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h1>Power Manager</h1>
+            <img src="img/iconsemfundo.png" alt="Power Manager Logo" class="logo-icon">
+            <h3><a href="index.html" style="text-decoration: none; color: white">Power Manager</a></h3>
         </div>
         <ul class="nav-menu">
             <li class="nav-item">
