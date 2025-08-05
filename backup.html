@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Manager - Monitoramento</title>
+    <link rel="icon" type="image/png" href="img/iconsemfundo.png">   
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .value-container {
+            margin: 30px 0;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .value {
+            font-size: 72px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 20px 0;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .connected {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .disconnected {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .timestamp {
+            font-size: 14px;
+            color: #95a5a6;
+            margin-top: 10px;
+        }
+        .login-form {
+            margin: 20px auto;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .login-form button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        /* Novos estilos para dispositivos */
+        .add-device-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+        
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .confirm-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .cancel-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .devices-container {
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .device {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .device-info {
+            flex-grow: 1;
+        }
+        
+        .device-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .device-value {
+            color: #3498db;
+            font-size: 24px;
+        }
+        
+        .device-state {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .device-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 15px;
+            display: none;
+        }
+        
+        .has-button .device-btn {
+            display: block;
+        }
+        
+        .device-btn[data-state="on"] {
+            background-color: #2ecc71;
+        }
+        
+        .device-btn[data-state="off"] {
+            background-color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Power Manager IoT</h1>
+        <p class="subtitle">Monitoramento em tempo real do dispositivo ESP32</p>
+        
+        <div class="login-form" id="loginForm">
+            <h3>Autenticação Requerida</h3>
+            <input type="email" id="email" placeholder="Email" value="powermanageriot@gmail.com">
+            <input type="password" id="password" placeholder="Senha" value="pmiot12*">
+            <button id="loginBtn">Entrar</button>
+            <div id="loginStatus"></div>
+        </div>
+        
+        <div id="mainContent" style="display: none;">
+            <div class="value-container">
+                <h2>Valor Atual do Sensor</h2>
+                <div class="value" id="currentValue">--</div>
+                <div class="timestamp" id="lastUpdate">Última atualização: --</div>
+            </div>
+            
+            <button class="add-device-btn" id="addDeviceBtn">+ Adicionar Dispositivo</button>
+            
+            <div class="devices-container" id="devicesContainer">
+                <!-- Dispositivos serão adicionados aqui dinamicamente -->
+            </div>
+            
+            <div class="status" id="connectionStatus">Conectando...</div>
+        </div>
+    </div>
+    
+    <!-- Modal para adicionar dispositivo -->
+    <div id="deviceModal" class="modal">
+        <div class="modal-content">
+            <h2>Adicionar Novo Dispositivo</h2>
+            <input type="text" id="deviceName" placeholder="Nome do Dispositivo">
+            <input type="number" id="deviceNumber" placeholder="Consumo em Watts">
+            <select id="hasButton">
+                <option value="no">Não Inteligente</option>
+                <option value="yes">Inteligente</option>
+            </select>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelBtn">Cancelar</button>
+                <button class="confirm-btn" id="confirmBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTPR8X4dRg5fZu_PTj0hwud3bfHtky1S4",
+            databaseURL: "https://powermanager-988cc-default-rtdb.firebaseio.com",
+            projectId: "powermanager-988cc",
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // Elementos da página
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginStatus = document.getElementById('loginStatus');
+        const loginForm = document.getElementById('loginForm');
+        const mainContent = document.getElementById('mainContent');
+        const currentValue = document.getElementById('currentValue');
+        const lastUpdate = document.getElementById('lastUpdate');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const addDeviceBtn = document.getElementById('addDeviceBtn');
+        const deviceModal = document.getElementById('deviceModal');
+        const deviceName = document.getElementById('deviceName');
+        const deviceNumber = document.getElementById('deviceNumber');
+        const hasButton = document.getElementById('hasButton');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const devicesContainer = document.getElementById('devicesContainer');
+
+        // Array para armazenar os dispositivos
+        let devices = [];
+
+        // Função para formatar data/hora
+        function formatDateTime(date) {
+            return date.toLocaleTimeString() + ' - ' + date.toLocaleDateString();
+        }
+
+        // Função para iniciar monitoramento dos dados
+        function startDataMonitoring() {
+            const user = auth.currentUser;
+            if (user) {
+                const valueRef = database.ref(`users/${user.uid}/esp32/numero`);
+                
+                valueRef.on('value', (snapshot) => {
+                    const value = snapshot.val();
+                    currentValue.textContent = value;
+
+                    const now = new Date();
+                    lastUpdate.textContent = `Última atualização: ${formatDateTime(now)}`;
+
+                    connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
+                    connectionStatus.className = "status connected";
+                }, (error) => {
+                    connectionStatus.textContent = "Erro na leitura: " + error.message;
+                    connectionStatus.className = "status disconnected";
+                });
+            }
+        }
+
+
+        // Função para carregar dispositivos do Firebase
+        function loadDevicesFromFirebase() {
+            const user = auth.currentUser;
+            if (user) {
+                const devicesRef = database.ref(`users/${user.uid}/devices`);
+                
+                devicesRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        devices = data;
+                        renderDevices();
+                    }
+                });
+            }
+        }
+
+        // Função para salvar dispositivos no Firebase
+        function saveDevicesToFirebase() {
+            const user = auth.currentUser;
+            if (user) {
+                database.ref(`users/${user.uid}/devices`).set(devices);
+            }
+        }
+
+        // Função para alternar o estado do dispositivo
+        function toggleDeviceState(index) {
+            // Alternar o estado
+            devices[index].state = !devices[index].state;
+            
+            // Atualizar no Firebase
+            const user = auth.currentUser;
+            if (user) {
+                database.ref(`users/${user.uid}/devices/${index}/state`).set(devices[index].state)
+                    .then(() => {
+                        console.log("Estado atualizado no Firebase");
+                        renderDevices(); // Atualizar a exibição
+                    })
+                    .catch((error) => {
+                        console.error("Erro ao atualizar estado:", error);
+                    });
+            }
+        }
+
+        // Função para renderizar os dispositivos
+        function renderDevices() {
+            devicesContainer.innerHTML = '';
+            
+            devices.forEach((device, index) => {
+                const deviceElement = document.createElement('div');
+                deviceElement.className = `device ${device.hasButton === 'yes' ? 'has-button' : ''}`;
+                
+                deviceElement.innerHTML = `
+                    <div class="device-info">
+                        <div class="device-name">${device.name}</div>
+                        <div class="device-value">${device.number}</div>
+                        <div class="device-state">Estado: ${device.state ? 'Ligado' : 'Desligado'}</div>
+                    </div>
+                    <button class="device-btn" data-index="${index}" data-state="${device.state ? 'on' : 'off'}">
+                        ${device.state ? 'Ligado' : 'Desligado'}
+                    </button>
+                `;
+                
+                devicesContainer.appendChild(deviceElement);
+                
+                // Adicionar evento de clique ao botão se o dispositivo tiver botão de ação
+                if (device.hasButton === 'yes') {
+                    const btn = deviceElement.querySelector('.device-btn');
+                    btn.addEventListener('click', () => toggleDeviceState(index));
+                }
+            });
+        }
+
+        // Evento de login
+        loginBtn.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            loginStatus.textContent = "Autenticando...";
+            loginStatus.style.color = "black";
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    loginStatus.textContent = "Autenticado com sucesso!";
+                    loginStatus.style.color = "green";
+                    loginForm.style.display = 'none';
+                    mainContent.style.display = 'block';
+                    startDataMonitoring();
+                    loadDevicesFromFirebase();
+                })
+                .catch((error) => {
+                    loginStatus.textContent = "Erro na autenticação: " + error.message;
+                    loginStatus.style.color = "red";
+                });
+        });
+
+        // Evento para abrir o modal
+        addDeviceBtn.addEventListener('click', () => {
+            deviceModal.style.display = 'block';
+        });
+
+        // Evento para fechar o modal
+        cancelBtn.addEventListener('click', () => {
+            deviceModal.style.display = 'none';
+        });
+
+        // Evento para confirmar novo dispositivo
+        confirmBtn.addEventListener('click', () => {
+            const name = deviceName.value.trim();
+            const number = deviceNumber.value.trim();
+            const hasBtn = hasButton.value;
+            
+            if (name && number) {
+                devices.push({
+                    name,
+                    number,
+                    hasButton: hasBtn,
+                    state: false // Estado inicial: desligado
+                });
+                
+                saveDevicesToFirebase();
+                renderDevices();
+                
+                deviceModal.style.display = 'none';
+                
+                // Limpar campos
+                deviceName.value = '';
+                deviceNumber.value = '';
+                hasButton.value = 'no';
+            }
+        });
+
+        // Fechar modal ao clicar fora dele
+        window.addEventListener('click', (event) => {
+            if (event.target === deviceModal) {
+                deviceModal.style.display = 'none';
+            }
+        });
+
+        // Verificar se já está autenticado ao carregar a página
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                loginForm.style.display = 'none';
+                mainContent.style.display = 'block';
+                startDataMonitoring();
+                loadDevicesFromFirebase();
+            } else {
+                loginForm.style.display = 'block';
+                mainContent.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

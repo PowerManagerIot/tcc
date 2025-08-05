@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Manager - Dashboard de Energia</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="styledashcerta.css">
+</head>
+<body>
+
+<!-- HAMBURGUER
+
+    <button class="hamburger-btn" id="hamburgerBtn">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button> -->
+
+    <!-- Connection Status -->
+    <div class="connection-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Conectado ao Firebase</span>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="img/iconsemfundo.png" alt="Power Manager Logo" class="logo-icon">
+            <h3><a href="index.html" style="text-decoration: none; color: white">Power Manager</a></h3>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                    </svg>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                    </svg>
+                    Histórico
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Configurações
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header">
+            <div class="breadcrumb">Empresa</div>
+            <h1 class="page-title">Consumo de energia</h1>
+        </header>
+
+        <!-- Location Tabs -->
+        <div class="location-tabs">
+            <div class="location-tab active" data-location="sao-paulo">
+                <div class="status-indicator"></div>
+                <div class="location-name">São Paulo</div>
+                <div class="location-cost">R$ <span id="cost-sp">20.408,00</span></div>
+                <div class="location-details"><span id="kwh-sp">25.500</span> kWh • <span id="co2-sp">400</span> kg</div>
+            </div>
+            <div class="location-tab" data-location="rio-claro">
+                <div class="status-indicator"></div>
+                <div class="location-name">Rio Claro</div>
+                <div class="location-cost">R$ <span id="cost-rc">15.450,00</span></div>
+                <div class="location-details"><span id="kwh-rc">18.000</span> kWh • <span id="co2-rc">320</span> kg</div>
+            </div>
+            <div class="location-tab" data-location="campinas">
+                <div class="status-indicator"></div>
+                <div class="location-name">Campinas</div>
+                <div class="location-cost">R$ <span id="cost-cp">18.350,00</span></div>
+                <div class="location-details"><span id="kwh-cp">22.100</span> kWh • <span id="co2-cp">380</span> kg</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Donut Charts -->
+            <div class="card">
+                <div class="donut-charts">
+                    <div class="donut-chart-container">
+                        <h3 class="card-title">Custo do Mês <div class="loading" id="loadingMonth"></div></h3>
+                        <canvas id="monthChart" width="200" height="200" class="chart-canvas"></canvas>
+                        <div class="chart-info">
+                            <div>
+                                <div class="chart-value">R$ <span id="monthValue">20.408,00</span></div>
+                                <div class="chart-label">25.500 kWh</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="donut-chart-container">
+                        <h3 class="card-title">Custo do Dia <div class="loading" id="loadingDay"></div></h3>
+                        <canvas id="dayChart" width="200" height="200" class="chart-canvas"></canvas>
+                        <div class="chart-info">
+                            <div>
+                                <div class="chart-value">R$ <span id="dayValue">750,72</span></div>
+                                <div class="chart-label">875 kWh</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bar Chart -->
+            <div class="card">
+                <div class="card-title">
+                    Gráfico de Consumo
+                    <div class="chart-controls">
+                        <button class="chart-btn" data-period="day">Dia</button>
+                        <button class="chart-btn" data-period="week">Semana</button>
+                        <button class="chart-btn active" data-period="month">Mês</button>
+                    </div>
+                </div>
+                <div class="bar-chart-container">
+                    <canvas id="consumptionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value"><span id="avgMonthCost">R$ 19.235,00</span></div>
+                <div class="stat-label">Média de custo mensal</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value"><span id="avgDayCost">R$ 750,00</span></div>
+                <div class="stat-label">Média de custo diário</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value"><span id="currentPower">2.5 kW</span></div>
+                <div class="stat-label">Potência atual</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value"><span id="totalDevices">12</span></div>
+                <div class="stat-label">Dispositivos ativos</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Simulação de dados do Firebase (substitua pela integração real)
+        class FirebaseSimulator {
+            constructor() {
+                this.isConnected = true;
+                this.data = {
+                    currentReading: 2.5, // kW atual do SCT013
+                    monthlyData: [],
+                    dailyData: [],
+                    locations: {
+                        'sao-paulo': { cost: 20408, kwh: 25500, co2: 400 },
+                        'rio-claro': { cost: 15450, kwh: 18000, co2: 320 },
+                        'campinas': { cost: 18350, kwh: 22100, co2: 380 }
+                    }
+                };
+                this.generateMockData();
+                this.startRealTimeUpdates();
+            }
+
+            generateMockData() {
+                // Gerar dados mensais
+                const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set'];
+                this.data.monthlyData = months.map(month => ({
+                    month,
+                    consumption: Math.random() * 30000 + 15000,
+                    cost: Math.random() * 25000 + 10000
+                }));
+
+                // Gerar dados diários (últimos 7 dias)
+                this.data.dailyData = Array.from({length: 7}, (_, i) => ({
+                    day: new Date(Date.now() - (6-i) * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR', {weekday: 'short'}),
+                    consumption: Math.random() * 1000 + 500,
+                    cost: Math.random() * 800 + 300
+                }));
+            }
+
+            startRealTimeUpdates() {
+                setInterval(() => {
+                    // Simular leitura do SCT013
+                    this.data.currentReading = Math.random() * 5 + 0.5;
+                    
+                    // Simular perda de conexão ocasional
+                    if (Math.random() < 0.05) {
+                        this.isConnected = false;
+                        setTimeout(() => this.isConnected = true, 3000);
+                    }
+
+                    this.notifyListeners();
+                }, 2000);
+            }
+
+            notifyListeners() {
+                dashboard.updateRealTimeData(this.data);
+                dashboard.updateConnectionStatus(this.isConnected);
+            }
+
+            getData() {
+                return this.data;
+            }
+        }
+
+        // Dashboard Controller
+        class Dashboard {
+            constructor() {
+                this.firebase = new FirebaseSimulator();
+                this.charts = {};
+                this.currentLocation = 'sao-paulo';
+                this.initCharts();
+                this.bindEvents();
+                this.updateData();
+            }
+
+            initCharts() {
+                // Gráfico Donut - Mês
+                const monthCtx = document.getElementById('monthChart').getContext('2d');
+                this.charts.month = new Chart(monthCtx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [75, 25],
+                            backgroundColor: ['#ef4444', '#333333'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: { legend: { display: false } },
+                        cutout: '70%'
+                    }
+                });
+
+                // Gráfico Donut - Dia
+                const dayCtx = document.getElementById('dayChart').getContext('2d');
+                this.charts.day = new Chart(dayCtx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [60, 40],
+                            backgroundColor: ['#00ff2a', '#333333'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: { legend: { display: false } },
+                        cutout: '70%'
+                    }
+                });
+
+                // Gráfico de Barras - Consumo
+                const consumptionCtx = document.getElementById('consumptionChart').getContext('2d');
+                this.charts.consumption = new Chart(consumptionCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Consumo (kWh)',
+                            data: [],
+                            backgroundColor: '#00ff2a',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#333333' },
+                                ticks: { color: '#888888' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#888888' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            bindEvents() {
+                // Location tabs
+                document.querySelectorAll('.location-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        document.querySelector('.location-tab.active').classList.remove('active');
+                        tab.classList.add('active');
+                        this.currentLocation = tab.dataset.location;
+                        this.updateData();
+                    });
+                });
+
+                // Chart period buttons
+                document.querySelectorAll('.chart-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelector('.chart-btn.active').classList.remove('active');
+                        btn.classList.add('active');
+                        this.updateConsumptionChart(btn.dataset.period);
+                    });
+                });
+            }
+
+            updateData() {
+                const data = this.firebase.getData();
+                
+                // Atualizar dados das localizações
+                Object.keys(data.locations).forEach(location => {
+                    const loc = data.locations[location];
+                    document.getElementById(`cost-${location.replace('-', '').substring(0,2)}`).textContent = 
+                        loc.cost.toLocaleString('pt-BR');
+                    document.getElementById(`kwh-${location.replace('-', '').substring(0,2)}`).textContent = 
+                        loc.kwh.toLocaleString('pt-BR');
+                    document.getElementById(`co2-${location.replace('-', '').substring(0,2)}`).textContent = 
+                        loc.co2;
+                });
+
+                this.updateConsumptionChart('month');
+            }
+
+            updateConsumptionChart(period) {
+                const data = this.firebase.getData();
+                let chartData, labels;
+
+                if (period === 'month') {
+                    chartData = data.monthlyData.map(d => d.consumption);
+                    labels = data.monthlyData.map(d => d.month);
+                } else {
+                    chartData = data.dailyData.map(d => d.consumption);
+                    labels = data.dailyData.map(d => d.day);
+                }
+
+                this.charts.consumption.data.labels = labels;
+                this.charts.consumption.data.datasets[0].data = chartData;
+                this.charts.consumption.update();
+            }
+
+            updateRealTimeData(data) {
+                // Atualizar potência atual
+                document.getElementById('currentPower').textContent = 
+                    `${data.currentReading.toFixed(1)} kW`;
+
+                // Atualizar valores em tempo real (simulação)
+                const variation = (Math.random() - 0.5) * 0.1;
+                const currentMonth = parseFloat(document.getElementById('monthValue').textContent.replace('.', '').replace(',', '.'));
+                const newMonthValue = currentMonth + (currentMonth * variation);
+                document.getElementById('monthValue').textContent = 
+                    newMonthValue.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+
+                // Remover indicadores de loading
+                document.querySelectorAll('.loading').forEach(loader => {
+                    loader.style.display = 'none';
+                });
+            }
+
+            updateConnectionStatus(isConnected) {
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                
+                if (isConnected) {
+                    statusDot.classList.remove('offline');
+                    statusText.textContent = 'Conectado ao Firebase';
+                } else {
+                    statusDot.classList.add('offline');
+                    statusText.textContent = 'Reconectando...';
+                }
+
+                // Atualizar indicadores das localizações
+                document.querySelectorAll('.status-indicator').forEach(indicator => {
+                    if (isConnected) {
+                        indicator.classList.remove('offline');
+                    } else {
+                        indicator.classList.add('offline');
+                    }
+                });
+            }
+        }
+
+                    /*HAMBURGUER*/
+
+
+        /*
+                // 3. ADICIONE este script no final do seu <script> existente (antes da linha "const dashboard = new Dashboard();")
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.querySelector('.sidebar');
+            
+            hamburgerBtn.addEventListener('click', function() {
+                hamburgerBtn.classList.toggle('active');
+                sidebar.classList.toggle('open');
+            });
+            
+            // Fechar sidebar ao clicar fora dela
+            document.addEventListener('click', function(e) {
+                if (!sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                    hamburgerBtn.classList.remove('active');
+                    sidebar.classList.remove('open');
+                }
+            });
+        }); */
+
+        // Inicializar Dashboard
+        const dashboard = new Dashboard();
+
+        // Exemplo de integração com Firebase real (descomente e configure)
+        /*
+        import { initializeApp } from 'firebase/app';
+        import { getDatabase, ref, onValue } from 'firebase/database';
+
+        const firebaseConfig = {
+            // Sua configuração do Firebase
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Escutar mudanças nos dados do sensor
+        const sensorRef = ref(database, 'sensors/sct013');
+        onValue(sensorRef, (snapshot) => {
+            const data = snapshot.val();
+            dashboard.updateRealTimeData(data);
+        });
+        */
+    </script>
+</body>
+</html>
