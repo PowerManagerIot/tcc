@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Power Manager IoT</title>
+    <link rel="icon" type="image/png" href="img/iconsemfundo.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>s
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -21,6 +26,7 @@
             }
         }
     </script>
+    <link rel="stylesheet" href="style.css">    
 </head>
 <body class="bg-bg-primary text-white font-sans">
     <!-- Sidebar -->
@@ -62,164 +68,227 @@
     <div class="ml-20 h-screen overflow-y-auto transition-all duration-300 ease-in-out">
         <div class="p-8">
         <!-- Header -->
-        <div class="mb-8">
-            <div class="text-sm text-gray-400 mb-2">Energia</div>
-            <h1 class="text-3xl font-semibold text-accent-green mb-4">Consumo de energia</h1>
-            
-            <!-- Connection Status -->
-            <div class="fixed top-8 right-8 bg-bg-card border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2">
-                <div class="w-2 h-2 bg-accent-green rounded-full animate-pulse"></div>
-                <span class="text-sm">Conectado ao Firebase</span>
-            </div>
-        </div>
-
-        <!-- Location Tabs -->
-        <div class="flex gap-4 mb-8 overflow-x-auto pb-2">
-            <div class="bg-green-500/10 border-2 border-accent-green rounded-xl p-6 min-w-52 cursor-pointer relative">
-                <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
-                <div class="font-semibold mb-2">São Paulo</div>
-                <div class="text-2xl font-bold text-accent-green mb-1">R$ 20.408,00</div>
-                <div class="text-sm text-gray-400">25.500 kWh • 200 kg</div>
-            </div>
-            
-            <div class="bg-bg-card border border-border-dark rounded-xl p-6 min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative">
-                <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
-                <div class="font-semibold mb-2">Rio Claro</div>
-                <div class="text-2xl font-bold text-accent-green mb-1">R$ 15.450,00</div>
-                <div class="text-sm text-gray-400">18.000 kWh • 230 kg</div>
-            </div>
-            
-            <div class="bg-bg-card border border-border-dark rounded-xl p-6 min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative">
-                <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
-                <div class="font-semibold mb-2">Campinas</div>
-                <div class="text-2xl font-bold text-accent-green mb-1">R$ 18.350,00</div>
-                <div class="text-sm text-gray-400">22.100 kWh • 380 kg</div>
-            </div>
-        </div>
-
-        <!-- Dashboard Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            <!-- Left Column - Charts -->
-            <div class="lg:col-span-1 space-y-8">
-                <!-- Monthly Cost Chart -->
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold">Custo do Mês</h3>
-                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
-                    </div>
-                    <div class="text-center">
-                        <div class="relative w-32 h-32 mx-auto mb-4">
-                            <svg class="w-32 h-32 transform -rotate-90">
-                                <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
-                                <circle cx="64" cy="64" r="56" stroke="#ef4444" stroke-width="8" fill="none" 
-                                        stroke-dasharray="351" stroke-dashoffset="88" stroke-linecap="round"/>
-                            </svg>
-                        </div>
-                        <div class="text-2xl font-bold text-accent-green">R$ 20.408,00</div>
-                        <div class="text-sm text-gray-400">25.500 kWh</div>
-                    </div>
+            <div class="mb-8">
+                <div class="text-sm text-gray-400 mb-2">Energia</div>
+                <h1 class="text-3xl font-semibold text-accent-green mb-4">Consumo de energia</h1>
+                
+                <!-- Connection Status -->
+                <div class="fixed top-8 right-8 bg-bg-card border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2">
+                    <div class="w-2 h-2 bg-accent-green rounded-full animate-pulse"></div>
+                    <span class="text-sm">Conectado ao Firebase</span>
                 </div>
 
-                <!-- Daily Cost Chart -->
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold">Custo do Dia</h3>
-                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
-                    </div>
-                    <div class="text-center">
-                        <div class="relative w-32 h-32 mx-auto mb-4">
-                            <svg class="w-32 h-32 transform -rotate-90">
-                                <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
-                                <circle cx="64" cy="64" r="56" stroke="#00ff2a" stroke-width="8" fill="none" 
-                                        stroke-dasharray="351" stroke-dashoffset="175" stroke-linecap="round"/>
-                            </svg>
-                        </div>
-                        <div class="text-2xl font-bold text-accent-green">R$ 750,72</div>
-                        <div class="text-sm text-gray-400">875 kWh</div>
-                    </div>
+                <div class="fixed top-8 right-8 bg-bg-card border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2 connection-status" id="connectionStatus">
+                    <div class="text-sm text-gray-400 mb-2 w-2 h-2 bg-accent-green rounded-full animate-pulse status-dot" id="statusDot"></div>
+                    <span class="text-sm">Conectando ao Firebase...</span>
                 </div>
             </div>
 
-            <!-- Right Column - Bar Chart -->
-            <div class="lg:col-span-2">
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6 h-full">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold">Gráfico de Consumo</h3>
-                        <div class="flex gap-2">
-                            <button class="px-3 py-1 text-sm border border-border-dark rounded text-gray-400 hover:bg-accent-green hover:text-black transition-all">Dia</button>
-                            <button class="px-3 py-1 text-sm border border-border-dark rounded text-gray-400 hover:bg-accent-green hover:text-black transition-all">Semana</button>
-                            <button class="px-3 py-1 text-sm bg-accent-green text-black rounded">Mês</button>
+            <!-- Location Tabs -->
+            <div class="flex gap-4 mb-8 overflow-x-auto pb-2">
+                <div class="bg-green-500/10 border-2 border-accent-green rounded-xl p-6 min-w-52 cursor-pointer relative">
+                    <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
+                    <div class="font-semibold mb-2">São Paulo</div>
+                    <div class="text-2xl font-bold text-accent-green mb-1">R$ 20.408,00</div>
+                    <div class="text-sm text-gray-400">25.500 kWh • 200 kg</div>
+                </div>
+                
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6 min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative">
+                    <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
+                    <div class="font-semibold mb-2">Rio Claro</div>
+                    <div class="text-2xl font-bold text-accent-green mb-1">R$ 15.450,00</div>
+                    <div class="text-sm text-gray-400">18.000 kWh • 230 kg</div>
+                </div>
+                
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6 min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative">
+                    <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
+                    <div class="font-semibold mb-2">Campinas</div>
+                    <div class="text-2xl font-bold text-accent-green mb-1">R$ 18.350,00</div>
+                    <div class="text-sm text-gray-400">22.100 kWh • 380 kg</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <!-- Left Column - Charts -->
+                <div class="lg:col-span-1 space-y-8">
+                    <!-- Monthly Cost Chart -->
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold">Custo do Mês</h3>
+                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="relative w-32 h-32 mx-auto mb-4">
+                                <svg class="w-32 h-32 transform -rotate-90">
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#ef4444" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="88" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-accent-green">R$ 20.408,00</div>
+                            <div class="text-sm text-gray-400">25.500 kWh</div>
                         </div>
                     </div>
-                    <div class="h-80 flex items-end justify-between px-4">
-                        <!-- Simulated Bar Chart -->
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 20%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 40%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 30%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 60%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 80%"></div>
-                        <div class="w-8 bg-accent-green rounded-t" style="height: 100%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 45%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 25%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 35%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 70%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 55%"></div>
-                        <div class="w-8 bg-gray-600 rounded-t" style="height: 15%"></div>
+
+                    <!-- Daily Cost Chart -->
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold">Custo do Dia</h3>
+                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="relative w-32 h-32 mx-auto mb-4">
+                                <svg class="w-32 h-32 transform -rotate-90">
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#00ff2a" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="175" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-accent-green">R$ 750,72</div>
+                            <div class="text-sm text-gray-400">875 kWh</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Bar Chart -->
+                <div class="lg:col-span-2">
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6 h-full">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold">Gráfico de Consumo</h3>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1 text-sm border border-border-dark rounded text-gray-400 hover:bg-accent-green hover:text-black transition-all">Dia</button>
+                                <button class="px-3 py-1 text-sm border border-border-dark rounded text-gray-400 hover:bg-accent-green hover:text-black transition-all">Semana</button>
+                                <button class="px-3 py-1 text-sm bg-accent-green text-black rounded">Mês</button>
+                            </div>
+                        </div>
+                        <div class="h-80 flex items-end justify-between px-4">
+                            <!-- Simulated Bar Chart -->
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 20%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 40%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 30%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 60%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 80%"></div>
+                            <div class="w-8 bg-accent-green rounded-t" style="height: 100%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 45%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 25%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 35%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 70%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 55%"></div>
+                            <div class="w-8 bg-gray-600 rounded-t" style="height: 15%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                <div class="text-3xl font-bold text-accent-green mb-2">R$ 19.235,00</div>
-                <div class="text-sm text-gray-400">Média de custo mensal</div>
-            </div>
-            
-            <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                <div class="text-3xl font-bold text-accent-green mb-2">R$ 750,00</div>
-                <div class="text-sm text-gray-400">Média de custo diário</div>
-            </div>
-            
-            <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                <div class="text-3xl font-bold text-accent-green mb-2">2.5 kW</div>
-                <div class="text-sm text-gray-400">Potência atual</div>
-            </div>
-            
-            <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                <div class="text-3xl font-bold text-accent-green mb-2">12</div>
-                <div class="text-sm text-gray-400">Dispositivos ativos</div>
-            </div>
-        </div>
-
-        <!-- IoT Section -->
-        <div class="mt-12">
-            <div class="text-sm text-gray-400 mb-2">Conectado ao Firebase (leitura ativa)</div>
-            <h2 class="text-2xl font-semibold text-accent-green mb-4">Power Manager IoT</h2>
-            <p class="text-gray-400 mb-8">Monitoramento em tempo real do dispositivo ESP32</p>
-            
-            <!-- Sensor Value Card -->
-            <div class="bg-bg-card border border-border-dark rounded-xl p-8 mb-8">
-                <h3 class="text-xl text-center text-gray-400 mb-8">Valor Atual do Sensor</h3>
-                <div class="text-center">
-                    <div class="text-6xl font-bold text-accent-green mb-4">7000</div>
-                    <div class="text-sm text-gray-400">Última atualização: 13:07:25 - 05/08/2025</div>
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
+                    <div class="text-3xl font-bold text-accent-green mb-2">R$ 19.235,00</div>
+                    <div class="text-sm text-gray-400">Média de custo mensal</div>
+                </div>
+                
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
+                    <div class="text-3xl font-bold text-accent-green mb-2">R$ 750,00</div>
+                    <div class="text-sm text-gray-400">Média de custo diário</div>
+                </div>
+                
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
+                    <div class="text-3xl font-bold text-accent-green mb-2">2.5 kW</div>
+                    <div class="text-sm text-gray-400">Potência atual</div>
+                </div>
+                
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
+                    <div class="text-3xl font-bold text-accent-green mb-2">12</div>
+                    <div class="text-sm text-gray-400">Dispositivos ativos</div>
                 </div>
             </div>
-            
-            <!-- Add Device Section -->
-            <button class="bg-accent-green text-black px-6 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity mb-4">
-                + Adicionar Dispositivo
-            </button>
-            <div class="text-sm text-gray-400 mb-4">Dispositivos inteligentes: 0/8 (máximo permitido)</div>
-            <div class="text-gray-400">
-                Nenhum dispositivo cadastrado. Clique em<br>
-                "Adicionar Dispositivo" para começar.
+
+            <!-- IoT Section -->
+            <div class="mt-12">
+                <div class="connection-status" id="connectionStatus">
+                    <div class="text-sm text-gray-400 mb-2 status-dot" id="statusDot"></div>
+                    <span>Conectando ao Firebase...</span>
+                </div>
+
+
+                <h2 class="text-2xl font-semibold text-accent-green mb-4">Power Manager IoT</h2>
+                <p class="text-gray-400 mb-8">Monitoramento em tempo real do dispositivo ESP32</p>
+
+
+                <!-- Login Form -->
+                <div class="login-form" id="loginForm">
+                    <h3>Autenticação Requerida</h3>
+                    <input type="email" id="email" placeholder="Email" value="powermanageriot@gmail.com">
+                    <input type="password" id="password" placeholder="Senha" value="pmiot12*">
+                    <button id="loginBtn">Entrar</button>
+                    <div id="loginStatus"></div>
+                </div>
+
+
+
+                
+                <!-- Sensor Value Card -->
+                <div class="bg-bg-card border border-border-dark rounded-xl p-8 mb-8 hidden mx-auto" id="mainContent">
+                    <div class="value-container">
+                        <h2 class="text-xl text-center text-gray-400 mb-8">Valor Atual do Sensor</h2>
+                        <div class="value text-6xl font-bold text-accent-green mb-4 text-center" id="currentValue">--</div>
+                        <div class="timestamp text-sm text-gray-400" id="lastUpdate">Última atualização: --</div>
+                    </div>
+                    
+                    <!-- Add Device Section -->
+                    <button class="bg-accent-green text-black px-6 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity mb-4 add-device-btn" id="addDeviceBtn">
+                        + Adicionar Dispositivo
+                    </button>
+
+                    <div class="text-sm text-gray-400 mb-4 smart-devices-limit" id="smartDevicesLimit">
+                        Dispositivos inteligentes: 0/8 (máximo permitido)
+                    </div>
+
+                    <div class="grid-cols-1" id="devicesContainer">
+                        <!-- Dispositivos serão adicionados aqui dinamicamente -->
+                    </div>
+                </div>
             </div>
-        </div>
         </div>
     </div>
+
+
+    <!-- Modal para adicionar dispositivo -->
+    <div id="deviceModal" class="modal">
+        <div class="modal-content">
+            <h2>Adicionar Novo Dispositivo</h2>
+            <input type="text" id="deviceName" placeholder="Nome do Dispositivo">
+            <input type="number" id="deviceNumber" placeholder="Consumo em Watts">
+            <select id="hasButton">
+                <option value="no">Não Inteligente</option>
+                <option value="yes">Inteligente (controlável)</option>
+            </select>
+            <div id="limitWarning" class="limit-warning hidden">
+                ⚠️ Limite máximo de 8 dispositivos inteligentes atingido! Selecione "Não Inteligente" para continuar.
+            </div>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelBtn">Cancelar</button>
+                <button class="confirm-btn" id="confirmBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal de confirmação de exclusão -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmar Exclusão</h2>
+            <p>Tem certeza que deseja excluir o dispositivo "<span id="deviceToDeleteName"></span>"?</p>
+            <p style="color: var(--accent-red); font-size: 0.9rem;">Esta ação não pode ser desfeita.</p>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelDeleteBtn">Cancelar</button>
+                <button class="confirm-btn" id="confirmDeleteBtn" style="background-color: var(--accent-red);">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+
 
     <!-- Mobile Menu Button (hidden on desktop) -->
     <button class="fixed top-4 left-4 lg:hidden bg-bg-secondary border border-border-dark rounded-lg p-3 z-50">
@@ -227,5 +296,7 @@
         <div class="w-6 h-0.5 bg-white mb-1"></div>
         <div class="w-6 h-0.5 bg-white"></div>
     </button>
+
+    <script src="script.js"></script>
 </body>
 </html>
