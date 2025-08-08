@@ -18,87 +18,6 @@
             --border-color: #333333;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 280px;
-            height: 100vh;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border-color);
-            padding: 2rem 0;
-            z-index: 1000;
-        }
-
-        .logo {
-            padding: 0 2rem;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 12px; /* Espaço entre o logo e o texto */
-        }
-
-        .logo-icon {
-            width: 32px;
-            height: 32px;
-            object-fit: contain; /* Mantém a proporção da imagem */
-        }
-
-        .nav-menu {
-            list-style: none;
-        }
-
-        .nav-item {
-            margin-bottom: 0.5rem;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 1rem 2rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: rgba(0, 255, 42, 0.1);
-            color: var(--accent-green);
-            border-right: 3px solid var(--accent-green);
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 280px;
-            padding: 2rem;
-            min-height: 100vh;
-        }
-
-        .header {
-            margin-bottom: 2rem;
-        }
-
-        .page-title {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--accent-green);
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-        }
-
         /* Connection Status */
         .connection-status {
             position: fixed;
@@ -236,95 +155,10 @@
             margin-bottom: 1.5rem;
         }
 
-        .devices-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-        }
 
-        .device {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-        }
+        
 
-        .device:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .device-info {
-            margin-bottom: 1rem;
-        }
-
-        .device-name {
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-        }
-
-        .device-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--accent-green);
-            margin: 0.5rem 0;
-        }
-
-        .device-state {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .device-controls {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .device-btn {
-            padding: 0.5rem 1rem;
-            background: var(--accent-green);
-            color: #000;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .device-btn[data-state="on"] {
-            background: var(--accent-green);
-        }
-
-        .device-btn[data-state="off"] {
-            background: var(--accent-red);
-            color: white;
-        }
-
-        .delete-btn {
-            padding: 0.5rem 1rem;
-            background: var(--accent-red);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .delete-btn:hover {
-            opacity: 0.9;
-        }
-
-        .device-type {
-            font-size: 0.75rem;
-            background: rgba(0, 255, 42, 0.1);
-            color: var(--accent-green);
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
-            margin-left: 0.5rem;
-        }
+        
 
         /* Modals */
         .modal {
@@ -398,40 +232,62 @@
             margin: 1rem 0;
             font-size: 0.9rem;
             border-left: 3px solid var(--accent-red);
+        }      
+
+
+
+        /*TROCANDO DE GRÁFICO*/
+
+        /*
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 1rem;
-            }
-
-            .devices-container {
-                grid-template-columns: 1fr;
-            }
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
 
+        .chart-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            justify-content: flex-end;
+        }
 
-        
+        .chart-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chart-btn.active,
+        .chart-btn:hover {
+            background: var(--accent-green);
+            color: #000;
+            border-color: var(--accent-green);
+        }
 
 
+        .bar-chart-container {
+            height: 400px;
+            position: relative;
+        }
 
+        */
 
 
         
