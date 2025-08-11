@@ -221,27 +221,20 @@
                     <div id="loginStatus"></div>
                 </div>
 
-
-
-                
                 <!-- Sensor Value Card -->
-                <div class="bg-bg-card border border-border-dark rounded-xl p-8 mb-8 hidden mx-auto" id="mainContent">
+                <div id="mainContent" style="display: none;">
                     <div class="value-container">
-                        <h2 class="text-xl text-center text-gray-400 mb-8">Valor Atual do Sensor</h2>
-                        <div class="value text-6xl font-bold text-accent-green mb-4 text-center" id="currentValue">--</div>
-                        <div class="timestamp text-sm text-gray-400" id="lastUpdate">Última atualização: --</div>
+                        <h2>Valor Atual do Sensor</h2>
+                        <div class="value" id="currentValue">--</div>
+                        <div class="timestamp" id="lastUpdate">Última atualização: --</div>
                     </div>
                     
-                    <!-- Add Device Section -->
-                    <button class="bg-accent-green text-black px-6 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity mb-4 add-device-btn" id="addDeviceBtn">
-                        + Adicionar Dispositivo
-                    </button>
-
-                    <div class="text-sm text-gray-400 mb-4 smart-devices-limit" id="smartDevicesLimit">
+                    <button class="add-device-btn" id="addDeviceBtn">+ Adicionar Dispositivo</button>
+                    <div class="smart-devices-limit" id="smartDevicesLimit">
                         Dispositivos inteligentes: 0/8 (máximo permitido)
                     </div>
-
-                    <div class="grid-cols-1" id="devicesContainer">
+                    
+                    <div class="devices-container" id="devicesContainer">
                         <!-- Dispositivos serão adicionados aqui dinamicamente -->
                     </div>
                 </div>

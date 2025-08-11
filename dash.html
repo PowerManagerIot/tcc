@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Power Manager - Dashboard de Energia</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
     <link rel="stylesheet" href="styledashcerta.css">
 </head>
 <body>
@@ -426,26 +426,6 @@
 
         // Inicializar Dashboard
         const dashboard = new Dashboard();
-
-        // Exemplo de integração com Firebase real (descomente e configure)
-        /*
-        import { initializeApp } from 'firebase/app';
-        import { getDatabase, ref, onValue } from 'firebase/database';
-
-        const firebaseConfig = {
-            // Sua configuração do Firebase
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        // Escutar mudanças nos dados do sensor
-        const sensorRef = ref(database, 'sensors/sct013');
-        onValue(sensorRef, (snapshot) => {
-            const data = snapshot.val();
-            dashboard.updateRealTimeData(data);
-        });
-        */
     </script>
 </body>
 </html>
