@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerManager - Cadastro</title>
+    <link rel="stylesheet" href="stylecd.css">
+</head>
+<body>
+    <!-- Header com logo, progresso e botão entrar -->
+    <div class="header">
+        <div class="logo">
+            <a href="index.html"><img src="img/iconsemfundo.png" alt="PowerManager Logo" class="logoicon">
+            PowerManager</a>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="step-counter">
+                <span id="currentStep">1</span> de <span id="totalSteps">4</span>
+            </div>
+        </div>
+
+        <button class="login-btn" onclick="irParaLogin()">Entrar</button>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="main-content">
+        <div class="form-container">
+            <!-- Etapa 1: Nome -->
+            <div class="step active" id="step1">
+                <h2 class="step-title">Qual é o seu nome?</h2>
+                <div class="input-group">
+                    <input type="text" id="nome" placeholder="Seu nome completo" required>
+                    <div class="error-message">Por favor, insira seu nome completo</div>
+                </div>
+                <div class="navigation">
+                    <button class="btn btn-primary" onclick="nextStep()">Próximo</button>
+                </div>
+            </div>
+
+            <!-- Etapa 2: E-mail -->
+            <div class="step" id="step2">
+                <h2 class="step-title">Qual é o seu e-mail?</h2>
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="nome@exemplo.com" required>
+                    <div class="error-message">Por favor, insira um e-mail válido</div>
+                </div>
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Voltar</button>
+                    <button class="btn btn-primary" onclick="nextStep()">Próximo</button>
+                </div>
+            </div>
+
+            <!-- Etapa 3: Telefone -->
+            <div class="step" id="step3">
+                <h2 class="step-title">Qual é o seu telefone?</h2>
+                <div class="input-group">
+                    <input type="tel" id="telefone" placeholder="(11) 99999-9999" required>
+                    <div class="error-message">Por favor, insira um telefone válido</div>
+                </div>
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Voltar</button>
+                    <button class="btn btn-primary" onclick="nextStep()">Próximo</button>
+                </div>
+            </div>
+
+            <!-- Etapa 4: Senha -->
+            <div class="step" id="step4">
+                <h2 class="step-title">Crie sua senha</h2>
+                <div class="password-container">
+                    <div class="input-group">
+                        <input type="password" id="senha" placeholder="Sua senha segura" required>
+                        <div class="error-message">A senha deve ter pelo menos 6 caracteres</div>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="confirmarSenha" placeholder="Confirme sua senha" required>
+                        <div class="error-message">As senhas não coincidem</div>
+                    </div>
+                </div>
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Voltar</button>
+                    <button class="btn btn-primary" onclick="finalizarCadastro()">Criar Conta</button>
+                </div>
+            </div>
+
+            <!-- Etapa Final: Sucesso -->
+            <div class="step" id="stepSuccess">
+                <div class="success-message">
+                    <div class="success-text">Conta criada com sucesso!</div>
+                    <div class="success-subtext">Bem-vindo ao PowerManager!</div>
+                    <button class="btn btn-primary" onclick="irParaLogin()">Fazer Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scriptcd.js"></script>
+</body>
+</html>

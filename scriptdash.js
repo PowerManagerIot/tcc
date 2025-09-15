@@ -424,6 +424,93 @@
             }
         });
 
+        //Script - Adicionar novo local -----------------------------------------------------
+
+        // Lista de locais (dados iniciais)
+        let locations = [
+            { name: 'São Paulo', cost: 20408, consumption: 25500, emission: 200, active: true },
+            { name: 'Rio Claro', cost: 15450, consumption: 18000, emission: 230, active: false },
+            { name: 'Campinas', cost: 18350, consumption: 22100, emission: 380, active: false }
+        ];
+
+        // Renderizar locais na tela
+        function renderLocations() {
+            const container = document.getElementById('locationsContainer');
+            const addButton = container.querySelector('div:last-child');
+            
+            // Limpar container mantendo só o botão de adicionar
+            while (container.firstChild && container.firstChild !== addButton) {
+                container.removeChild(container.firstChild);
+            }
+            
+            // Adicionar cada local
+            locations.forEach((location, index) => {
+                const locationDiv = document.createElement('div');
+                locationDiv.className = `${location.active ? 'bg-green-500/10 border-2 border-accent-green' : 'bg-bg-card border border-border-dark'} rounded-xl p-6 min-w-52 cursor-pointer relative hover:transform hover:-translate-y-1 transition-all duration-300 slide-in`;
+                locationDiv.innerHTML = `
+                    <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
+                    <div class="font-semibold mb-2">${location.name}</div>
+                    <div class="text-2xl font-bold text-accent-green mb-1">R$ ${location.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                    <div class="text-sm text-gray-400">${location.consumption.toLocaleString('pt-BR')} kWh • ${location.emission} kg</div>
+                `;
+                locationDiv.onclick = () => setActiveLocation(index);
+                container.insertBefore(locationDiv, addButton);
+            });
+        }
+
+        // Definir local ativo
+        function setActiveLocation(index) {
+            locations = locations.map((loc, i) => ({ ...loc, active: i === index }));
+            renderLocations();
+        }
+
+        // Abrir modal
+        function openLocationModal() {
+            document.getElementById('locationModal').classList.remove('hidden');
+        }
+
+        // Fechar modal
+        function closeLocationModal() {
+            document.getElementById('locationModal').classList.add('hidden');
+            document.getElementById('locationName').value = '';
+            document.getElementById('locationCost').value = '';
+            document.getElementById('locationConsumption').value = '';
+            document.getElementById('locationEmission').value = '';
+        }
+
+        // Adicionar novo local
+        function addLocation() {
+            const name = document.getElementById('locationName').value;
+            const cost = parseFloat(document.getElementById('locationCost').value);
+            const consumption = parseFloat(document.getElementById('locationConsumption').value);
+            const emission = parseFloat(document.getElementById('locationEmission').value);
+            
+            if (name && cost && consumption && emission) {
+                locations.push({
+                    name,
+                    cost,
+                    consumption,
+                    emission,
+                    active: false
+                });
+                renderLocations();
+                closeLocationModal();
+            } else {
+                alert('Por favor, preencha todos os campos');
+            }
+        }
+
+        // Inicializar ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            renderLocations();
+        });
+
+        // Fechar modal ao clicar fora
+        document.getElementById('locationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLocationModal();
+            }
+        });
 
 
 

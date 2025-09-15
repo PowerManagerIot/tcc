@@ -20,22 +20,23 @@
                         'bg-card': '#1e1e1e',
                         'accent-green': '#00ff2a',
                         'accent-red': '#ef4444',
-                        'border-dark': '#333333'
+                        'border-dark': '#333333',
+                        'accent-yellow': '#eeea10'
                     }
                 }
             }
         }
     </script>
-    <link rel="stylesheet" href="style.css">    
+    <link rel="stylesheet" href="styledash.css">    
 </head>
 <body class="bg-bg-primary text-white font-sans">
     <!-- Sidebar -->
-    <div class="fixed left-0 top-0 w-20 hover:w-64 h-full bg-bg-secondary border-r border-border-dark z-50 overflow-y-auto transition-all duration-300 ease-in-out group">
+    <div class="fixed left-0 top-0 w-20 hover:w-64 h-full bg-bg-secondary border-r border-border-dark z-50 transition-all duration-300 ease-in-out group">
         <div class="p-4">
             <!-- Logo -->
             <div class="flex items-center gap-3 mb-8">
                 <a href="index.html" class="w-10 h-10 object-contain flex-shrink-0"><img src="img/iconsemfundo.png" alt="Power Manager Logo"></a>
-                <a href="index.html" class="text-accent-green font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap"><h3 >Power Manager</h3></a>
+                <a href="index.html" class="font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap"><h3 >Power Manager</h3></a>
             </div>
             
             <!-- Navigation -->
@@ -48,9 +49,9 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
+                        <a href="relatorio.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
                             <span class="text-xl flex-shrink-0">📈</span>
-                            <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Histórico</span>
+                            <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Relatórios</span>
                         </a>
                     </li>
                     <li>
@@ -65,7 +66,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="ml-20 h-screen overflow-y-auto transition-all duration-300 ease-in-out">
+    <div class="ml-20 h-screen transition-all duration-300 ease-in-out">
         <div class="p-8">
         <!-- Header -->
             <div class="mb-8">
@@ -106,6 +107,53 @@
                     <div class="text-2xl font-bold text-accent-green mb-1">R$ 18.350,00</div>
                     <div class="text-sm text-gray-400">22.100 kWh • 380 kg</div>
                 </div>
+
+                <div class="min-w-52 flex items-center justify-center">
+                    <button onclick="openLocationModal()" class="bg-bg-card border-2 border-dashed border-border-dark rounded-xl p-6 w-full h-full hover:border-accent-green hover:bg-green-500/5 transition-all duration-300 group">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2 text-gray-500 group-hover:text-accent-green transition-colors">+</div>
+                            <div class="font-semibold text-gray-400 group-hover:text-accent-green transition-colors">Adicionar Local</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal para Adicionar Local -->
+            <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-70 modal-backdrop hidden z-50 flex items-center justify-center">
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6 w-full max-w-md mx-4 transform transition-all">
+                    <h2 class="text-xl font-semibold text-accent-green mb-6">Adicionar Novo Local</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Nome do Local</label>
+                            <input type="text" id="locationName" placeholder="Ex: São Paulo" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Custo Mensal (R$)</label>
+                            <input type="number" id="locationCost" placeholder="Ex: 15000" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Consumo (kWh)</label>
+                            <input type="number" id="locationConsumption" placeholder="Ex: 18000" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Emissão CO₂ (kg)</label>
+                            <input type="number" id="locationEmission" placeholder="Ex: 200" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button onclick="closeLocationModal()" class="flex-1 px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg hover:bg-red-500/10 hover:border-accent-red transition-all">
+                            Cancelar
+                        </button>
+                        <button onclick="addLocation()" class="flex-1 px-4 py-2 bg-accent-green text-black rounded-lg font-semibold hover:bg-green-400 transition-all">
+                            Adicionar
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Dashboard Grid -->
@@ -126,8 +174,8 @@
                                             stroke-dasharray="351" stroke-dashoffset="88" stroke-linecap="round"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-green">R$ 20.408,00</div>
-                            <div class="text-sm text-gray-400">25.500 kWh</div>
+                            <div class="text-2xl font-bold text-accent-red">R$ 463,50</div>
+                            <div class="text-sm text-gray-400">342 kWh</div>
                         </div>
                     </div>
 
@@ -141,18 +189,97 @@
                             <div class="relative w-32 h-32 mx-auto mb-4">
                                 <svg class="w-32 h-32 transform -rotate-90">
                                     <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#00ff2a" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="175" stroke-linecap="round"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#eeea10" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="102" stroke-linecap="round"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-green">R$ 750,72</div>
-                            <div class="text-sm text-gray-400">875 kWh</div>
+                            <div class="text-2xl font-bold text-accent-yellow">R$ 15,45</div>
+                            <div class="text-sm text-gray-400">11.4 kWh</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!--Coluna 2-->
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold">Ar-Condicionado</h3>
+                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="relative w-32 h-32 mx-auto mb-4">
+                                <svg class="w-32 h-32 transform -rotate-90">
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#eeea10" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="112" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-accent-yellow">R$ 6,30</div>
+                            <div class="text-sm text-gray-400">4 kWh</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold">Lâmpada do Quarto</h3>
+                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="relative w-32 h-32 mx-auto mb-4">
+                                <svg class="w-32 h-32 transform -rotate-90">
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#00ff2a" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="309" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-accent-green">R$ 0,27</div>
+                            <div class="text-sm text-gray-400">0.60 kWh</div>
                         </div>
                     </div>
                 </div>
 
+                <!--Coluna 3-->
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold">Ventilador</h3>
+                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="relative w-32 h-32 mx-auto mb-4">
+                                <svg class="w-32 h-32 transform -rotate-90">
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#00ff2a" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="280" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-accent-green">R$ 0,45</div>
+                            <div class="text-sm text-gray-400">1 kWh</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold">Chuveiro</h3>
+                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="relative w-32 h-32 mx-auto mb-4">
+                                <svg class="w-32 h-32 transform -rotate-90">
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#ef4444" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="85" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold text-accent-red">R$ 8,43</div>
+                            <div class="text-sm text-gray-400">5.8 kWh</div>
+                        </div>
+                    </div>
+                </div>                
+
                 <!-- Right Column - Bar Chart -->
-                <div class="lg:col-span-2">
+                <!--<div class="lg:col-span-2">
                     <div class="bg-bg-card border border-border-dark rounded-xl p-6 h-full">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-semibold">Gráfico de Consumo</h3>
@@ -163,7 +290,7 @@
                             </div>
                         </div>
                         <div class="h-80 flex items-end justify-between px-4">
-                            <!-- Simulated Bar Chart -->
+                            Simulated Bar Chart 
                             <div class="w-8 bg-gray-600 rounded-t" style="height: 20%"></div>
                             <div class="w-8 bg-gray-600 rounded-t" style="height: 40%"></div>
                             <div class="w-8 bg-gray-600 rounded-t" style="height: 30%"></div>
@@ -178,23 +305,23 @@
                             <div class="w-8 bg-gray-600 rounded-t" style="height: 15%"></div>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
 
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                    <div class="text-3xl font-bold text-accent-green mb-2">R$ 19.235,00</div>
+                    <div class="text-3xl font-bold text-accent-green mb-2">R$ 387,66</div>
                     <div class="text-sm text-gray-400">Média de custo mensal</div>
                 </div>
                 
                 <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                    <div class="text-3xl font-bold text-accent-green mb-2">R$ 750,00</div>
+                    <div class="text-3xl font-bold text-accent-green mb-2">R$ 14,89</div>
                     <div class="text-sm text-gray-400">Média de custo diário</div>
                 </div>
                 
                 <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                    <div class="text-3xl font-bold text-accent-green mb-2">2.5 kW</div>
+                    <div class="text-3xl font-bold text-accent-green mb-2">0.47 kW</div>
                     <div class="text-sm text-gray-400">Potência atual</div>
                 </div>
                 
@@ -204,7 +331,8 @@
                 </div>
             </div>
 
-            <!-- IoT Section -->
+
+            <!-- IoT Section - Não mexer nessa sessão -->
             <div class="mt-12">
 
 
@@ -286,6 +414,6 @@
         <div class="w-6 h-0.5 bg-white"></div>
     </button>
 
-    <script src="script.js"></script>
+    <script src="scriptdash.js"></script>
 </body>
 </html>
