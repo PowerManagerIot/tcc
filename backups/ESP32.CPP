@@ -16,10 +16,15 @@
 #define USER_PASSWORD "pmiot12*"
 
 // Pinos dos relés
-#define RELAY_PIN_1 23   
-#define RELAY_PIN_2 5   
-#define RELAY_PIN_3 18
-#define RELAY_PIN_4 19
+#define RELAY_PIN_1 15   
+#define RELAY_PIN_2 2   
+#define RELAY_PIN_3 4
+#define RELAY_PIN_4 16
+#define RELAY_PIN_5 13
+#define RELAY_PIN_6 12
+#define RELAY_PIN_7 14
+#define RELAY_PIN_8 27
+
 
 // Objetos Firebase
 FirebaseData fbdo;
@@ -34,7 +39,7 @@ unsigned long readDataPrevMillis = 0;
 #define LED_BUILTIN 2
 
 // Array para armazenar os pinos dos relés
-int relayPins[] = {RELAY_PIN_1, RELAY_PIN_2, RELAY_PIN_3, RELAY_PIN_4};
+int relayPins[] = {RELAY_PIN_1, RELAY_PIN_2, RELAY_PIN_3, RELAY_PIN_4, RELAY_PIN_5, RELAY_PIN_6, RELAY_PIN_7, RELAY_PIN_8,};
 int numRelays = sizeof(relayPins) / sizeof(relayPins[0]);
 
 void setup() {
