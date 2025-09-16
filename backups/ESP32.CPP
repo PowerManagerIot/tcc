@@ -98,12 +98,12 @@ void loop() {
       
       // Enviar o número para o caminho correto
       if (Firebase.RTDB.setInt(&fbdo, path, numeroParaEnviar)) {
-        Serial.println("Número 4000 enviado com sucesso!");
+        Serial.println("consumo enviado com sucesso!");
         digitalWrite(LED_BUILTIN, HIGH);
         delay(100);
         digitalWrite(LED_BUILTIN, LOW);
       } else {
-        Serial.println("Falha no envio do número:");
+        Serial.println("Falha no envio do :");
         Serial.println(fbdo.errorReason());
       }
     }
