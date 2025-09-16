@@ -15,9 +15,9 @@
 #define USER_EMAIL "powermanageriot@gmail.com"
 #define USER_PASSWORD "pmiot12*"
 
-// Pinos dos relés (defina conforme sua conexão)
-#define RELAY_PIN_1 23   // Relé para dispositivo 1 (ventilador)
-#define RELAY_PIN_2 5   // Adicione mais pinos conforme necessário
+// Pinos dos relés
+#define RELAY_PIN_1 23   
+#define RELAY_PIN_2 5   
 #define RELAY_PIN_3 18
 #define RELAY_PIN_4 19
 
