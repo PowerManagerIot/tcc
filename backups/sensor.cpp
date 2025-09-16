@@ -1,59 +1,98 @@
-#define PINO_SENSOR 34
-const float VREF = 3.3f;
-const float ADC_MAX = 4095.0f;
+#include <WiFi.h>
+#include <Firebase_ESP_Client.h>
 
-const float AMPS_PER_VOLT = 30.0f;   // ajustar: 30.0 para SCT-013 30A/1V
-const float LINE_VOLTAGE = 220.0f;   // ajustar para sua rede
-const int SAMPLES = 500;             // amostras por janela RMS
-const float EMA_ALPHA = 0.005f;      // 0.005 = filtro lento (mais estável)
+// Bibliotecas auxiliares do Firebase
+#include "addons/TokenHelper.h"
+#include "addons/RTDBHelper.h"
 
-/* --- não mexer abaixo se não souber --- */
-float offsetEMA = VREF / 2.0f;   // valor inicial do offset (meio da escala)
+// ==== CONFIGURAÇÕES DE REDE ====
+#define WIFI_SSID "SEU_WIFI"
+#define WIFI_PASSWORD "SUA_SENHA"
+
+// ==== CONFIGURAÇÕES DO FIREBASE ====
+#define API_KEY "SUA_API_KEY"
+#define DATABASE_URL "https://SEU_PROJETO.firebaseio.com/" 
+
+// Objetos Firebase
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+// Controle de tempo
+unsigned long sendDataPrevMillis = 0;
+unsigned long acumuloPrevMillis = 0;
+
+// Variáveis de acumulação
+float somaConsumo = 0;
+int intervaloEnvio = 5000; // 5 segundos
 
 void setup() {
   Serial.begin(115200);
-  analogReadResolution(12); // 12-bit ADC
-  // Garanta atenuação para ler até ~3.3V no ESP32 (ajusta faixa)
-  #if defined(ARDUINO_ARCH_ESP32)
-    analogSetPinAttenuation(PINO_SENSOR, ADC_11db); // permite ~0-3.3V
-  #endif
-  delay(200);
-  Serial.println("Medidor de corrente (offset automatico) iniciado");
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  // Conectar ao Wi-Fi
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Conectando ao Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(300);
+  }
+  Serial.println("\nWi-Fi conectado!");
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+
+  // Config Firebase
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_URL;
+
+  // Login anônimo (ou pode ser com email/senha)
+  if (Firebase.signUp(&config, &auth, "", "")) {
+    Serial.println("Login anônimo OK!");
+  } else {
+    Serial.printf("Erro no signup: %s\n", config.signer.signupError.message.c_str());
+  }
+
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
 }
 
 void loop() {
-  float somaQuad = 0.0f;
+  if (Firebase.ready()) {
 
-  for (int i = 0; i < SAMPLES; i++) {
-    int leitura = analogRead(PINO_SENSOR);
-    float tensao = ( (float)leitura / ADC_MAX ) * VREF;
+    // Acumular leituras continuamente (1 vez por segundo, pode ajustar)
+    if (millis() - acumuloPrevMillis >= 1000) {
+      acumuloPrevMillis = millis();
 
-    // Atualiza offset com EMA (filtro exponencial)
-    offsetEMA = (1.0f - EMA_ALPHA) * offsetEMA + EMA_ALPHA * tensao;
+      // Aqui entra sua função de medição de corrente
+      // Por enquanto simulação com leitura analógica
+      float leituraAtual = analogRead(34);  
 
-    // Sinal AC estimado subtraindo o offset atual
-    float ac = tensao - offsetEMA;
+      somaConsumo += leituraAtual; // acumula valores
+      Serial.print("Leitura atual: ");
+      Serial.println(leituraAtual);
+    }
 
-    somaQuad += ac * ac;
+    // Enviar soma acumulada a cada 5 segundos
+    if (millis() - sendDataPrevMillis > intervaloEnvio) {
+      sendDataPrevMillis = millis();
 
-    // controle de taxa de amostragem: aprox. 10 kHz -> delayMicroseconds(100)
-    // ajuste conforme necessário. Não use delay() aqui.
-    delayMicroseconds(100); // ~10 kHz
+      // Montar o caminho no Firebase
+      String path = "/users/" + String(auth.token.uid.c_str()) + "/esp32/consumo";
+
+      // Envia soma total
+      if (Firebase.RTDB.setFloat(&fbdo, path, somaConsumo)) {
+        Serial.print("Consumo acumulado enviado: ");
+        Serial.println(somaConsumo);
+        digitalWrite(LED_BUILTIN, HIGH);
+        delay(100);
+        digitalWrite(LED_BUILTIN, LOW);
+      } else {
+        Serial.println("Falha no envio!");
+        Serial.println(fbdo.errorReason());
+      }
+
+      // Resetar soma
+      somaConsumo = 0;
+    }
   }
-
-  float vRMS = sqrt(somaQuad / (float)SAMPLES);
-  float correnteRMS = vRMS * AMPS_PER_VOLT;
-  float potencia = correnteRMS * LINE_VOLTAGE;
-
-  // Impressão
-  Serial.print("Offset (V): ");
-  Serial.print(offsetEMA, 4);
-  Serial.print("  |  vRMS (V): ");
-  Serial.print(vRMS, 4);
-  Serial.print("  |  I_RMS (A): ");
-  Serial.print(correnteRMS, 3);
-  Serial.print("  |  P_est (W): ");
-  Serial.println(potencia, 1);
-
-  delay(500); // esperar meio segundo entre janelas (ajuste se quiser)
 }
