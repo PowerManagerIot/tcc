@@ -7,11 +7,10 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        // URL do seu Firebase Realtime Database
-        var firebase = new FirebaseClient("https://powermanager-988cc-default-rtdb.firebaseio.com/");
+        var firebase = new FirebaseClient("*************************************");
         
         // ID do usuário e dispositivo baseado na estrutura mostrada
-        string userId = "VX0Ud3jgCPTdGZrutzn6Sp9tlGO2";
+        string userId = "**********************************";
         string deviceName = "esp32";
         
         Console.WriteLine("Monitorando leituras do ESP32...");
@@ -19,7 +18,6 @@ class Program
         Console.WriteLine($"Dispositivo: {deviceName}");
         Console.WriteLine("Pressione Enter para sair.\n");
 
-        // Escuta mudanças no campo numero (potência) do ESP32
         var observable = firebase
             .Child("users")
             .Child(userId)
@@ -35,11 +33,9 @@ class Program
                     {
                         double potencia = leitura.Object;
                         
-                        // Calcula energia consumida em 5s (assumindo leituras a cada 5s)
-                        // Fórmula: Energia (kWh) = Potência (W) × Tempo (h) / 1000
-                        double energia5s = potencia * (5.0 / 3600.0) / 1000.0; // 5 segundos = 5/3600 horas
+                        // Calcula energia consumida em 5s (leituras a cada 5s)
+                        double energia5s = potencia * (5.0 / 3600.0) / 1000.0;
                         
-                        // Caminho para o consumo total acumulado
                         var consumoTotalRef = firebase
                             .Child("users")
                             .Child(userId)
@@ -47,17 +43,13 @@ class Program
                             .Child(deviceName)
                             .Child("consumo_total");
                         
-                        // Lê o valor atual do consumo acumulado
                         var totalSnap = await consumoTotalRef.OnceSingleAsync<double?>();
                         double acumulado = totalSnap ?? 0.0; // Se não existir, inicia com 0
                         
-                        // Adiciona o novo consumo ao acumulado
                         acumulado += energia5s;
-                        
-                        // Atualiza o consumo total no Firebase
+                
                         await consumoTotalRef.PutAsync(acumulado);
                         
-                        // Também salva um log da leitura atual com timestamp
                         string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                         var logRef = firebase
                             .Child("users")
@@ -75,7 +67,6 @@ class Program
                             total_acumulado = acumulado
                         });
                         
-                        // Exibe informações no console
                         Console.WriteLine($"[{timestamp}] Potência: {potencia:F2} W | " +
                                         $"Energia 5s: {energia5s:F6} kWh | " +
                                         $"Total Acumulado: {acumulado:F6} kWh");
@@ -87,7 +78,6 @@ class Program
                 }
             });
 
-        // Mantém o programa rodando
         Console.ReadLine();
         
         // Cleanup

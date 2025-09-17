@@ -340,7 +340,8 @@
             console.log("Dispositivos inteligentes atuais:", smartDeviceCount, "Limite:", MAX_SMART_DEVICES);
             
             if (isSmart && smartDeviceCount >= MAX_SMART_DEVICES) {
-                alert(`LIMITE ATINGIDO!\n\nVocê já possui ${smartDeviceCount} dispositivos inteligentes.\nO limite máximo é ${MAX_SMART_DEVICES} dispositivos inteligentes.\n\nPara adicionar este dispositivo, selecione "Não Inteligente".`);
+                alert(`LIMITE ATINGIDO!\n\nVocê já possui ${smartDeviceCount} dispositivos inteligentes.\nO limite máximo 
+                    é ${MAX_SMART_DEVICES} dispositivos inteligentes.\n\nPara adicionar este dispositivo, selecione "Não Inteligente".`);
                 return;
             }
             

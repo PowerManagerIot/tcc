@@ -45,10 +45,6 @@
             setLoadingState(true);
 
             try {
-                // Simular chamada para API
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                // Aqui você faria a chamada real para seu backend
                 const loginData = {
                     email: email,
                     senha: senha
@@ -56,7 +52,6 @@
 
                 console.log('Dados de login:', loginData);
 
-                // Simular resposta de sucesso
                 alert('Login realizado com sucesso!\nRedirecionando para o dashboard...');
                 window.location.href = 'dashboard.html';
 

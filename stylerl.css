@@ -347,6 +347,23 @@
             min-height: 100vh;
         }
 
+        .register-btn {
+            background: transparent;
+            border: 2px solid #00ff2a;
+            color: #00ff2a;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .register-btn:hover {
+            background: #00ff2a;
+            color: rgb(0, 0, 0);
+        }
+
 
         @media (max-width: 768px) {
 
