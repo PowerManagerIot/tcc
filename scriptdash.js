@@ -159,7 +159,7 @@ const powerBar = document.getElementById('powerBar');
 
         // Monitorar potência instantânea
         function monitorPower() {
-            const powerRef = database.ref(`users/${USER_ID}/esp32/s1/potencia`) + database.ref(`users/${USER_ID}/esp32/s2/potencia`);
+            const powerRef = database.ref(`users/${USER_ID}/esp32/potencia_instantanea`);
             
             powerRef.on('value', (snapshot) => {
                 currentPowerValue = snapshot.val() || 0;
