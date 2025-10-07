@@ -1,18 +1,6 @@
 // Configuração do Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyBTPR8X4dRg5fZu_PTj0hwud3bfHtky1S4",
-    authDomain: "SEU_AUTH_DOMAIN",
-    databaseURL: "https://powermanager-988cc-default-rtdb.firebaseio.com",
-    projectId: "powermanager-988cc",
-    storageBucket: "SEU_STORAGE_BUCKET",
-    messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-    appId: "SEU_APP_ID"
-};
+import {auth, database} from "./auth.js"
 
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const database = firebase.database();
 
 // Variável para controlar estado de loading
 let isLoading = false;
@@ -144,9 +132,9 @@ async function realizarLogin(email, senha) {
         console.log('Login realizado com sucesso:', user);
 
         // Salva informações do usuário no localStorage
-        //localStorage.setItem('userEmail', user.email);
-        //localStorage.setItem('userId', user.uid);
-        //localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('userId', user.uid);
+        localStorage.setItem('isLoggedIn', 'true');
 
         // Busca dados adicionais do usuário no database
         const userSnapshot = await database.ref(`users/${user.uid}/profile`).once('value');

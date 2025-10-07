@@ -1,27 +1,9 @@
-// Configuração do Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyBTPR8X4dRg5fZu_PTj0hwud3bfHtky1S4",
-    databaseURL: "https://powermanager-988cc-default-rtdb.firebaseio.com",
-    projectId: "powermanager-988cc",
-};
+import {auth, database} from "./auth.js"
 
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+// Variável global para armazenar o ID do usuário logado
+let USER_ID = null;
 
-// REMOVER OU COMENTAR A LINHA DE AUTH
-// const auth = firebase.auth();
-
-// DEFINIR UM USER ID FIXO (substitua pelo ID real do seu usuário)
-const USER_ID = "VXOUd3jgCPTdGZrutzn6Sp9tlGO2"; // Coloque aqui o ID do usuário que você quer usar
-
-// Elementos da página (REMOVER elementos de login)
-// const emailInput = document.getElementById('email'); // REMOVIDO
-// const passwordInput = document.getElementById('password'); // REMOVIDO
-// const loginBtn = document.getElementById('loginBtn'); // REMOVIDO
-// const loginStatus = document.getElementById('loginStatus'); // REMOVIDO
-// const loginForm = document.getElementById('loginForm'); // REMOVIDO
-
+// Elementos da página
 const mainContent = document.getElementById('mainContent');
 const currentValue = document.getElementById('currentValue');
 const lastUpdate = document.getElementById('lastUpdate');
@@ -51,6 +33,54 @@ const MAX_SMART_DEVICES = 8;
 // Variáveis para controle de exclusão
 let deviceToDelete = null;
 
+// Função para verificar autenticação e obter USER_ID
+function verificarAutenticacao() {
+    return new Promise((resolve, reject) => {
+        // Primeiro verifica se há usuário no sessionStorage/localStorage
+        const storedUserId = sessionStorage.getItem('userId') || localStorage.getItem('userId');
+        const isLoggedIn = sessionStorage.getItem('isLoggedIn') || localStorage.getItem('isLoggedIn');
+        
+        if (storedUserId && isLoggedIn === 'true') {
+            USER_ID = storedUserId;
+            console.log('Usuário recuperado do storage:', USER_ID);
+            resolve(USER_ID);
+        } else {
+            // Se não há no storage, verifica com Firebase Auth
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    USER_ID = user.uid;
+                    console.log('Usuário autenticado:', USER_ID);
+                    
+                    // Salva no storage para próxima vez
+                    sessionStorage.setItem('userId', user.uid);
+                    sessionStorage.setItem('userEmail', user.email);
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    
+                    resolve(USER_ID);
+                } else {
+                    console.log('Nenhum usuário autenticado');
+                    reject('Usuário não autenticado');
+                }
+            });
+        }
+    });
+}
+
+// Função para redirecionar para login se não estiver autenticado
+function redirecionarParaLogin() {
+    alert('Sessão expirada. Por favor, faça login novamente.');
+    // Limpa os dados de sessão
+    sessionStorage.clear();
+    localStorage.clear();
+    
+    // Limpar cookies
+    document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+    
+    window.location.href = 'login.html';
+}
+
 // Função para formatar data/hora
 function formatDateTime(date) {
     return date.toLocaleTimeString() + ' - ' + date.toLocaleDateString();
@@ -74,8 +104,7 @@ function updateSmartDevicesCounter() {
     }
 }
 
-
-// Função para iniciar monitoramento dos dados - MODIFICADA
+// Função para iniciar monitoramento dos dados
 function startDataMonitoring() {
     // Monitorar S1 e S2 para consumo em tempo real
     const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
@@ -219,7 +248,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função para carregar dispositivos do Firebase - MODIFICADA
 function loadDevicesFromFirebase() {
-    // Usar USER_ID fixo
+    if (!USER_ID) {
+        console.error('USER_ID não definido');
+        return;
+    }
+    
     // Carregar dispositivos regulares
     const regularDevicesRef = database.ref(`users/${USER_ID}/regularDevices`);
     regularDevicesRef.on('value', (snapshot) => {
@@ -239,11 +272,15 @@ function loadDevicesFromFirebase() {
     });
 }
 
-// Função para alternar o estado do dispositivo inteligente - MODIFICADA
+// Função para alternar o estado do dispositivo inteligente
 function toggleDeviceState(deviceKey) {
+    if (!USER_ID) {
+        console.error('USER_ID não definido');
+        return;
+    }
+    
     smartDevices[deviceKey].state = !smartDevices[deviceKey].state;
     
-    // Usar USER_ID fixo
     database.ref(`users/${USER_ID}/devices/${deviceKey}/state`).set(smartDevices[deviceKey].state)
         .then(() => {
             console.log("Estado atualizado no Firebase");
@@ -261,11 +298,13 @@ function showDeleteConfirmation(deviceKey, deviceName, isSmart) {
     deleteModal.style.display = 'block';
 }
 
-// Função para excluir dispositivo - MODIFICADA
+// Função para excluir dispositivo
 function deleteDevice() {
-    if (!deviceToDelete) return;
+    if (!deviceToDelete || !USER_ID) {
+        console.error('Dados insuficientes para excluir dispositivo');
+        return;
+    }
 
-    // Usar USER_ID fixo
     const path = deviceToDelete.isSmart 
         ? `users/${USER_ID}/devices/${deviceToDelete.key}`
         : `users/${USER_ID}/regularDevices/${deviceToDelete.key}`;
@@ -292,7 +331,7 @@ function deleteDevice() {
         });
 }
 
-// Função para renderizar os dispositivos (mantém igual)
+// Função para renderizar os dispositivos
 function renderDevices() {
     devicesContainer.innerHTML = '';
     
@@ -375,13 +414,6 @@ cancelDeleteBtn.addEventListener('click', () => {
     deviceToDelete = null;
 });
 
-// REMOVER evento de login - toda essa parte foi removida
-/* 
-loginBtn.addEventListener('click', () => {
-    // CÓDIGO DE LOGIN REMOVIDO
-});
-*/
-
 // Evento para abrir o modal
 addDeviceBtn.addEventListener('click', () => {
     deviceModal.style.display = 'block';
@@ -419,8 +451,14 @@ function getNextDeviceId(devices) {
     return ids.length === 0 ? 0 : Math.max(...ids) + 1;
 }
 
-// Evento para confirmar novo dispositivo - MODIFICADO
+// Evento para confirmar novo dispositivo
 confirmBtn.addEventListener('click', () => {
+    if (!USER_ID) {
+        alert('Erro: Usuário não identificado. Por favor, faça login novamente.');
+        redirecionarParaLogin();
+        return;
+    }
+    
     const name = deviceName.value.trim();
     const number = parseInt(deviceNumber.value.trim());
     const isSmart = hasButton.value === 'yes';
@@ -445,7 +483,6 @@ confirmBtn.addEventListener('click', () => {
         state: false
     };
     
-    // Usar USER_ID fixo
     if (isSmart) {
         if (smartDeviceCount >= MAX_SMART_DEVICES) {
             alert(`ERRO: Limite de dispositivos inteligentes atingido (${smartDeviceCount}/${MAX_SMART_DEVICES})`);
@@ -500,32 +537,68 @@ window.addEventListener('click', (event) => {
     }
 });
 
-// MODIFICAR - Iniciar aplicação diretamente sem verificar autenticação
-document.addEventListener('DOMContentLoaded', function() {
-    // Esconder form de login e mostrar conteúdo principal diretamente
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.style.display = 'none';
+// Função para inicializar o dashboard
+async function inicializarDashboard() {
+    try {
+        // Verifica autenticação e obtém USER_ID
+        await verificarAutenticacao();
+        
+        console.log('Dashboard inicializado para usuário:', USER_ID);
+        
+        // Esconder form de login e mostrar conteúdo principal
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.style.display = 'none';
+        }
+        
+        if (mainContent) {
+            mainContent.style.display = 'block';
+        }
+        
+        // Iniciar monitoramento e carregar dispositivos
+        startDataMonitoring();
+        loadDevicesFromFirebase();
+        
+        // Renderizar locais
+        renderLocations();
+        
+    } catch (error) {
+        console.error('Erro ao inicializar dashboard:', error);
+        redirecionarParaLogin();
     }
-    
-    mainContent.style.display = 'block';
-    
-    // Iniciar monitoramento e carregar dispositivos
-    startDataMonitoring();
-    loadDevicesFromFirebase();
-    
-    // Renderizar locais também
-    renderLocations();
-});
+}
 
-// REMOVER verificação de autenticação
-/*
-auth.onAuthStateChanged((user) => {
-    // CÓDIGO DE VERIFICAÇÃO REMOVIDO
-});
-*/
+// Função de logout - MÉTODO CORRETO
+function logout() {
+    console.log('Iniciando logout...');
+    
+    auth.signOut().then(() => {
+        console.log('Firebase signOut bem-sucedido');
+        
+        // Limpar TODOS os dados de sessão
+        sessionStorage.clear();
+        localStorage.clear();
+        
+        // Limpar cookies
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        console.log('Logout realizado com sucesso - sessão limpa');
+        
+        // Redirecionar para login
+        window.location.href = 'login.html';
+        
+    }).catch((error) => {
+        console.error('Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout: ' + error.message);
+    });
+}
 
-// Script - Adicionar novo local (mantém igual)
+// Tornar a função logout global para o HTML poder chamar
+window.logout = logout;
+
+// Locais - Script para adicionar novo local
 let locations = [
     { name: 'São Paulo', cost: 20408, consumption: 25500, emission: 200, active: true },
     { name: 'Rio Claro', cost: 15450, consumption: 18000, emission: 230, active: false },
@@ -534,6 +607,8 @@ let locations = [
 
 function renderLocations() {
     const container = document.getElementById('locationsContainer');
+    if (!container) return;
+    
     const addButton = container.querySelector('div:last-child');
     
     while (container.firstChild && container.firstChild !== addButton) {
@@ -560,11 +635,18 @@ function setActiveLocation(index) {
 }
 
 function openLocationModal() {
-    document.getElementById('locationModal').classList.remove('hidden');
+    const modal = document.getElementById('locationModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
 }
 
 function closeLocationModal() {
-    document.getElementById('locationModal').classList.add('hidden');
+    const modal = document.getElementById('locationModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    
     document.getElementById('locationName').value = '';
     document.getElementById('locationCost').value = '';
     document.getElementById('locationConsumption').value = '';
@@ -592,8 +674,36 @@ function addLocation() {
     }
 }
 
-document.getElementById('locationModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeLocationModal();
+// Tornar funções globais para o HTML
+window.openLocationModal = openLocationModal;
+window.closeLocationModal = closeLocationModal;
+window.addLocation = addLocation;
+
+// Event listener do modal de location
+const locationModal = document.getElementById('locationModal');
+if (locationModal) {
+    locationModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeLocationModal();
+        }
+    });
+}
+
+// Inicializar aplicação quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, inicializando dashboard...');
+    inicializarDashboard();
+    
+    // Event listener para o botão de logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        console.log('Botão de logout encontrado, adicionando event listener');
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Botão de logout clicado');
+            logout();
+        });
+    } else {
+        console.warn('Botão de logout não encontrado no DOM');
     }
 });
