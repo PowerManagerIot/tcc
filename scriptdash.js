@@ -104,7 +104,8 @@ function updateSmartDevicesCounter() {
     }
 }
 
-// Função para iniciar monitoramento dos dados
+
+// Função para iniciar monitoramento dos dados - MODIFICADA
 function startDataMonitoring() {
     // Monitorar S1 e S2 para consumo em tempo real
     const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
@@ -144,18 +145,39 @@ function startDataMonitoring() {
     });
 }
 
+
+
+
+
+
+
+
+//==================================================================================
+
+//==================================================================================
+
+//==================================================================================
+
 const powerBar = document.getElementById('powerBar');
 const percentage = document.getElementById('percentage');
 const currentPower = document.getElementById('currentPower');
 const limitPower = document.getElementById('limitPower');
 const status = document.getElementById('status');
 
-let alertLimit = 100; // Valor padrão
+// Elementos da segunda barra (Consumo Mensal)
+const monthlyBar = document.getElementById('monthlyBar');
+const monthlyPercentage = document.getElementById('monthlyPercentage');
+const currentMonthly = document.getElementById('currentMonthly');
+const limitMonthly = document.getElementById('limitMonthly');
+
+let alertLimit = 100; // Valor padrão para consumo em tempo real
+let monthlyLimit = 600; // Valor padrão para consumo total
 let currentPowerValue = 0;
+let currentMonthlyValue = 0;
 let s1Power = 0; // Potência do sensor 1
 let s2Power = 0; // Potência do sensor 2
 
-// Função para atualizar a barra
+// Função para atualizar a barra de potência instantânea
 function updateBar(current, limit) {
     const percent = (current / limit) * 100;
     const displayPercent = Math.min(percent, 100); // Limita a barra visualmente a 100%
@@ -178,7 +200,30 @@ function updateBar(current, limit) {
     }
 }
 
-// Buscar o limit do alerta
+// Função para atualizar a barra de consumo mensal
+function updateMonthlyBar(current, limit) {
+    const percent = (current / limit) * 100;
+    const displayPercent = Math.min(percent, 100); // Limita a barra visualmente a 100%
+    
+    monthlyBar.style.width = displayPercent + '%';
+    monthlyPercentage.textContent = percent.toFixed(1) + '%';
+    currentMonthly.textContent = current.toFixed(2);
+    limitMonthly.textContent = limit;
+    
+    // Remover todas as classes
+    monthlyBar.classList.remove('warning', 'danger', 'full');
+    
+    // Adicionar classe baseada na porcentagem
+    if (percent >= 100) {
+        monthlyBar.classList.add('full');
+    } else if (percent >= 80) {
+        monthlyBar.classList.add('danger');
+    } else if (percent >= 60) {
+        monthlyBar.classList.add('warning');
+    }
+}
+
+// Buscar os limites dos alertas
 function getAlertLimit() {
     const alertsRef = database.ref(`users/${USER_ID}/alerts`);
     
@@ -186,29 +231,70 @@ function getAlertLimit() {
         const data = snapshot.val();
         
         if (data) {
-            // Pegar o primeiro alerta e seu limit
-            const firstAlertKey = Object.keys(data)[0];
-            alertLimit = data[firstAlertKey].limit;
+            let foundRealtimeAlert = null;
+            let foundTotalAlert = null;
             
-            console.log("Limit do alerta:", alertLimit);
-            updateBar(currentPowerValue, alertLimit);
+            // Procurar pelos dois tipos de alerta
+            Object.keys(data).forEach((key) => {
+                console.log("Alerta encontrado:", key, "Type:", data[key].type); // Log para debug
+                if (data[key].type === "Consumo em tempo real") {
+                    foundRealtimeAlert = data[key];
+                }
+                if (data[key].type === "Consumo Total") {
+                    foundTotalAlert = data[key];
+                }
+            });
             
-            status.textContent = "✓ Conectado - Monitorando em tempo real";
-            status.className = "status connected";
+            // Processar alerta de tempo real
+            if (foundRealtimeAlert && foundRealtimeAlert.limit) {
+                alertLimit = foundRealtimeAlert.limit;
+                console.log("Limit do alerta de consumo em tempo real:", alertLimit);
+                updateBar(currentPowerValue, alertLimit);
+                
+                status.textContent = "✓ Conectado - Monitorando em tempo real";
+                status.className = "status connected";
+            } else {
+                console.log("Nenhum alerta de 'Consumo em tempo real' encontrado");
+                alertLimit = 100;
+                updateBar(currentPowerValue, alertLimit);
+                
+                status.textContent = "⚠ Nenhum alerta de consumo em tempo real cadastrado - Usando limite padrão (100W)";
+                status.className = "status error";
+            }
+            
+            // Processar alerta de consumo total
+            if (foundTotalAlert && foundTotalAlert.limit) {
+                monthlyLimit = foundTotalAlert.limit;
+                console.log("Limit do alerta de consumo total:", monthlyLimit);
+                updateMonthlyBar(currentMonthlyValue, monthlyLimit);
+            } else {
+                console.log("Nenhum alerta de 'Consumo Total' encontrado - Usando limite padrão (500W)");
+                monthlyLimit = 400;
+                updateMonthlyBar(currentMonthlyValue, monthlyLimit);
+            }
         } else {
-            console.log("Nenhum alerta encontrado, usando limite padrão");
+            console.log("Nenhum alerta encontrado no banco");
             alertLimit = 100;
-            status.textContent = "⚠ Nenhum alerta cadastrado - Usando limite padrão (100W)";
+            monthlyLimit = 400;
+            updateBar(currentPowerValue, alertLimit);
+            updateMonthlyBar(currentMonthlyValue, monthlyLimit);
+            
+            status.textContent = "⚠ Nenhum alerta cadastrado - Usando limites padrão";
             status.className = "status error";
         }
     }, (error) => {
-        console.error("Erro ao buscar limit:", error);
+        console.error("Erro ao buscar alertas:", error);
+        alertLimit = 100;
+        monthlyLimit = 300;
+        updateBar(currentPowerValue, alertLimit);
+        updateMonthlyBar(currentMonthlyValue, monthlyLimit);
+        
         status.textContent = "✗ Erro ao conectar: " + error.message;
         status.className = "status error";
     });
 }
 
-// Monitorar potência instantânea - MODIFICADO para somar S1 e S2
+// Monitorar potência instantânea
 function monitorPower() {
     const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
     const s2Ref = database.ref(`users/${USER_ID}/esp32/s2/potencia`);
@@ -216,7 +302,7 @@ function monitorPower() {
     // Monitorar S1
     s1Ref.on('value', (snapshot) => {
         s1Power = snapshot.val() || 0;
-        currentPowerValue = s1Power + s2Power; // Soma das potências
+        currentPowerValue = s1Power + s2Power;
         console.log("S1:", s1Power, "| S2:", s2Power, "| Total:", currentPowerValue);
         updateBar(currentPowerValue, alertLimit);
     }, (error) => {
@@ -228,7 +314,7 @@ function monitorPower() {
     // Monitorar S2
     s2Ref.on('value', (snapshot) => {
         s2Power = snapshot.val() || 0;
-        currentPowerValue = s1Power + s2Power; // Soma das potências
+        currentPowerValue = s1Power + s2Power;
         console.log("S1:", s1Power, "| S2:", s2Power, "| Total:", currentPowerValue);
         updateBar(currentPowerValue, alertLimit);
     }, (error) => {
@@ -238,12 +324,40 @@ function monitorPower() {
     });
 }
 
-// Iniciar monitoramento
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("Iniciando monitoramento...");
-    getAlertLimit();
-    monitorPower();
-});
+// Monitorar consumo mensal acumulado
+function monitorMonthlyConsumption() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Formato: 01, 02, etc.
+    const monthKey = `${year}-${month}`;
+    
+    const monthlyRef = database.ref(`users/${USER_ID}/esp32/estatisticas/mensal/${monthKey}`);
+    
+    monthlyRef.on('value', (snapshot) => {
+        currentMonthlyValue = snapshot.val() || 0;
+        console.log("Consumo mensal acumulado:", currentMonthlyValue);
+        updateMonthlyBar(currentMonthlyValue, monthlyLimit);
+    }, (error) => {
+        console.error("Erro ao monitorar consumo mensal:", error);
+    });
+}
+
+//================================================================================================
+
+//================================================================================================
+
+
+//================================================================================================
+
+
+
+
+
+
+
+
+
+
 // Chamar a função
 
 // Função para carregar dispositivos do Firebase - MODIFICADA
@@ -706,4 +820,13 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.warn('Botão de logout não encontrado no DOM');
     }
+});
+
+
+// Iniciar monitoramento
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Iniciando monitoramento...");
+    getAlertLimit();
+    monitorPower();
+    monitorMonthlyConsumption(); 
 });
