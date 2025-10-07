@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alertas - Power Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+
+<body class="bg-[#0a0a0a] text-white font-sans p-8">
+  <!-- Sidebar -->
+  <div class="fixed left-0 top-0 w-20 hover:w-64 h-full bg-[#1a1a1a] border-r border-[#333] z-50 transition-all duration-300 ease-in-out group">
+    <div class="p-4">
+      <div class="flex items-center gap-3 mb-8">
+        <a href="index.html" class="w-10 h-10"><img src="img/iconsemfundo.png" alt="Logo" /></a>
+        <a href="index.html" class="font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Power Manager</a>
+      </div>
+      <nav>
+        <ul class="space-y-4">
+          <li><a href="dashboard.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-[#00ff2a] hover:bg-green-500/10 rounded-lg transition-all">Dashboard</a></li>
+          <li><a href="relatorio.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-[#00ff2a] hover:bg-green-500/10 rounded-lg transition-all">Relatórios</a></li>
+          <li><a href="alertas.html" class="flex items-center py-3 px-2 text-[#00ff2a] bg-green-500/10 border-2 border-[#00ff2a] rounded-lg">Alertas</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="ml-20 h-screen overflow-y-auto px-6">
+    <div class="flex justify-between items-center mt-6">
+      <h1 class="text-3xl font-bold text-[#00ff2a]">Gerenciar Alertas</h1>
+      <button class="bg-[#00ff2a] text-black px-4 py-2 rounded-xl hover:bg-green-400 transition" onclick="openAlertModal()">+ Criar Alerta</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="alertModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
+      <div class="bg-[#1e1e1e] p-6 rounded-2xl w-full max-w-md shadow-lg border border-[#333]">
+        <h2 id="alertModalTitle" class="text-2xl font-bold text-white mb-4">Criar Alerta</h2>
+        <div class="flex flex-col gap-3">
+          <input id="alertName" type="text" placeholder="Nome do alerta" class="p-2 rounded bg-[#1a1a1a] text-white outline-none border border-[#333]">
+          <input id="alertLimit" type="number" placeholder="Limite (kWh)" class="p-2 rounded bg-[#1a1a1a] text-white outline-none border border-[#333]">
+          <select id="alertType" class="p-2 rounded bg-[#1a1a1a] text-white outline-none border border-[#333]">
+            <option value="Consumo em tempo real">Tempo Real</option>
+            <option value="Consumo Total">Total</option>
+          </select>
+          <button id="saveAlertBtn" class="bg-[#00ff2a] text-black px-4 py-2 rounded-xl hover:bg-green-400 transition" onclick="saveAlert()">Salvar</button>
+          <button class="text-gray-400 hover:text-white mt-2" onclick="closeAlertModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="mt-10">
+      <h3 class="text-2xl font-semibold text-[#00ff2a] mb-4">Alertas Criados</h3>
+      <div id="alertsContainer" class="flex flex-col gap-3"></div>
+    </div>
+  </div>
+
+  <!-- ========================= SCRIPT ========================= -->
+  <script>
+    // ====== CONFIG FIREBASE ======
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTPR8X4dRg5fZu_PTj0hwud3bfHtky1S4",
+      authDomain: "powermanager-988cc.firebaseapp.com",
+      databaseURL: "https://powermanager-988cc-default-rtdb.firebaseio.com",
+      projectId: "powermanager-988cc",
+      storageBucket: "powermanager-988cc.appspot.com",
+      messagingSenderId: "SEU_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    
+    // UID FIXO - Sempre usará este usuário
+    const uid = "VXOUd3jgCPTdGZrutzn6Sp9tlGO2";
+    
+    const alertsContainer = document.getElementById("alertsContainer");
+    let currentEditId = null;
+    let currentAlerts = {};
+
+    
+    // === MODAL ===
+    function openAlertModal(editId = null) {
+      const modal = document.getElementById("alertModal");
+      const title = document.getElementById("alertModalTitle");
+      const saveBtn = document.getElementById("saveAlertBtn");
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+
+      if (editId) {
+        currentEditId = editId;
+        title.textContent = "Editar Alerta";
+        saveBtn.textContent = "Salvar Alterações";
+        loadAlertData(editId);
+      } else {
+        currentEditId = null;
+        title.textContent = "Criar Alerta";
+        saveBtn.textContent = "Salvar";
+        document.getElementById("alertName").value = "";
+        document.getElementById("alertLimit").value = "";
+        document.getElementById("alertType").value = "Consumo em tempo real";
+      }
+    }
+
+    function closeAlertModal() {
+      document.getElementById("alertModal").classList.add("hidden");
+      document.getElementById("alertModal").classList.remove("flex");
+    }
+
+    // === SALVAR ===
+    function saveAlert() {
+      const name = document.getElementById("alertName").value.trim();
+      const limit = parseFloat(document.getElementById("alertLimit").value);
+      const type = document.getElementById("alertType").value;
+
+      if (!name || isNaN(limit)) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+
+      const data = { name, limit, type, timestamp: Date.now() };
+      const ref = firebase.database().ref(`users/${uid}/alerts`);
+
+      if (currentEditId) {
+        // Ao editar, verificar se mudou o tipo
+        const currentAlert = currentAlerts[currentEditId];
+        if (currentAlert && currentAlert.type !== type) {
+          // Verificar se já existe outro alerta com o novo tipo
+          const existingType = Object.entries(currentAlerts).find(
+            ([id, a]) => a.type === type && id !== currentEditId
+          );
+          
+          if (existingType) {
+            alert(`Já existe um alerta do tipo "${type}". Você só pode ter um alerta de cada tipo.`);
+            return;
+          }
+        }
+        
+        ref.child(currentEditId)
+          .update(data)
+          .then(() => {
+            closeAlertModal();
+            console.log("✅ Alerta atualizado");
+          })
+          .catch(err => console.error("Erro ao atualizar:", err));
+      } else {
+        // Verificar se já existe alerta do mesmo tipo
+        const existingType = Object.values(currentAlerts).find(a => a.type === type);
+        
+        if (existingType) {
+          alert(`Já existe um alerta do tipo "${type}". Você só pode ter um alerta de cada tipo.`);
+          return;
+        }
+        
+        ref
+          .push(data)
+          .then(() => {
+            closeAlertModal();
+            console.log("✅ Alerta criado");
+          })
+          .catch(err => console.error("Erro ao criar:", err));
+      }
+    }
+
+    // === LISTAR ===
+    function loadAlerts() {
+      const ref = firebase.database().ref(`users/${uid}/alerts`);
+      ref.on("value", snap => {
+        currentAlerts = snap.val() || {};
+        renderAlerts(currentAlerts);
+      });
+    }
+
+    function renderAlerts(alerts) {
+      alertsContainer.innerHTML = "";
+      const keys = Object.keys(alerts);
+      if (keys.length === 0) {
+        alertsContainer.innerHTML = `<p class="text-gray-400">Nenhum alerta criado ainda.</p>`;
+        return;
+      }
+
+      keys.forEach(id => {
+        const a = alerts[id];
+        const color = a.type === "Consumo em tempo real" ? "text-yellow-400" : "text-blue-400";
+        const date = new Date(a.timestamp).toLocaleString();
+
+        alertsContainer.innerHTML += `
+          <div class="flex justify-between items-center bg-[#1e1e1e] border border-[#333] p-4 rounded-xl">
+            <div>
+              <p class="font-semibold">${a.name}</p>
+              <p class="text-sm text-gray-400">Limite: ${a.limit} kWh • Tipo: <span class="${color}">${a.type}</span></p>
+              <p class="text-xs text-gray-500">Criado em: ${date}</p>
+            </div>
+            <div class="flex gap-3">
+              <button onclick="openAlertModal('${id}')" class="text-yellow-400 hover:text-yellow-300">✏️</button>
+              <button onclick="deleteAlert('${id}')" class="text-red-500 hover:text-red-400">🗑️</button>
+            </div>
+          </div>`;
+      });
+    }
+
+    // === CARREGAR PARA EDIÇÃO ===
+    function loadAlertData(id) {
+      firebase.database().ref(`users/${uid}/alerts/${id}`).once("value").then(snap => {
+        const a = snap.val();
+        if (a) {
+          document.getElementById("alertName").value = a.name;
+          document.getElementById("alertLimit").value = a.limit;
+          document.getElementById("alertType").value = a.type;
+        }
+      });
+    }
+
+    // === EXCLUIR ===
+    function deleteAlert(id) {
+      if (confirm("Deseja realmente excluir este alerta?")) {
+        firebase.database().ref(`users/${uid}/alerts/${id}`).remove();
+      }
+    }
+
+    // === CARREGAR ALERTAS AO INICIAR ===
+    loadAlerts();
+    console.log("🔓 Usando UID fixo:", uid);
+  </script>
+</body>
+</html>

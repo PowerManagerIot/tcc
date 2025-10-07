@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <button class="login-btn" onclick="irParaLogin()">Entrar</button>
+        <button class="login-btn" id="btnEntrar">Entrar</button>
     </div>
 
     <!-- Conteúdo principal -->
@@ -37,7 +37,7 @@
                     <div class="error-message">Por favor, insira seu nome completo</div>
                 </div>
                 <div class="navigation">
-                    <button class="btn btn-primary" onclick="nextStep()">Próximo</button>
+                    <button class="btn btn-primary" id="btnNext1">Próximo</button>
                 </div>
             </div>
 
@@ -49,8 +49,8 @@
                     <div class="error-message">Por favor, insira um e-mail válido</div>
                 </div>
                 <div class="navigation">
-                    <button class="btn btn-secondary" onclick="prevStep()">Voltar</button>
-                    <button class="btn btn-primary" onclick="nextStep()">Próximo</button>
+                    <button class="btn btn-secondary" id="btnPrev2">Voltar</button>
+                    <button class="btn btn-primary" id="btnNext2">Próximo</button>
                 </div>
             </div>
 
@@ -62,8 +62,8 @@
                     <div class="error-message">Por favor, insira um telefone válido</div>
                 </div>
                 <div class="navigation">
-                    <button class="btn btn-secondary" onclick="prevStep()">Voltar</button>
-                    <button class="btn btn-primary" onclick="nextStep()">Próximo</button>
+                    <button class="btn btn-secondary" id="btnPrev3">Voltar</button>
+                    <button class="btn btn-primary" id="btnNext3">Próximo</button>
                 </div>
             </div>
 
@@ -81,8 +81,8 @@
                     </div>
                 </div>
                 <div class="navigation">
-                    <button class="btn btn-secondary" onclick="prevStep()">Voltar</button>
-                    <button class="btn btn-primary" onclick="finalizarCadastro()">Criar Conta</button>
+                    <button class="btn btn-secondary" id="btnPrev4">Voltar</button>
+                    <button class="btn btn-primary" id="btnCriarConta">Criar Conta</button>
                 </div>
             </div>
 
@@ -91,12 +91,75 @@
                 <div class="success-message">
                     <div class="success-text">Conta criada com sucesso!</div>
                     <div class="success-subtext">Bem-vindo ao PowerManager!</div>
-                    <button class="btn btn-primary" onclick="irParaLogin()">Fazer Login</button>
+                    <button class="btn btn-primary" id="btnFazerLogin">Fazer Login</button>
+                </div>
+            </div>
+
+            <!-- Etapa de Loading -->
+            <div class="step" id="stepLoading">
+                <div class="loading-message">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Criando sua conta...</div>
+                </div>
+            </div>
+
+            <!-- Etapa de Erro -->
+            <div class="step" id="stepError">
+                <div class="error-display">
+                    <div class="error-text">Ops! Algo deu errado</div>
+                    <div class="error-detail" id="errorDetail"></div>
+                    <button class="btn btn-primary" id="btnTentarNovamente">Tentar Novamente</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="scriptcd.js"></script>
+    <!-- Script principal com Firebase -->
+    <script type="module" src="scriptcd.js"></script>
+
+    <!-- Estilos adicionais para loading e erro -->
+    <style>
+        .loading-message {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .error-display {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .error-text {
+            font-size: 24px;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+
+        .error-detail {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
 </body>
 </html>

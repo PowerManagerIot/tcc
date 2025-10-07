@@ -36,7 +36,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
+                        <a href="alerta.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-bell-ringing"></i></span>
                             <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Alertas</span>
                         </a>
@@ -48,9 +48,44 @@
 
     <div class="ml-20 h-screen transition-all duration-300 ease-in-out">
 
-        <div class="mb-8">            
-            <div class="fixed top-8 right-8 border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2 connection-status register-btn" id="connectionStatus">
-                <i class="ph ph-plus"></i><span class="text-sm">Crie uma automação</span>
+        <div class="mb-8">
+            <button onclick="openLocationModal()">            
+                <div class="fixed top-8 right-8 border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2 connection-status register-btn" id="connectionStatus">
+                    <i class="ph ph-plus"></i><span class="text-sm">Crie um alerta</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Modal para Adicionar Local -->
+        <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-70 modal-backdrop hidden z-50 flex items-center justify-center">
+            <div class="bg-bg-card border border-border-dark rounded-xl p-6 w-full max-w-md mx-4 transform transition-all">
+                <h2 class="text-xl font-semibold text-accent-green mb-6">Crie um alerta</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Nome do Alerta</label>
+                        <input type="text" id="locationName" placeholder="Ex: Alto consumo!" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Tipo do Alerta (R$)</label>
+                        <input type="number" id="locationCost" placeholder="Ex: Notificação ou Automação" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Valor para disparo (kW)</label>
+                        <input type="number" id="locationConsumption" placeholder="Ex: 18000" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button onclick="closeLocationModal()" class="flex-1 px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg hover:bg-red-500/10 hover:border-accent-red transition-all">
+                        Cancelar
+                    </button>
+                    <button onclick="addLocation()" class="flex-1 px-4 py-2 bg-accent-green text-black rounded-lg font-semibold hover:bg-green-400 transition-all">
+                        Criar
+                    </button>
+                </div>
             </div>
         </div>
     

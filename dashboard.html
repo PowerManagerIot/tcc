@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -65,7 +65,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
+                        <a href="alerta.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-bell-ringing"></i></span>
                             <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Alertas</span>
                         </a>
@@ -282,35 +282,6 @@
                         </div>
                     </div>
                 </div>                
-
-                <!-- Right Column - Bar Chart -->
-                <!--<div class="lg:col-span-2">
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6 h-full">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold">Gráfico de Consumo</h3>
-                            <div class="flex gap-2">
-                                <button class="px-3 py-1 text-sm border border-border-dark rounded text-gray-400 hover:bg-accent-green hover:text-black transition-all">Dia</button>
-                                <button class="px-3 py-1 text-sm border border-border-dark rounded text-gray-400 hover:bg-accent-green hover:text-black transition-all">Semana</button>
-                                <button class="px-3 py-1 text-sm bg-accent-green text-black rounded">Mês</button>
-                            </div>
-                        </div>
-                        <div class="h-80 flex items-end justify-between px-4">
-                            Simulated Bar Chart 
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 20%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 40%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 30%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 60%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 80%"></div>
-                            <div class="w-8 bg-accent-green rounded-t" style="height: 100%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 45%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 25%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 35%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 70%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 55%"></div>
-                            <div class="w-8 bg-gray-600 rounded-t" style="height: 15%"></div>
-                        </div>
-                    </div>
-                </div> -->
             </div>
 
             <!-- Stats Grid -->
@@ -342,17 +313,10 @@
 
 
                 <h2 class="text-2xl font-semibold text-accent-green mb-4">Power Manager IoT</h2>
-                <p class="text-gray-400 mb-8">Monitoramento em tempo real do dispositivo ESP32</p>
+                <p class="text-gray-400 mb-8">Monitoramento em tempo real da rede</p>
 
 
-                <!-- Login Form -->
-                <div class="login-form" id="loginForm">
-                    <h3>Autenticação Requerida</h3>
-                    <input type="email" id="email" placeholder="Email" value="powermanageriot@gmail.com">
-                    <input type="password" id="password" placeholder="Senha" value="pmiot12*">
-                    <button id="loginBtn">Entrar</button>
-                    <div id="loginStatus"></div>
-                </div>
+                
 
                 <!-- Sensor Value Card -->
                 <div id="mainContent" style="display: none;">
@@ -360,8 +324,21 @@
                         <h2>Consumo em tempo real</h2>
                         <div class="value" id="currentValue">--</div>
                         <div class="timestamp" id="lastUpdate">Última atualização: --</div>
+                        <div class="bar-container">
+                            <div class="bar-info">
+                                <span class="bar-label">Potência Instantânea</span>
+                                <span class="bar-values">
+                                    <span id="currentPower">--</span> W / <span id="limitPower">--</span> W
+                                </span>
+                            </div>
+                            <div class="bar-bg">
+                                <div class="bar-fill" id="powerBar">
+                                    <span id="percentage">0%</span>
+                                </div>
+                            </div>
+                     </div>
+                </div>
                     </div>
-                    
                     <button class="add-device-btn" id="addDeviceBtn">+ Adicionar Dispositivo</button>
                     <div class="smart-devices-limit" id="smartDevicesLimit">
                         Dispositivos inteligentes: 0/8 (máximo permitido)

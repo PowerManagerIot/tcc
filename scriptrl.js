@@ -250,3 +250,5 @@ tailwind.config = {
                 closeLocationModal();
             }
         });
+
+        
