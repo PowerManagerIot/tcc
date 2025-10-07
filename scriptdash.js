@@ -96,88 +96,105 @@ function startDataMonitoring() {
 }
 
 const powerBar = document.getElementById('powerBar');
-        const percentage = document.getElementById('percentage');
-        const currentPower = document.getElementById('currentPower');
-        const limitPower = document.getElementById('limitPower');
-        const status = document.getElementById('status');
+const percentage = document.getElementById('percentage');
+const currentPower = document.getElementById('currentPower');
+const limitPower = document.getElementById('limitPower');
+const status = document.getElementById('status');
 
-        let alertLimit = 100; // Valor padrão
-        let currentPowerValue = 0;
+let alertLimit = 100; // Valor padrão
+let currentPowerValue = 0;
+let s1Power = 0; // Potência do sensor 1
+let s2Power = 0; // Potência do sensor 2
 
-        // Função para atualizar a barra
-        function updateBar(current, limit) {
-            const percent = (current / limit) * 100;
-            const displayPercent = Math.min(percent, 100); // Limita a barra visualmente a 100%
+// Função para atualizar a barra
+function updateBar(current, limit) {
+    const percent = (current / limit) * 100;
+    const displayPercent = Math.min(percent, 100); // Limita a barra visualmente a 100%
+    
+    powerBar.style.width = displayPercent + '%';
+    percentage.textContent = percent.toFixed(1) + '%'; // Mostra porcentagem real, mesmo acima de 100%
+    currentPower.textContent = current.toFixed(2);
+    limitPower.textContent = limit;
+    
+    // Remover todas as classes
+    powerBar.classList.remove('warning', 'danger', 'full');
+    
+    // Adicionar classe baseada na porcentagem
+    if (percent >= 100) {
+        powerBar.classList.add('full');
+    } else if (percent >= 80) {
+        powerBar.classList.add('danger');
+    } else if (percent >= 60) {
+        powerBar.classList.add('warning');
+    }
+}
+
+// Buscar o limit do alerta
+function getAlertLimit() {
+    const alertsRef = database.ref(`users/${USER_ID}/alerts`);
+    
+    alertsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        if (data) {
+            // Pegar o primeiro alerta e seu limit
+            const firstAlertKey = Object.keys(data)[0];
+            alertLimit = data[firstAlertKey].limit;
             
-            powerBar.style.width = displayPercent + '%';
-            percentage.textContent = percent.toFixed(1) + '%'; // Mostra porcentagem real, mesmo acima de 100%
-            currentPower.textContent = current;
-            limitPower.textContent = limit;
+            console.log("Limit do alerta:", alertLimit);
+            updateBar(currentPowerValue, alertLimit);
             
-            // Remover todas as classes
-            powerBar.classList.remove('warning', 'danger', 'full');
-            
-            // Adicionar classe baseada na porcentagem
-            if (percent >= 100) {
-                powerBar.classList.add('full');
-            } else if (percent >= 80) {
-                powerBar.classList.add('danger');
-            } else if (percent >= 60) {
-                powerBar.classList.add('warning');
-            }
+            status.textContent = "✓ Conectado - Monitorando em tempo real";
+            status.className = "status connected";
+        } else {
+            console.log("Nenhum alerta encontrado, usando limite padrão");
+            alertLimit = 100;
+            status.textContent = "⚠ Nenhum alerta cadastrado - Usando limite padrão (100W)";
+            status.className = "status error";
         }
+    }, (error) => {
+        console.error("Erro ao buscar limit:", error);
+        status.textContent = "✗ Erro ao conectar: " + error.message;
+        status.className = "status error";
+    });
+}
 
-        // Buscar o limit do alerta
-        function getAlertLimit() {
-            const alertsRef = database.ref(`users/${USER_ID}/alerts`);
-            
-            alertsRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                
-                if (data) {
-                    // Pegar o primeiro alerta e seu limit
-                    const firstAlertKey = Object.keys(data)[0];
-                    alertLimit = data[firstAlertKey].limit;
-                    
-                    console.log("Limit do alerta:", alertLimit);
-                    updateBar(currentPowerValue, alertLimit);
-                    
-                    status.textContent = "✓ Conectado - Monitorando em tempo real";
-                    status.className = "status connected";
-                } else {
-                    console.log("Nenhum alerta encontrado, usando limite padrão");
-                    alertLimit = 100;
-                    status.textContent = "⚠ Nenhum alerta cadastrado - Usando limite padrão (100W)";
-                    status.className = "status error";
-                }
-            }, (error) => {
-                console.error("Erro ao buscar limit:", error);
-                status.textContent = "✗ Erro ao conectar: " + error.message;
-                status.className = "status error";
-            });
-        }
+// Monitorar potência instantânea - MODIFICADO para somar S1 e S2
+function monitorPower() {
+    const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
+    const s2Ref = database.ref(`users/${USER_ID}/esp32/s2/potencia`);
+    
+    // Monitorar S1
+    s1Ref.on('value', (snapshot) => {
+        s1Power = snapshot.val() || 0;
+        currentPowerValue = s1Power + s2Power; // Soma das potências
+        console.log("S1:", s1Power, "| S2:", s2Power, "| Total:", currentPowerValue);
+        updateBar(currentPowerValue, alertLimit);
+    }, (error) => {
+        console.error("Erro ao monitorar S1:", error);
+        status.textContent = "✗ Erro na leitura de S1";
+        status.className = "status error";
+    });
+    
+    // Monitorar S2
+    s2Ref.on('value', (snapshot) => {
+        s2Power = snapshot.val() || 0;
+        currentPowerValue = s1Power + s2Power; // Soma das potências
+        console.log("S1:", s1Power, "| S2:", s2Power, "| Total:", currentPowerValue);
+        updateBar(currentPowerValue, alertLimit);
+    }, (error) => {
+        console.error("Erro ao monitorar S2:", error);
+        status.textContent = "✗ Erro na leitura de S2";
+        status.className = "status error";
+    });
+}
 
-        // Monitorar potência instantânea
-        function monitorPower() {
-            const powerRef = database.ref(`users/${USER_ID}/esp32/potencia_instantanea`);
-            
-            powerRef.on('value', (snapshot) => {
-                currentPowerValue = snapshot.val() || 0;
-                console.log("Potência atual:", currentPowerValue);
-                updateBar(currentPowerValue, alertLimit);
-            }, (error) => {
-                console.error("Erro ao monitorar potência:", error);
-                status.textContent = "✗ Erro na leitura de potência";
-                status.className = "status error";
-            });
-        }
-
-        // Iniciar monitoramento
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("Iniciando monitoramento...");
-            getAlertLimit();
-            monitorPower();
-        });
+// Iniciar monitoramento
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Iniciando monitoramento...");
+    getAlertLimit();
+    monitorPower();
+});
 
 // Chamar a função
 
