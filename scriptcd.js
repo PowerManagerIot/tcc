@@ -131,20 +131,7 @@ function prevStep() {
 }
 
 // =====================================================
-// FUNÇÃO PARA GERAR ID ALEATÓRIO
-// =====================================================
-function generateRandomUserId() {
-    // Gera um ID aleatório similar ao formato do Firebase
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 28; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
-
-// =====================================================
-// FUNÇÃO PRINCIPAL - CRIAR USUÁRIO NO FIREBASE
+// FUNÇÃO PRINCIPAL - CRIAR USUÁRIO NO FIREBASE (CORRIGIDA)
 // =====================================================
 async function criarUsuarioFirebase(dadosUsuario) {
     try {
@@ -162,13 +149,12 @@ async function criarUsuarioFirebase(dadosUsuario) {
             displayName: dadosUsuario.nome
         });
         
-        // Gerar ID aleatório único
-        const userId = generateRandomUserId();
+        // ✅ CORREÇÃO: Usar o UID do Firebase Auth como chave principal
+        // Agora userId e uid terão o MESMO valor
+        const userId = user.uid;
         
         // Preparar dados do perfil (sem incluir a senha)
         const profileData = {
-            userId: userId,
-            uid: user.uid, // UID do Firebase Auth
             nome: dadosUsuario.nome,
             email: dadosUsuario.email,
             telefone: dadosUsuario.telefone,
@@ -176,14 +162,14 @@ async function criarUsuarioFirebase(dadosUsuario) {
             ativo: true
         };
         
-        // Salvar no Realtime Database no caminho especificado
+        // Salvar no Realtime Database usando o UID do Auth como chave
+        // Estrutura: users/{uid}/profile
         await set(ref(database, `users/${userId}/profile`), profileData);
         
-        console.log('Usuário criado com sucesso:', userId);
-        return { success: true, userId: userId, authId: user.uid };
+        console.log('Usuário criado com sucesso. UID:', userId);
+        return { success: true, userId: userId };
         
     } catch (error) {
-        // ========== INÍCIO DO TRATAMENTO DE ERROS ==========
         console.error('Erro ao criar usuário:', error);
         
         // Tratar erros específicos do Firebase
@@ -205,7 +191,6 @@ async function criarUsuarioFirebase(dadosUsuario) {
         }
         
         return { success: false, error: mensagemErro };
-        // ========== FIM DO TRATAMENTO DE ERROS ==========
     }
 }
 
@@ -234,9 +219,11 @@ async function finalizarCadastro() {
         const resultado = await criarUsuarioFirebase(dadosUsuario);
         
         if (resultado.success) {
-            // Salvar ID do usuário no localStorage para uso futuro
-            localStorage.setItem('currentUserId', resultado.userId);
-            localStorage.setItem('currentUserAuthId', resultado.authId);
+            // Salvar ID do usuário no localStorage
+            localStorage.setItem('userId', resultado.userId);
+            localStorage.setItem('userEmail', dadosUsuario.email);
+            localStorage.setItem('userName', dadosUsuario.nome);
+            localStorage.setItem('isLoggedIn', 'true');
             
             // Mostrar tela de sucesso
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
@@ -253,12 +240,10 @@ async function finalizarCadastro() {
             document.getElementById('confirmarSenha').value = '';
             
         } else {
-            // ========== INÍCIO DO TRATAMENTO DE ERRO NA UI ==========
             // Mostrar erro
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById('stepError').classList.add('active');
             document.getElementById('errorDetail').textContent = resultado.error;
-            // ========== FIM DO TRATAMENTO DE ERRO NA UI ==========
             
             // Reabilitar botão
             btnCriarConta.disabled = false;
@@ -333,7 +318,6 @@ document.addEventListener('keypress', function(e) {
 // VERIFICAÇÃO DO FIREBASE
 // =====================================================
 window.addEventListener('load', function() {
-    // ========== INÍCIO DA VERIFICAÇÃO DE ERRO ==========
     setTimeout(() => {
         if (!auth || !database) {
             console.error('Firebase não foi carregado corretamente. Verifique sua configuração.');
@@ -342,7 +326,6 @@ window.addEventListener('load', function() {
             console.log('Firebase carregado com sucesso!');
         }
     }, 2000);
-    // ========== FIM DA VERIFICAÇÃO DE ERRO ==========
 });
 
 // Inicializar progress bar

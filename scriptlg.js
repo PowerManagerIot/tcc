@@ -331,6 +331,8 @@ async function loginComApple() {
 }
 
 // Redirecionar para cadastro
+window.irParaCadastro = irParaCadastro;
+
 function irParaCadastro() {
     window.location.href = 'cadastro.html';
 }
