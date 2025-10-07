@@ -16,14 +16,14 @@
 #define USER_PASSWORD "pmiot12*"
 
 // Pinos dos relés
-#define RELAY_PIN_1 15   
-#define RELAY_PIN_2 2   
-#define RELAY_PIN_3 4
-#define RELAY_PIN_4 16
-#define RELAY_PIN_5 13
-#define RELAY_PIN_6 12
-#define RELAY_PIN_7 14
-#define RELAY_PIN_8 27
+#define RELAY_PIN_1 13   
+#define RELAY_PIN_2 12
+#define RELAY_PIN_3 14
+#define RELAY_PIN_4 27
+#define RELAY_PIN_5 2
+#define RELAY_PIN_6 4
+#define RELAY_PIN_7 5
+#define RELAY_PIN_8 18
 
 
 // Objetos Firebase
