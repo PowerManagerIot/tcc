@@ -77,20 +77,40 @@ function updateSmartDevicesCounter() {
 
 // Função para iniciar monitoramento dos dados - MODIFICADA
 function startDataMonitoring() {
-    // Usar USER_ID fixo em vez de auth.currentUser
-    const valueRef = database.ref(`users/${USER_ID}/esp32/potencia_instantanea`);
+    // Monitorar S1 e S2 para consumo em tempo real
+    const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
+    const s2Ref = database.ref(`users/${USER_ID}/esp32/s2/potencia`);
     
-    valueRef.on('value', (snapshot) => {
-        const value = snapshot.val();
-        currentValue.textContent = value || '--';
-
+    let s1Value = 0;
+    let s2Value = 0;
+    
+    // Função para atualizar o display com a soma
+    function updateCurrentValue() {
+        const totalValue = s1Value + s2Value;
+        currentValue.textContent = totalValue.toFixed(2);
+        
         const now = new Date();
         lastUpdate.textContent = `Última atualização: ${formatDateTime(now)}`;
-
+        
         connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
         connectionStatus.className = "status connected";
+    }
+    
+    // Monitorar S1
+    s1Ref.on('value', (snapshot) => {
+        s1Value = snapshot.val() || 0;
+        updateCurrentValue();
     }, (error) => {
-        connectionStatus.textContent = "Erro na leitura: " + error.message;
+        connectionStatus.textContent = "Erro na leitura S1: " + error.message;
+        connectionStatus.className = "status disconnected";
+    });
+    
+    // Monitorar S2
+    s2Ref.on('value', (snapshot) => {
+        s2Value = snapshot.val() || 0;
+        updateCurrentValue();
+    }, (error) => {
+        connectionStatus.textContent = "Erro na leitura S2: " + error.message;
         connectionStatus.className = "status disconnected";
     });
 }
@@ -195,7 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
     getAlertLimit();
     monitorPower();
 });
-
 // Chamar a função
 
 // Função para carregar dispositivos do Firebase - MODIFICADA
