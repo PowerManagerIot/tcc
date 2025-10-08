@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -84,11 +84,6 @@
                 <h1 class="text-3xl font-semibold text-accent-green mb-4">Consumo de energia</h1>
                 
                 <!-- Connection Status -->
-                <div class="fixed top-8 right-8 bg-bg-card border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2">
-                    <div class="w-2 h-2 bg-accent-green rounded-full animate-pulse"></div>
-                    <span class="text-sm">Conectado ao Firebase</span>
-                </div>
-
                 <div class="fixed top-8 right-8 bg-bg-card border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2 connection-status" id="connectionStatus">
                     <div class="text-sm text-gray-400 mb-2 w-2 h-2 bg-accent-green rounded-full animate-pulse status-dot" id="statusDot"></div>
                     <span class="text-sm">Conectando ao Firebase...</span>
@@ -147,6 +142,11 @@
                         <div>
                             <label class="block text-sm text-gray-400 mb-2">Consumo (kWh)</label>
                             <input type="number" id="locationConsumption" placeholder="Ex: 18000" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Emissão de CO₂ (kg)</label>
+                            <input type="number" id="locationEmission" placeholder="Ex: 230" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
                         </div>
                     </div>
                     
@@ -207,7 +207,7 @@
 
                 <!--Coluna 2-->
                 <div class="lg:col-span-1 space-y-8">
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6" data-device="ar-cond">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-semibold">Ar-Condicionado</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
@@ -220,12 +220,12 @@
                                             stroke-dasharray="351" stroke-dashoffset="112" stroke-linecap="round"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-yellow">R$ 6,30</div>
+                            <div class="text-2xl font-bold text-accent-yellow cost-value">R$ 3,20</div>
                             <div class="text-sm text-gray-400">4 kWh</div>
                         </div>
                     </div>
 
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6" data-device="lampada">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-semibold">Lâmpada do Quarto</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
@@ -238,7 +238,7 @@
                                             stroke-dasharray="351" stroke-dashoffset="309" stroke-linecap="round"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-green">R$ 0,27</div>
+                            <div class="text-2xl font-bold text-accent-green cost-value">R$ 0,48</div>
                             <div class="text-sm text-gray-400">0.60 kWh</div>
                         </div>
                     </div>
@@ -246,7 +246,7 @@
 
                 <!--Coluna 3-->
                 <div class="lg:col-span-1 space-y-8">
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6" data-device="ventilador">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-semibold">Ventilador</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
@@ -259,12 +259,12 @@
                                             stroke-dasharray="351" stroke-dashoffset="280" stroke-linecap="round"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-green">R$ 0,45</div>
+                            <div class="text-2xl font-bold text-accent-green cost-value">R$ 0,80</div>
                             <div class="text-sm text-gray-400">1 kWh</div>
                         </div>
                     </div>
 
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-6" data-device="chuveiro">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-semibold">Chuveiro</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
@@ -277,7 +277,7 @@
                                             stroke-dasharray="351" stroke-dashoffset="85" stroke-linecap="round"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-red">R$ 8,43</div>
+                            <div class="text-2xl font-bold text-accent-red cost-value">R$ 4,64</div>
                             <div class="text-sm text-gray-400">5.8 kWh</div>
                         </div>
                     </div>
@@ -308,15 +308,10 @@
             </div>
 
 
-            <!-- IoT Section - Não mexer nessa sessão -->
+            <!-- IoT Section -->
             <div class="mt-12">
-
-
                 <h2 class="text-2xl font-semibold text-accent-green mb-4">Power Manager IoT</h2>
                 <p class="text-gray-400 mb-8">Monitoramento em tempo real da rede</p>
-
-
-                
 
                 <!-- Sensor Value Card -->
                 <div id="mainContent" style="display: none;">
@@ -361,14 +356,15 @@
 
                     </div>
                 </div>
+                
                 <button class="add-device-btn" id="addDeviceBtn">+ Adicionar Dispositivo</button>
+                <button class="add-device-btn" id="energyPriceBtn" onclick="openEnergyPriceModal()" style="background: linear-gradient(135deg, #eeea10 0%, #d4d010 100%); margin-left: 10px;">⚡ Preço da Energia</button>
                 <div class="smart-devices-limit" id="smartDevicesLimit">
                     Dispositivos inteligentes: 0/8 (máximo permitido)
                 </div>
                 
                 <div class="devices-container" id="devicesContainer">
                     <!-- Dispositivos serão adicionados aqui dinamicamente -->
-                </div>
                 </div>
             </div>
         </div>
@@ -409,6 +405,31 @@
         </div>
     </div>
 
+    <!-- Modal para configurar preço da energia -->
+    <div id="energyPriceModal" class="modal">
+        <div class="modal-content">
+            <h2>⚡ Configurar Preço da Energia</h2>
+            <p style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 15px;">
+                Insira o preço do kWh cobrado pela sua distribuidora de energia.
+            </p>
+            <div id="currentPriceDisplay" style="color: var(--accent-green); font-size: 0.95rem; margin-bottom: 15px; font-weight: 600;">
+                Preço atual: R$ 0,80/kWh
+            </div>
+            <label for="energyPriceInput" style="display: block; margin-bottom: 8px; color: #ecf0f1; font-size: 0.9rem;">
+                Novo preço (R$/kWh):
+            </label>
+            <input type="number" id="energyPriceInput" placeholder="Ex: 0.85" step="0.01" min="0.01" 
+                   style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: var(--bg-secondary); color: white; font-size: 1rem;">
+            <p style="color: #95a5a6; font-size: 0.85rem; margin-top: 10px;">
+                💡 Os valores de todos os dispositivos serão atualizados automaticamente.
+            </p>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelPriceBtn" onclick="closeEnergyPriceModal()">Cancelar</button>
+                <button class="confirm-btn" id="confirmPriceBtn" onclick="updateEnergyPrice()">Atualizar</button>
+            </div>
+        </div>
+    </div>
+
 
     <button id="logoutBtn" class="fixed top-4 right-60 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 z-50 flex items-center gap-2">
         <span>Sair</span>
@@ -423,6 +444,6 @@
         <div class="w-6 h-0.5 bg-white"></div>
     </button>
 
-    <script type="module"  src="scriptdash.js"></script>
+    <script type="module" src="scriptdash.js"></script>
 </body>
 </html>

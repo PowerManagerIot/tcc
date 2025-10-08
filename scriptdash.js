@@ -1,13 +1,15 @@
 import {auth, database} from "./auth.js"
 
-// Variável global para armazenar o ID do usuário logado
+// ========== VARIÁVEIS GLOBAIS ==========
 let USER_ID = null;
 
-// Elementos da página
+// Elementos da página principal
 const mainContent = document.getElementById('mainContent');
 const currentValue = document.getElementById('currentValue');
 const lastUpdate = document.getElementById('lastUpdate');
 const connectionStatus = document.getElementById('connectionStatus');
+
+// Elementos do modal de dispositivos
 const addDeviceBtn = document.getElementById('addDeviceBtn');
 const deviceModal = document.getElementById('deviceModal');
 const deviceName = document.getElementById('deviceName');
@@ -25,18 +27,53 @@ const deviceToDeleteName = document.getElementById('deviceToDeleteName');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 
-// Arrays para armazenar os dispositivos
+// Elementos do modal de preço de energia
+const energyPriceBtn = document.getElementById('energyPriceBtn');
+const energyPriceModal = document.getElementById('energyPriceModal');
+const energyPriceInput = document.getElementById('energyPriceInput');
+const currentPriceDisplay = document.getElementById('currentPriceDisplay');
+const confirmPriceBtn = document.getElementById('confirmPriceBtn');
+const cancelPriceBtn = document.getElementById('cancelPriceBtn');
+
+// Elementos das barras de monitoramento
+const powerBar = document.getElementById('powerBar');
+const percentage = document.getElementById('percentage');
+const currentPower = document.getElementById('currentPower');
+const limitPower = document.getElementById('limitPower');
+const status = document.getElementById('status');
+const monthlyBar = document.getElementById('monthlyBar');
+const monthlyPercentage = document.getElementById('monthlyPercentage');
+const currentMonthly = document.getElementById('currentMonthly');
+const limitMonthly = document.getElementById('limitMonthly');
+
+// Variáveis de controle
 let regularDevices = {};
 let smartDevices = {};
 const MAX_SMART_DEVICES = 8;
-
-// Variáveis para controle de exclusão
 let deviceToDelete = null;
 
-// Função para verificar autenticação e obter USER_ID
+// Variáveis de monitoramento
+let alertLimit = 100;
+let monthlyLimit = 700;
+let currentPowerValue = 0;
+let currentMonthlyValue = 0;
+let s1Power = 0;
+let s2Power = 0;
+
+// Preço da energia (padrão R$ 0,80/kWh)
+let energyPrice = 0.80;
+
+// Locais
+let locations = [
+    { name: 'São Paulo', cost: 20408, consumption: 25500, emission: 200, active: true },
+    { name: 'Rio Claro', cost: 15450, consumption: 18000, emission: 230, active: false },
+    { name: 'Campinas', cost: 18350, consumption: 22100, emission: 380, active: false }
+];
+
+// ========== FUNÇÕES DE AUTENTICAÇÃO ==========
+
 function verificarAutenticacao() {
     return new Promise((resolve, reject) => {
-        // Primeiro verifica se há usuário no sessionStorage/localStorage
         const storedUserId = sessionStorage.getItem('userId') || localStorage.getItem('userId');
         const isLoggedIn = sessionStorage.getItem('isLoggedIn') || localStorage.getItem('isLoggedIn');
         
@@ -45,13 +82,11 @@ function verificarAutenticacao() {
             console.log('Usuário recuperado do storage:', USER_ID);
             resolve(USER_ID);
         } else {
-            // Se não há no storage, verifica com Firebase Auth
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     USER_ID = user.uid;
                     console.log('Usuário autenticado:', USER_ID);
                     
-                    // Salva no storage para próxima vez
                     sessionStorage.setItem('userId', user.uid);
                     sessionStorage.setItem('userEmail', user.email);
                     sessionStorage.setItem('isLoggedIn', 'true');
@@ -66,14 +101,11 @@ function verificarAutenticacao() {
     });
 }
 
-// Função para redirecionar para login se não estiver autenticado
 function redirecionarParaLogin() {
     alert('Sessão expirada. Por favor, faça login novamente.');
-    // Limpa os dados de sessão
     sessionStorage.clear();
     localStorage.clear();
     
-    // Limpar cookies
     document.cookie.split(";").forEach(function(c) { 
         document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
     });
@@ -81,12 +113,294 @@ function redirecionarParaLogin() {
     window.location.href = 'login.html';
 }
 
-// Função para formatar data/hora
+function logout() {
+    console.log('Iniciando logout...');
+    
+    auth.signOut().then(() => {
+        console.log('Firebase signOut bem-sucedido');
+        sessionStorage.clear();
+        localStorage.clear();
+        
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        window.location.href = 'login.html';
+    }).catch((error) => {
+        console.error('Erro ao fazer logout:', error);
+        alert('Erro ao fazer logout: ' + error.message);
+    });
+}
+
+// ========== FUNÇÕES DE MONITORAMENTO DE CONSUMO ==========
+
 function formatDateTime(date) {
     return date.toLocaleTimeString() + ' - ' + date.toLocaleDateString();
 }
 
-// Função para atualizar o contador de dispositivos inteligentes
+function updateBar(current, limit) {
+    const percent = (current / limit) * 100;
+    const displayPercent = Math.min(percent, 100);
+    
+    if (powerBar) powerBar.style.width = displayPercent + '%';
+    if (percentage) percentage.textContent = percent.toFixed(1) + '%';
+    if (currentPower) currentPower.textContent = current.toFixed(2);
+    if (limitPower) limitPower.textContent = limit;
+    
+    if (powerBar) {
+        powerBar.classList.remove('warning', 'danger', 'full');
+        
+        if (percent >= 100) {
+            powerBar.classList.add('full');
+        } else if (percent >= 80) {
+            powerBar.classList.add('danger');
+        } else if (percent >= 60) {
+            powerBar.classList.add('warning');
+        }
+    }
+}
+
+function updateMonthlyBar(current, limit) {
+    const percent = (current / limit) * 100;
+    const displayPercent = Math.min(percent, 100);
+    
+    if (monthlyBar) monthlyBar.style.width = displayPercent + '%';
+    if (monthlyPercentage) monthlyPercentage.textContent = percent.toFixed(1) + '%';
+    if (currentMonthly) currentMonthly.textContent = current.toFixed(2);
+    if (limitMonthly) limitMonthly.textContent = limit;
+    
+    if (monthlyBar) {
+        monthlyBar.classList.remove('warning', 'danger', 'full');
+        
+        if (percent >= 100) {
+            monthlyBar.classList.add('full');
+        } else if (percent >= 80) {
+            monthlyBar.classList.add('danger');
+        } else if (percent >= 60) {
+            monthlyBar.classList.add('warning');
+        }
+    }
+}
+
+function getAlertLimit() {
+    const alertsRef = database.ref(`users/${USER_ID}/alerts`);
+    
+    alertsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        if (data) {
+            let foundRealtimeAlert = null;
+            let foundTotalAlert = null;
+            
+            Object.keys(data).forEach((key) => {
+                const alertData = data[key];
+                
+                if (alertData.type === "Consumo em tempo real") {
+                    foundRealtimeAlert = alertData;
+                }
+                if (alertData.type === "Consumo Total") {
+                    foundTotalAlert = alertData;
+                }
+            });
+            
+            // Processar alerta de tempo real
+            if (foundRealtimeAlert?.limit) {
+                alertLimit = foundRealtimeAlert.limit;
+                updateBar(currentPowerValue, alertLimit);
+                
+                if (status) {
+                    status.textContent = "✓ Conectado - Monitorando em tempo real";
+                    status.className = "status connected";
+                }
+            } else {
+                alertLimit = 100;
+                updateBar(currentPowerValue, alertLimit);
+                
+                if (status) {
+                    status.textContent = "⚠ Nenhum alerta de consumo em tempo real cadastrado - Usando limite padrão (100W)";
+                    status.className = "status error";
+                }
+            }
+            
+            // Processar alerta de consumo total
+            if (foundTotalAlert?.limit) {
+                monthlyLimit = foundTotalAlert.limit;
+            } else {
+                monthlyLimit = 700;
+            }
+            
+            updateMonthlyBar(currentMonthlyValue, monthlyLimit);
+            monitorMonthlyConsumption();
+            
+        } else {
+            alertLimit = 100;
+            monthlyLimit = 700;
+            updateBar(currentPowerValue, alertLimit);
+            updateMonthlyBar(currentMonthlyValue, monthlyLimit);
+            
+            if (status) {
+                status.textContent = "⚠ Nenhum alerta cadastrado - Usando limites padrão";
+                status.className = "status error";
+            }
+        }
+    }, (error) => {
+        console.error("Erro ao buscar alertas:", error);
+        if (status) {
+            status.textContent = "✗ Erro ao conectar: " + error.message;
+            status.className = "status error";
+        }
+    });
+}
+
+function monitorPower() {
+    const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
+    const s2Ref = database.ref(`users/${USER_ID}/esp32/s2/potencia`);
+    
+    function updateCurrentValue() {
+        currentPowerValue = s1Power + s2Power;
+        
+        // Atualizar display principal
+        if (currentValue) {
+            currentValue.textContent = currentPowerValue.toFixed(2);
+        }
+        if (lastUpdate) {
+            const now = new Date();
+            lastUpdate.textContent = `Última atualização: ${formatDateTime(now)}`;
+        }
+        if (connectionStatus) {
+            connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
+            connectionStatus.className = "status connected";
+        }
+        
+        // Atualizar barra de potência
+        updateBar(currentPowerValue, alertLimit);
+    }
+    
+    s1Ref.on('value', (snapshot) => {
+        s1Power = snapshot.val() || 0;
+        updateCurrentValue();
+    }, (error) => {
+        console.error("Erro ao monitorar S1:", error);
+        if (connectionStatus) {
+            connectionStatus.textContent = "✗ Erro na leitura de S1";
+            connectionStatus.className = "status disconnected";
+        }
+    });
+    
+    s2Ref.on('value', (snapshot) => {
+        s2Power = snapshot.val() || 0;
+        updateCurrentValue();
+    }, (error) => {
+        console.error("Erro ao monitorar S2:", error);
+        if (connectionStatus) {
+            connectionStatus.textContent = "✗ Erro na leitura de S2";
+            connectionStatus.className = "status disconnected";
+        }
+    });
+}
+
+function monitorMonthlyConsumption() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const monthKey = `${year}-${month}`;
+    
+    const monthlyRef = database.ref(`users/${USER_ID}/esp32/estatisticas/mensal/${monthKey}`);
+    
+    monthlyRef.on('value', (snapshot) => {
+        currentMonthlyValue = snapshot.val() || 0;
+        updateMonthlyBar(currentMonthlyValue, monthlyLimit);
+    }, (error) => {
+        console.error("Erro ao monitorar consumo mensal:", error);
+    });
+}
+
+// ========== FUNÇÕES DE PREÇO DE ENERGIA ==========
+
+function openEnergyPriceModal() {
+    energyPriceModal.style.display = 'block';
+    energyPriceInput.value = energyPrice.toFixed(2);
+    updateCurrentPriceDisplay();
+}
+
+function closeEnergyPriceModal() {
+    energyPriceModal.style.display = 'none';
+}
+
+function updateCurrentPriceDisplay() {
+    if (currentPriceDisplay) {
+        currentPriceDisplay.textContent = `Preço atual: R$ ${energyPrice.toFixed(2)}/kWh`;
+    }
+}
+
+function updateEnergyPrice() {
+    const newPrice = parseFloat(energyPriceInput.value);
+    
+    if (!newPrice || newPrice <= 0) {
+        alert('Por favor, insira um preço válido maior que zero.');
+        return;
+    }
+    
+    energyPrice = newPrice;
+    
+    // Salvar no localStorage
+    localStorage.setItem('energyPrice', energyPrice.toString());
+    
+    // Atualizar todos os valores dos dispositivos
+    updateDevicePrices();
+    
+    closeEnergyPriceModal();
+    
+    if (connectionStatus) {
+        connectionStatus.textContent = `Preço da energia atualizado para R$ ${energyPrice.toFixed(2)}/kWh`;
+        connectionStatus.className = "status connected";
+        
+        setTimeout(() => {
+            connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
+        }, 3000);
+    }
+}
+
+function updateDevicePrices() {
+    // Ar-Condicionado - 4 kWh
+    const arCondCost = 4 * energyPrice;
+    const arCondElement = document.querySelector('[data-device="ar-cond"]');
+    if (arCondElement) {
+        arCondElement.querySelector('.cost-value').textContent = `R$ ${arCondCost.toFixed(2)}`;
+    }
+    
+    // Lâmpada do Quarto - 0.60 kWh
+    const lampadaCost = 0.60 * energyPrice;
+    const lampadaElement = document.querySelector('[data-device="lampada"]');
+    if (lampadaElement) {
+        lampadaElement.querySelector('.cost-value').textContent = `R$ ${lampadaCost.toFixed(2)}`;
+    }
+    
+    // Ventilador - 1 kWh
+    const ventiladorCost = 1 * energyPrice;
+    const ventiladorElement = document.querySelector('[data-device="ventilador"]');
+    if (ventiladorElement) {
+        ventiladorElement.querySelector('.cost-value').textContent = `R$ ${ventiladorCost.toFixed(2)}`;
+    }
+    
+    // Chuveiro - 5.8 kWh
+    const chuveiroCost = 5.8 * energyPrice;
+    const chuveiroElement = document.querySelector('[data-device="chuveiro"]');
+    if (chuveiroElement) {
+        chuveiroElement.querySelector('.cost-value').textContent = `R$ ${chuveiroCost.toFixed(2)}`;
+    }
+}
+
+function loadEnergyPrice() {
+    const savedPrice = localStorage.getItem('energyPrice');
+    if (savedPrice) {
+        energyPrice = parseFloat(savedPrice);
+    }
+    updateDevicePrices();
+}
+
+// ========== FUNÇÕES DE DISPOSITIVOS ==========
+
 function updateSmartDevicesCounter() {
     const smartDeviceCount = Object.keys(smartDevices).length;
     smartDevicesLimit.textContent = `Dispositivos inteligentes: ${smartDeviceCount}/${MAX_SMART_DEVICES} (máximo permitido)`;
@@ -104,320 +418,45 @@ function updateSmartDevicesCounter() {
     }
 }
 
-
-// Função para iniciar monitoramento dos dados - MODIFICADA
-function startDataMonitoring() {
-    // Monitorar S1 e S2 para consumo em tempo real
-    const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
-    const s2Ref = database.ref(`users/${USER_ID}/esp32/s2/potencia`);
-    
-    let s1Value = 0;
-    let s2Value = 0;
-    
-    // Função para atualizar o display com a soma
-    function updateCurrentValue() {
-        const totalValue = s1Value + s2Value;
-        currentValue.textContent = totalValue.toFixed(2);
-        
-        const now = new Date();
-        lastUpdate.textContent = `Última atualização: ${formatDateTime(now)}`;
-        
-        connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
-        connectionStatus.className = "status connected";
-    }
-    
-    // Monitorar S1
-    s1Ref.on('value', (snapshot) => {
-        s1Value = snapshot.val() || 0;
-        updateCurrentValue();
-    }, (error) => {
-        connectionStatus.textContent = "Erro na leitura S1: " + error.message;
-        connectionStatus.className = "status disconnected";
-    });
-    
-    // Monitorar S2
-    s2Ref.on('value', (snapshot) => {
-        s2Value = snapshot.val() || 0;
-        updateCurrentValue();
-    }, (error) => {
-        connectionStatus.textContent = "Erro na leitura S2: " + error.message;
-        connectionStatus.className = "status disconnected";
-    });
-}
-
-
-
-
-
-
-
-
-//==================================================================================
-
-//==================================================================================
-
-//==================================================================================
-
-const powerBar = document.getElementById('powerBar');
-const percentage = document.getElementById('percentage');
-const currentPower = document.getElementById('currentPower');
-const limitPower = document.getElementById('limitPower');
-const status = document.getElementById('status');
-
-// Elementos da segunda barra (Consumo Mensal)
-const monthlyBar = document.getElementById('monthlyBar');
-const monthlyPercentage = document.getElementById('monthlyPercentage');
-const currentMonthly = document.getElementById('currentMonthly');
-const limitMonthly = document.getElementById('limitMonthly');
-
-let alertLimit = 100; // Valor padrão para consumo em tempo real
-let monthlyLimit = 600; // Valor padrão para consumo total
-let currentPowerValue = 0;
-let currentMonthlyValue = 0;
-let s1Power = 0; // Potência do sensor 1
-let s2Power = 0; // Potência do sensor 2
-
-// Função para atualizar a barra de potência instantânea
-function updateBar(current, limit) {
-    const percent = (current / limit) * 100;
-    const displayPercent = Math.min(percent, 100); // Limita a barra visualmente a 100%
-    
-    powerBar.style.width = displayPercent + '%';
-    percentage.textContent = percent.toFixed(1) + '%'; // Mostra porcentagem real, mesmo acima de 100%
-    currentPower.textContent = current.toFixed(2);
-    limitPower.textContent = limit;
-    
-    // Remover todas as classes
-    powerBar.classList.remove('warning', 'danger', 'full');
-    
-    // Adicionar classe baseada na porcentagem
-    if (percent >= 100) {
-        powerBar.classList.add('full');
-    } else if (percent >= 80) {
-        powerBar.classList.add('danger');
-    } else if (percent >= 60) {
-        powerBar.classList.add('warning');
-    }
-}
-
-// Função para atualizar a barra de consumo mensal
-function updateMonthlyBar(current, limit) {
-    const percent = (current / limit) * 100;
-    const displayPercent = Math.min(percent, 100); // Limita a barra visualmente a 100%
-    
-    monthlyBar.style.width = displayPercent + '%';
-    monthlyPercentage.textContent = percent.toFixed(1) + '%';
-    currentMonthly.textContent = current.toFixed(2);
-    limitMonthly.textContent = limit;
-    
-    // Remover todas as classes
-    monthlyBar.classList.remove('warning', 'danger', 'full');
-    
-    // Adicionar classe baseada na porcentagem
-    if (percent >= 100) {
-        monthlyBar.classList.add('full');
-    } else if (percent >= 80) {
-        monthlyBar.classList.add('danger');
-    } else if (percent >= 60) {
-        monthlyBar.classList.add('warning');
-    }
-}
-
-// Buscar os limites dos alertas
-function getAlertLimit() {
-    const alertsRef = database.ref(`users/${USER_ID}/alerts`);
-    
-    alertsRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        
-        if (data) {
-            let foundRealtimeAlert = null;
-            let foundTotalAlert = null;
-            
-            // Procurar pelos dois tipos de alerta
-            Object.keys(data).forEach((key) => {
-                console.log("Alerta encontrado:", key, "Type:", data[key].type); // Log para debug
-                if (data[key].type === "Consumo em tempo real") {
-                    foundRealtimeAlert = data[key];
-                }
-                if (data[key].type === "Consumo Total") {
-                    foundTotalAlert = data[key];
-                }
-            });
-            
-            // Processar alerta de tempo real
-            if (foundRealtimeAlert && foundRealtimeAlert.limit) {
-                alertLimit = foundRealtimeAlert.limit;
-                console.log("Limit do alerta de consumo em tempo real:", alertLimit);
-                updateBar(currentPowerValue, alertLimit);
-                
-                status.textContent = "✓ Conectado - Monitorando em tempo real";
-                status.className = "status connected";
-            } else {
-                console.log("Nenhum alerta de 'Consumo em tempo real' encontrado");
-                alertLimit = 100;
-                updateBar(currentPowerValue, alertLimit);
-                
-                status.textContent = "⚠ Nenhum alerta de consumo em tempo real cadastrado - Usando limite padrão (100W)";
-                status.className = "status error";
-            }
-            
-            // Processar alerta de consumo total
-            if (foundTotalAlert && foundTotalAlert.limit) {
-                monthlyLimit = foundTotalAlert.limit;
-                console.log("Limit do alerta de consumo total:", monthlyLimit);
-                updateMonthlyBar(currentMonthlyValue, monthlyLimit);
-            } else {
-                console.log("Nenhum alerta de 'Consumo Total' encontrado - Usando limite padrão (500W)");
-                monthlyLimit = 400;
-                updateMonthlyBar(currentMonthlyValue, monthlyLimit);
-            }
-        } else {
-            console.log("Nenhum alerta encontrado no banco");
-            alertLimit = 100;
-            monthlyLimit = 400;
-            updateBar(currentPowerValue, alertLimit);
-            updateMonthlyBar(currentMonthlyValue, monthlyLimit);
-            
-            status.textContent = "⚠ Nenhum alerta cadastrado - Usando limites padrão";
-            status.className = "status error";
-        }
-    }, (error) => {
-        console.error("Erro ao buscar alertas:", error);
-        alertLimit = 100;
-        monthlyLimit = 300;
-        updateBar(currentPowerValue, alertLimit);
-        updateMonthlyBar(currentMonthlyValue, monthlyLimit);
-        
-        status.textContent = "✗ Erro ao conectar: " + error.message;
-        status.className = "status error";
-    });
-}
-
-// Monitorar potência instantânea
-function monitorPower() {
-    const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
-    const s2Ref = database.ref(`users/${USER_ID}/esp32/s2/potencia`);
-    
-    // Monitorar S1
-    s1Ref.on('value', (snapshot) => {
-        s1Power = snapshot.val() || 0;
-        currentPowerValue = s1Power + s2Power;
-        console.log("S1:", s1Power, "| S2:", s2Power, "| Total:", currentPowerValue);
-        updateBar(currentPowerValue, alertLimit);
-    }, (error) => {
-        console.error("Erro ao monitorar S1:", error);
-        status.textContent = "✗ Erro na leitura de S1";
-        status.className = "status error";
-    });
-    
-    // Monitorar S2
-    s2Ref.on('value', (snapshot) => {
-        s2Power = snapshot.val() || 0;
-        currentPowerValue = s1Power + s2Power;
-        console.log("S1:", s1Power, "| S2:", s2Power, "| Total:", currentPowerValue);
-        updateBar(currentPowerValue, alertLimit);
-    }, (error) => {
-        console.error("Erro ao monitorar S2:", error);
-        status.textContent = "✗ Erro na leitura de S2";
-        status.className = "status error";
-    });
-}
-
-// Monitorar consumo mensal acumulado
-function monitorMonthlyConsumption() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Formato: 01, 02, etc.
-    const monthKey = `${year}-${month}`;
-    
-    const monthlyRef = database.ref(`users/${USER_ID}/esp32/estatisticas/mensal/${monthKey}`);
-    
-    monthlyRef.on('value', (snapshot) => {
-        currentMonthlyValue = snapshot.val() || 0;
-        console.log("Consumo mensal acumulado:", currentMonthlyValue);
-        updateMonthlyBar(currentMonthlyValue, monthlyLimit);
-    }, (error) => {
-        console.error("Erro ao monitorar consumo mensal:", error);
-    });
-}
-
-//================================================================================================
-
-//================================================================================================
-
-
-//================================================================================================
-
-
-
-
-
-
-
-
-
-
-// Chamar a função
-
-// Função para carregar dispositivos do Firebase - MODIFICADA
 function loadDevicesFromFirebase() {
     if (!USER_ID) {
         console.error('USER_ID não definido');
         return;
     }
     
-    // Carregar dispositivos regulares
     const regularDevicesRef = database.ref(`users/${USER_ID}/regularDevices`);
     regularDevicesRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        regularDevices = data || {};
+        regularDevices = snapshot.val() || {};
         renderDevices();
         updateSmartDevicesCounter();
     });
     
-    // Carregar dispositivos inteligentes (tabela "devices")
     const devicesRef = database.ref(`users/${USER_ID}/devices`);
     devicesRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        smartDevices = data || {};
+        smartDevices = snapshot.val() || {};
         renderDevices();
         updateSmartDevicesCounter();
     });
 }
 
-// Função para alternar o estado do dispositivo inteligente
 function toggleDeviceState(deviceKey) {
-    if (!USER_ID) {
-        console.error('USER_ID não definido');
-        return;
-    }
+    if (!USER_ID) return;
     
     smartDevices[deviceKey].state = !smartDevices[deviceKey].state;
     
     database.ref(`users/${USER_ID}/devices/${deviceKey}/state`).set(smartDevices[deviceKey].state)
-        .then(() => {
-            console.log("Estado atualizado no Firebase");
-            renderDevices();
-        })
-        .catch((error) => {
-            console.error("Erro ao atualizar estado:", error);
-        });
+        .then(() => renderDevices())
+        .catch((error) => console.error("Erro ao atualizar estado:", error));
 }
 
-// Função para mostrar modal de confirmação de exclusão
 function showDeleteConfirmation(deviceKey, deviceName, isSmart) {
     deviceToDelete = { key: deviceKey, name: deviceName, isSmart: isSmart };
     deviceToDeleteName.textContent = deviceName;
     deleteModal.style.display = 'block';
 }
 
-// Função para excluir dispositivo
 function deleteDevice() {
-    if (!deviceToDelete || !USER_ID) {
-        console.error('Dados insuficientes para excluir dispositivo');
-        return;
-    }
+    if (!deviceToDelete || !USER_ID) return;
 
     const path = deviceToDelete.isSmart 
         ? `users/${USER_ID}/devices/${deviceToDelete.key}`
@@ -425,17 +464,18 @@ function deleteDevice() {
 
     database.ref(path).remove()
         .then(() => {
-            console.log(`Dispositivo ${deviceToDelete.name} excluído com sucesso`);
             deleteModal.style.display = 'none';
             const deletedName = deviceToDelete.name;
             deviceToDelete = null;
             
-            connectionStatus.textContent = `Dispositivo "${deletedName}" excluído com sucesso!`;
-            connectionStatus.className = "status connected";
-            
-            setTimeout(() => {
-                connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
-            }, 3000);
+            if (connectionStatus) {
+                connectionStatus.textContent = `Dispositivo "${deletedName}" excluído com sucesso!`;
+                connectionStatus.className = "status connected";
+                
+                setTimeout(() => {
+                    connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
+                }, 3000);
+            }
         })
         .catch((error) => {
             console.error("Erro ao excluir dispositivo:", error);
@@ -445,7 +485,6 @@ function deleteDevice() {
         });
 }
 
-// Função para renderizar os dispositivos
 function renderDevices() {
     devicesContainer.innerHTML = '';
     
@@ -465,16 +504,13 @@ function renderDevices() {
                 <div class="device-state">Dispositivo não controlável</div>
             </div>
             <div class="device-controls">
-                <button class="delete-btn" data-key="${key}" data-name="${device.name}" data-smart="false">
-                    🗑️ Excluir
-                </button>
+                <button class="delete-btn">🗑️ Excluir</button>
             </div>
         `;
         
         devicesContainer.appendChild(deviceElement);
         
-        const deleteBtn = deviceElement.querySelector('.delete-btn');
-        deleteBtn.addEventListener('click', () => {
+        deviceElement.querySelector('.delete-btn').addEventListener('click', () => {
             showDeleteConfirmation(key, device.name, false);
         });
     });
@@ -495,22 +531,17 @@ function renderDevices() {
                 <div class="device-state">Estado: ${device.state ? 'Ligado' : 'Desligado'}</div>
             </div>
             <div class="device-controls">
-                <button class="device-btn" data-key="${key}" data-state="${device.state ? 'on' : 'off'}">
+                <button class="device-btn" data-state="${device.state ? 'on' : 'off'}">
                     ${device.state ? 'Ligado' : 'Desligado'}
                 </button>
-                <button class="delete-btn" data-key="${key}" data-name="${device.name}" data-smart="true">
-                    🗑️ Excluir
-                </button>
+                <button class="delete-btn">🗑️ Excluir</button>
             </div>
         `;
         
         devicesContainer.appendChild(deviceElement);
         
-        const controlBtn = deviceElement.querySelector('.device-btn');
-        controlBtn.addEventListener('click', () => toggleDeviceState(key));
-        
-        const deleteBtn = deviceElement.querySelector('.delete-btn');
-        deleteBtn.addEventListener('click', () => {
+        deviceElement.querySelector('.device-btn').addEventListener('click', () => toggleDeviceState(key));
+        deviceElement.querySelector('.delete-btn').addEventListener('click', () => {
             showDeleteConfirmation(key, device.name, true);
         });
     });
@@ -520,21 +551,24 @@ function renderDevices() {
     }
 }
 
-// Eventos do modal de exclusão
-confirmDeleteBtn.addEventListener('click', deleteDevice);
+function getNextDeviceId(devices) {
+    const ids = Object.keys(devices).map(id => parseInt(id)).filter(id => !isNaN(id));
+    return ids.length === 0 ? 0 : Math.max(...ids) + 1;
+}
 
+// ========== EVENT LISTENERS - DISPOSITIVOS ==========
+
+confirmDeleteBtn.addEventListener('click', deleteDevice);
 cancelDeleteBtn.addEventListener('click', () => {
     deleteModal.style.display = 'none';
     deviceToDelete = null;
 });
 
-// Evento para abrir o modal
 addDeviceBtn.addEventListener('click', () => {
     deviceModal.style.display = 'block';
     updateSmartDevicesCounter();
 });
 
-// Evento para fechar o modal
 cancelBtn.addEventListener('click', () => {
     deviceModal.style.display = 'none';
     limitWarning.style.display = 'none';
@@ -543,10 +577,8 @@ cancelBtn.addEventListener('click', () => {
     hasButton.value = 'no';
 });
 
-// Monitorar mudanças no select para mostrar aviso
 hasButton.addEventListener('change', () => {
     const smartDeviceCount = Object.keys(smartDevices).length;
-    console.log("Select mudou para:", hasButton.value, "Dispositivos atuais:", smartDeviceCount);
     
     if (hasButton.value === 'yes' && smartDeviceCount >= MAX_SMART_DEVICES) {
         limitWarning.style.display = 'block';
@@ -559,13 +591,6 @@ hasButton.addEventListener('change', () => {
     }
 });
 
-// Função para obter o próximo ID sequencial
-function getNextDeviceId(devices) {
-    const ids = Object.keys(devices).map(id => parseInt(id)).filter(id => !isNaN(id));
-    return ids.length === 0 ? 0 : Math.max(...ids) + 1;
-}
-
-// Evento para confirmar novo dispositivo
 confirmBtn.addEventListener('click', () => {
     if (!USER_ID) {
         alert('Erro: Usuário não identificado. Por favor, faça login novamente.');
@@ -583,10 +608,9 @@ confirmBtn.addEventListener('click', () => {
     }
     
     const smartDeviceCount = Object.keys(smartDevices).length;
-    console.log("Dispositivos inteligentes atuais:", smartDeviceCount, "Limite:", MAX_SMART_DEVICES);
     
     if (isSmart && smartDeviceCount >= MAX_SMART_DEVICES) {
-        alert(`LIMITE ATINGIDO!\n\nVocê já possui ${smartDeviceCount} dispositivos inteligentes.\nO limite máximo é ${MAX_SMART_DEVICES} dispositivos inteligentes.\n\nPara adicionar este dispositivo, selecione "Não Inteligente".`);
+        alert(`LIMITE ATINGIDO!\n\nVocê já possui ${smartDeviceCount} dispositivos inteligentes.\nO limite máximo é ${MAX_SMART_DEVICES} dispositivos inteligentes.`);
         return;
     }
     
@@ -597,127 +621,25 @@ confirmBtn.addEventListener('click', () => {
         state: false
     };
     
-    if (isSmart) {
-        if (smartDeviceCount >= MAX_SMART_DEVICES) {
-            alert(`ERRO: Limite de dispositivos inteligentes atingido (${smartDeviceCount}/${MAX_SMART_DEVICES})`);
-            return;
-        }
-        
-        const nextId = getNextDeviceId(smartDevices);
-        console.log("Salvando dispositivo inteligente com ID:", nextId);
-        
-        database.ref(`users/${USER_ID}/devices/${nextId}`).set(newDevice)
-            .then(() => {
-                console.log("Dispositivo inteligente salvo no Firebase com ID:", nextId);
-                deviceModal.style.display = 'none';
-                limitWarning.style.display = 'none';
-                deviceName.value = '';
-                deviceNumber.value = '';
-                hasButton.value = 'no';
-            })
-            .catch((error) => {
-                console.error("Erro ao salvar dispositivo inteligente:", error);
-                alert("Erro ao salvar dispositivo: " + error.message);
-            });
-    } else {
-        const nextId = getNextDeviceId(regularDevices);
-        console.log("Salvando dispositivo regular com ID:", nextId);
-        
-        database.ref(`users/${USER_ID}/regularDevices/${nextId}`).set(newDevice)
-            .then(() => {
-                console.log("Dispositivo regular salvo no Firebase com ID:", nextId);
-                deviceModal.style.display = 'none';
-                limitWarning.style.display = 'none';
-                deviceName.value = '';
-                deviceNumber.value = '';
-                hasButton.value = 'no';
-            })
-            .catch((error) => {
-                console.error("Erro ao salvar dispositivo regular:", error);
-                alert("Erro ao salvar dispositivo: " + error.message);
-            });
-    }
-});
-
-// Fechar modais ao clicar fora deles
-window.addEventListener('click', (event) => {
-    if (event.target === deviceModal) {
-        deviceModal.style.display = 'none';
-        limitWarning.style.display = 'none';
-    }
-    if (event.target === deleteModal) {
-        deleteModal.style.display = 'none';
-        deviceToDelete = null;
-    }
-});
-
-// Função para inicializar o dashboard
-async function inicializarDashboard() {
-    try {
-        // Verifica autenticação e obtém USER_ID
-        await verificarAutenticacao();
-        
-        console.log('Dashboard inicializado para usuário:', USER_ID);
-        
-        // Esconder form de login e mostrar conteúdo principal
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.style.display = 'none';
-        }
-        
-        if (mainContent) {
-            mainContent.style.display = 'block';
-        }
-        
-        // Iniciar monitoramento e carregar dispositivos
-        startDataMonitoring();
-        loadDevicesFromFirebase();
-        
-        // Renderizar locais
-        renderLocations();
-        
-    } catch (error) {
-        console.error('Erro ao inicializar dashboard:', error);
-        redirecionarParaLogin();
-    }
-}
-
-// Função de logout - MÉTODO CORRETO
-function logout() {
-    console.log('Iniciando logout...');
+    const path = isSmart ? 'devices' : 'regularDevices';
+    const devices = isSmart ? smartDevices : regularDevices;
+    const nextId = getNextDeviceId(devices);
     
-    auth.signOut().then(() => {
-        console.log('Firebase signOut bem-sucedido');
-        
-        // Limpar TODOS os dados de sessão
-        sessionStorage.clear();
-        localStorage.clear();
-        
-        // Limpar cookies
-        document.cookie.split(";").forEach(function(c) { 
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    database.ref(`users/${USER_ID}/${path}/${nextId}`).set(newDevice)
+        .then(() => {
+            deviceModal.style.display = 'none';
+            limitWarning.style.display = 'none';
+            deviceName.value = '';
+            deviceNumber.value = '';
+            hasButton.value = 'no';
+        })
+        .catch((error) => {
+            console.error("Erro ao salvar dispositivo:", error);
+            alert("Erro ao salvar dispositivo: " + error.message);
         });
-        
-        console.log('Logout realizado com sucesso - sessão limpa');
-        
-        // Redirecionar para login
-        window.location.href = 'login.html';
-        
-    }).catch((error) => {
-        console.error('Erro ao fazer logout:', error);
-        alert('Erro ao fazer logout: ' + error.message);
-    });
-}
+});
 
-// Tornar a função logout global para o HTML poder chamar
-window.logout = logout;
-
-// Locais - Script para adicionar novo local
-let locations = [
-    { name: 'São Paulo', cost: 20408, consumption: 25500, emission: 200, active: true },
-    { name: 'Rio Claro', cost: 15450, consumption: 18000, emission: 230, active: false },
-    { name: 'Campinas', cost: 18350, consumption: 22100, emission: 380, active: false }
-];
+// ========== FUNÇÕES DE LOCAIS ==========
 
 function renderLocations() {
     const container = document.getElementById('locationsContainer');
@@ -750,16 +672,12 @@ function setActiveLocation(index) {
 
 function openLocationModal() {
     const modal = document.getElementById('locationModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-    }
+    if (modal) modal.classList.remove('hidden');
 }
 
 function closeLocationModal() {
     const modal = document.getElementById('locationModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
+    if (modal) modal.classList.add('hidden');
     
     document.getElementById('locationName').value = '';
     document.getElementById('locationCost').value = '';
@@ -774,13 +692,7 @@ function addLocation() {
     const emission = parseFloat(document.getElementById('locationEmission').value);
     
     if (name && cost && consumption && emission) {
-        locations.push({
-            name,
-            cost,
-            consumption,
-            emission,
-            active: false
-        });
+        locations.push({ name, cost, consumption, emission, active: false });
         renderLocations();
         closeLocationModal();
     } else {
@@ -788,45 +700,73 @@ function addLocation() {
     }
 }
 
-// Tornar funções globais para o HTML
-window.openLocationModal = openLocationModal;
-window.closeLocationModal = closeLocationModal;
-window.addLocation = addLocation;
+// ========== INICIALIZAÇÃO ==========
+
+async function inicializarDashboard() {
+    try {
+        await verificarAutenticacao();
+        console.log('Dashboard inicializado para usuário:', USER_ID);
+        
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) loginForm.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'block';
+        
+        // Carregar preço da energia salvo
+        loadEnergyPrice();
+        
+        // Iniciar todos os monitoramentos
+        getAlertLimit();
+        monitorPower();
+        loadDevicesFromFirebase();
+        renderLocations();
+        
+    } catch (error) {
+        console.error('Erro ao inicializar dashboard:', error);
+        redirecionarParaLogin();
+    }
+}
+
+// ========== EVENT LISTENERS GLOBAIS ==========
+
+document.addEventListener('DOMContentLoaded', inicializarDashboard);
+
+// Fechar modais ao clicar fora
+window.addEventListener('click', (event) => {
+    if (event.target === deviceModal) {
+        deviceModal.style.display = 'none';
+        limitWarning.style.display = 'none';
+    }
+    if (event.target === deleteModal) {
+        deleteModal.style.display = 'none';
+        deviceToDelete = null;
+    }
+    if (event.target === energyPriceModal) {
+        energyPriceModal.style.display = 'none';
+    }
+});
 
 // Event listener do modal de location
 const locationModal = document.getElementById('locationModal');
 if (locationModal) {
     locationModal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeLocationModal();
-        }
+        if (e.target === this) closeLocationModal();
     });
 }
 
-// Inicializar aplicação quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM carregado, inicializando dashboard...');
-    inicializarDashboard();
-    
-    // Event listener para o botão de logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        console.log('Botão de logout encontrado, adicionando event listener');
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Botão de logout clicado');
-            logout();
-        });
-    } else {
-        console.warn('Botão de logout não encontrado no DOM');
-    }
-});
+// Botão de logout
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        logout();
+    });
+}
 
-
-// Iniciar monitoramento
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("Iniciando monitoramento...");
-    getAlertLimit();
-    monitorPower();
-    monitorMonthlyConsumption(); 
-});
+// Tornar funções globais para o HTML
+window.logout = logout;
+window.openLocationModal = openLocationModal;
+window.closeLocationModal = closeLocationModal;
+window.addLocation = addLocation;
+window.openEnergyPriceModal = openEnergyPriceModal;
+window.closeEnergyPriceModal = closeEnergyPriceModal;
+window.updateEnergyPrice = updateEnergyPrice;
