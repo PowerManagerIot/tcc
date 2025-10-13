@@ -526,3 +526,161 @@
             font-weight: bold;
             color: #44cc44;
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /* ========== TEMA CLARO ========== */
+
+:root {
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #1a1a1a;
+    --bg-card: #1e1e1e;
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --border-color: #333333;
+    --accent-green: #00ff2a;
+    --accent-red: #ef4444;
+    --accent-yellow: #eeea10;
+}
+
+[data-theme="light"] {
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --text-primary: #0a0a0a;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-yellow: #f59e0b;
+}
+
+/* Aplicar variáveis CSS */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.bg-bg-primary {
+    background-color: var(--bg-primary) !important;
+}
+
+.bg-bg-secondary {
+    background-color: var(--bg-secondary) !important;
+}
+
+.bg-bg-card {
+    background-color: var(--bg-card) !important;
+}
+
+.text-white {
+    color: var(--text-primary) !important;
+}
+
+.text-gray-400 {
+    color: var(--text-secondary) !important;
+}
+
+.border-border-dark {
+    border-color: var(--border-color) !important;
+}
+
+.text-accent-green {
+    color: var(--accent-green) !important;
+}
+
+.text-accent-red {
+    color: var(--accent-red) !important;
+}
+
+.text-accent-yellow {
+    color: var(--accent-yellow) !important;
+}
+
+/* Estilo do botão de tema */
+#themeToggleBtn {
+    transition: all 0.3s ease;
+}
+
+#themeToggleBtn:hover {
+    transform: scale(1.05);
+}
+
+[data-theme="light"] #themeToggleBtn {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+[data-theme="light"] .bg-green-500\/10 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+[data-theme="light"] .border-accent-green {
+    border-color: var(--accent-green) !important;
+}
+
+[data-theme="light"] .hover\:bg-green-500\/10:hover {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Ajustes para elementos específicos */
+[data-theme="light"] .modal-content,
+[data-theme="light"] .device,
+[data-theme="light"] .value-container {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="light"] .status-dot {
+    background-color: var(--accent-green);
+}
+
+/* SVG circles no tema claro */
+[data-theme="light"] circle[stroke="#333"] {
+    stroke: #e5e7eb;
+}
+
+[data-theme="light"] .bar-bg {
+    background-color: #e5e7eb;
+}

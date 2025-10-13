@@ -770,3 +770,86 @@ window.addLocation = addLocation;
 window.openEnergyPriceModal = openEnergyPriceModal;
 window.closeEnergyPriceModal = closeEnergyPriceModal;
 window.updateEnergyPrice = updateEnergyPrice;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ========== SISTEMA DE TEMA CLARO/ESCURO ==========
+
+// Função para alternar o tema
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Atualizar ícone do botão
+    updateThemeIcon(newTheme);
+}
+
+// Função para atualizar o ícone do botão
+function updateThemeIcon(theme) {
+    const themeIcon = document.getElementById('themeIcon');
+    if (themeIcon) {
+        if (theme === 'light') {
+            themeIcon.innerHTML = '<i class="ph ph-moon"></i>';
+        } else {
+            themeIcon.innerHTML = '<i class="ph ph-sun"></i>';
+        }
+    }
+}
+
+// Função para carregar o tema salvo
+function loadSavedTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+// Inicializar tema ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+    loadSavedTheme();
+    
+    // Adicionar event listener ao botão de tema
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', toggleTheme);
+    }
+});
+
+// Tornar função global
+window.toggleTheme = toggleTheme;
