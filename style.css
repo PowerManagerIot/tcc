@@ -50,6 +50,19 @@
             }
         }
 
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .nav-right {
+        gap: 0.5rem;
+    }
+    
+    .theme-toggle-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+}
         .nav-container {
             display: flex;
             justify-content: space-between;

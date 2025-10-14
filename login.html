@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PowerManager - Login</title>
     <link rel="stylesheet" href="stylelg.css">
+    <link rel="stylesheet" href="theme-toggle.css">
     <!-- Firebase App (the core Firebase SDK) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <!-- Firebase Auth -->
@@ -18,7 +19,11 @@
         <div class="logo">
             <a href="index.html"><img src="img/iconsemfundo.png" alt="PowerManager Logo" class="logoicon">
             PowerManager</a>
+            
         </div>
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Alternar tema">
+                <span id="themeIcon">☀️</span>
+            </button>
         <button class="register-btn" onclick="irParaCadastro()">Cadastrar</button>
     </div>
 
@@ -80,5 +85,6 @@
     </div>
 
     <script type="module" src="scriptlg.js"></script>
+    <script src="theme-toggle.js"></script>
 </body>
 </html>
