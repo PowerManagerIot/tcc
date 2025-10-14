@@ -49,59 +49,7 @@
                 background: rgba(255, 255, 255, 0.9);
             }
         }
-/* ========== BOTÃO DE ALTERNÂNCIA DE TEMA ========== */
 
-/* Grupo de botões à direita */
-.nav-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-/* Botão de alternância de tema */
-.theme-toggle-btn {
-    background: transparent;
-    border: 2px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 0.5rem;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 1.2rem;
-}
-
-.theme-toggle-btn:hover {
-    border-color: var(--accent-orange);
-    color: var(--accent-orange);
-    transform: rotate(180deg);
-}
-
-/* Tema claro */
-body.light-mode {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --text-primary: #000000;
-    --text-secondary: #666666;
-    --border-color: #e5e5e5;
-}
-
-body.light-mode .navbar {
-    background: rgba(255, 255, 255, 0.9);
-}
-
-body.light-mode .geometric-shape {
-    border-color: var(--accent-orange);
-}
-
-/* Transição suave entre temas */
-body {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
 
 /* Responsivo */
 @media (max-width: 768px) {
