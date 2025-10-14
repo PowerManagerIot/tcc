@@ -26,7 +26,7 @@ const deleteModal = document.getElementById('deleteModal');
 const deviceToDeleteName = document.getElementById('deviceToDeleteName');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-z
+
 // Elementos do modal de preço de energia
 const energyPriceBtn = document.getElementById('energyPriceBtn');
 const energyPriceModal = document.getElementById('energyPriceModal');
@@ -347,7 +347,7 @@ function updateEnergyPrice() {
     localStorage.setItem('energyPrice', energyPrice.toString());
     
     // Atualizar todos os valores dos dispositivos
-    renderDeviceCards();
+    updateDevicePrices();
     
     closeEnergyPriceModal();
     
@@ -361,130 +361,42 @@ function updateEnergyPrice() {
     }
 }
 
+function updateDevicePrices() {
+    // Ar-Condicionado - 4 kWh
+    const arCondCost = 4 * energyPrice;
+    const arCondElement = document.querySelector('[data-device="ar-cond"]');
+    if (arCondElement) {
+        arCondElement.querySelector('.cost-value').textContent = `R$ ${arCondCost.toFixed(2)}`;
+    }
+    
+    // Lâmpada do Quarto - 0.60 kWh
+    const lampadaCost = 0.60 * energyPrice;
+    const lampadaElement = document.querySelector('[data-device="lampada"]');
+    if (lampadaElement) {
+        lampadaElement.querySelector('.cost-value').textContent = `R$ ${lampadaCost.toFixed(2)}`;
+    }
+    
+    // Ventilador - 1 kWh
+    const ventiladorCost = 1 * energyPrice;
+    const ventiladorElement = document.querySelector('[data-device="ventilador"]');
+    if (ventiladorElement) {
+        ventiladorElement.querySelector('.cost-value').textContent = `R$ ${ventiladorCost.toFixed(2)}`;
+    }
+    
+    // Chuveiro - 5.8 kWh
+    const chuveiroCost = 5.8 * energyPrice;
+    const chuveiroElement = document.querySelector('[data-device="chuveiro"]');
+    if (chuveiroElement) {
+        chuveiroElement.querySelector('.cost-value').textContent = `R$ ${chuveiroCost.toFixed(2)}`;
+    }
+}
+
 function loadEnergyPrice() {
     const savedPrice = localStorage.getItem('energyPrice');
     if (savedPrice) {
         energyPrice = parseFloat(savedPrice);
     }
-}
-
-// ========== FUNÇÕES DE RENDERIZAÇÃO DE CARDS DE DISPOSITIVOS ==========
-
-function getCardColor(percentage) {
-    if (percentage >= 70) return { color: '#ef4444', name: 'accent-red' }; // Vermelho
-    if (percentage >= 40) return { color: '#eeea10', name: 'accent-yellow' }; // Amarelo
-    return { color: '#00ff2a', name: 'accent-green' }; // Verde
-}
-
-function calculateStrokeDashoffset(percentage) {
-    const circumference = 2 * Math.PI * 56; // 351.858
-    return circumference - (percentage / 100) * circumference;
-}
-
-function renderDeviceCards() {
-    const dashboardGrid = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-3.gap-8.mb-8');
-    
-    if (!dashboardGrid) {
-        console.error('Dashboard grid não encontrado');
-        return;
-    }
-    
-    // Limpar todas as colunas existentes
-    dashboardGrid.innerHTML = '';
-    
-    // Combinar todos os dispositivos
-    const allDevices = [];
-    
-    // Adicionar dispositivos regulares
-    Object.keys(regularDevices).forEach((key) => {
-        const device = regularDevices[key];
-        allDevices.push({
-            key,
-            name: device.name,
-            power: device.number,
-            type: 'regular'
-        });
-    });
-    
-    // Adicionar dispositivos inteligentes
-    Object.keys(smartDevices).forEach((key) => {
-        const device = smartDevices[key];
-        allDevices.push({
-            key,
-            name: device.name,
-            power: device.number,
-            type: 'smart',
-            state: device.state
-        });
-    });
-    
-    // Se não houver dispositivos, mostrar mensagem
-    if (allDevices.length === 0) {
-        dashboardGrid.innerHTML = `
-            <div class="lg:col-span-3 text-center py-12">
-                <p class="text-gray-400 text-lg mb-4">Nenhum dispositivo cadastrado ainda</p>
-                <p class="text-gray-500 text-sm">Clique em "Adicionar Dispositivo" para começar a monitorar</p>
-            </div>
-        `;
-        return;
-    }
-    
-    // Criar colunas dinamicamente (máximo 3 colunas)
-    const columns = [[], [], []];
-    
-    allDevices.forEach((device, index) => {
-        columns[index % 3].push(device);
-    });
-    
-    // Renderizar cada coluna
-    columns.forEach((columnDevices, colIndex) => {
-        if (columnDevices.length === 0) return;
-        
-        const column = document.createElement('div');
-        column.className = 'lg:col-span-1 space-y-8';
-        
-        columnDevices.forEach(device => {
-            const kWh = device.power / 1000; // Converter W para kWh
-            const cost = kWh * energyPrice;
-            const percentage = (device.power / 6000) * 100; // Máximo assumido de 6000W
-            const { color, name: colorName } = getCardColor(percentage);
-            const strokeDashoffset = calculateStrokeDashoffset(percentage);
-            
-            const card = document.createElement('div');
-            card.className = 'bg-bg-card border border-border-dark rounded-xl p-6';
-            card.setAttribute('data-device', device.key);
-            
-            card.innerHTML = `
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold">${device.name}</h3>
-                    <div class="w-2 h-2 bg-accent-green rounded-full"></div>
-                </div>
-                <div class="text-center">
-                    <div class="relative w-32 h-32 mx-auto mb-4">
-                        <svg class="w-32 h-32 transform -rotate-90">
-                            <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
-                            <circle cx="64" cy="64" r="56" stroke="${color}" stroke-width="8" fill="none" 
-                                    stroke-dasharray="351" stroke-dashoffset="${strokeDashoffset}" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                    <div class="text-2xl font-bold text-${colorName} cost-value">R$ ${cost.toFixed(2)}</div>
-                    <div class="text-sm text-gray-400">${kWh.toFixed(2)} kWh</div>
-                    ${device.type === 'smart' ? `
-                        <div class="mt-4 pt-4 border-t border-border-dark">
-                            <div class="text-xs text-gray-500 mb-2">Dispositivo Inteligente</div>
-                            <div class="text-sm ${device.state ? 'text-accent-green' : 'text-gray-400'}">
-                                Estado: ${device.state ? '🟢 Ligado' : '⚪ Desligado'}
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-            
-            column.appendChild(card);
-        });
-        
-        dashboardGrid.appendChild(column);
-    });
+    updateDevicePrices();
 }
 
 // ========== FUNÇÕES DE DISPOSITIVOS ==========
@@ -516,7 +428,6 @@ function loadDevicesFromFirebase() {
     regularDevicesRef.on('value', (snapshot) => {
         regularDevices = snapshot.val() || {};
         renderDevices();
-        renderDeviceCards();
         updateSmartDevicesCounter();
     });
     
@@ -524,7 +435,6 @@ function loadDevicesFromFirebase() {
     devicesRef.on('value', (snapshot) => {
         smartDevices = snapshot.val() || {};
         renderDevices();
-        renderDeviceCards();
         updateSmartDevicesCounter();
     });
 }
@@ -535,10 +445,7 @@ function toggleDeviceState(deviceKey) {
     smartDevices[deviceKey].state = !smartDevices[deviceKey].state;
     
     database.ref(`users/${USER_ID}/devices/${deviceKey}/state`).set(smartDevices[deviceKey].state)
-        .then(() => {
-            renderDevices();
-            renderDeviceCards();
-        })
+        .then(() => renderDevices())
         .catch((error) => console.error("Erro ao atualizar estado:", error));
 }
 
@@ -725,15 +632,6 @@ confirmBtn.addEventListener('click', () => {
             deviceName.value = '';
             deviceNumber.value = '';
             hasButton.value = 'no';
-            
-            if (connectionStatus) {
-                connectionStatus.textContent = `Dispositivo "${name}" adicionado com sucesso!`;
-                connectionStatus.className = "status connected";
-                
-                setTimeout(() => {
-                    connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
-                }, 3000);
-            }
         })
         .catch((error) => {
             console.error("Erro ao salvar dispositivo:", error);
