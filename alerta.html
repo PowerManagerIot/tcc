@@ -1,67 +1,210 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Alertas - Power Manager</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alertas - Power Manager IoT</title>
+    <link rel="icon" type="image/png" href="img/iconsemfundo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-primary': '#0a0a0a',
+                        'bg-secondary': '#1a1a1a',
+                        'bg-card': '#1e1e1e',
+                        'accent-green': '#00ff2a',
+                        'accent-red': '#ef4444',
+                        'border-dark': '#333333',
+                        'accent-yellow': '#eeea10'
+                    }
+                }
+            }
+        }
+    </script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css"
+    />
 </head>
-
-<body class="bg-[#0a0a0a] text-white font-sans p-8">
-  <!-- Sidebar -->
-  <div class="fixed left-0 top-0 w-20 hover:w-64 h-full bg-[#1a1a1a] border-r border-[#333] z-50 transition-all duration-300 ease-in-out group">
-    <div class="p-4">
-      <div class="flex items-center gap-3 mb-8">
-        <a href="index.html" class="w-10 h-10"><img src="img/iconsemfundo.png" alt="Logo" /></a>
-        <a href="index.html" class="font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Power Manager</a>
-      </div>
-      <nav>
-        <ul class="space-y-4">
-          <li><a href="dashboard.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-[#00ff2a] hover:bg-green-500/10 rounded-lg transition-all">Dashboard</a></li>
-          <li><a href="relatorio.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-[#00ff2a] hover:bg-green-500/10 rounded-lg transition-all">Relatórios</a></li>
-          <li><a href="alertas.html" class="flex items-center py-3 px-2 text-[#00ff2a] bg-green-500/10 border-2 border-[#00ff2a] rounded-lg">Alertas</a></li>
-        </ul>
-      </nav>
-    </div>
-  </div>
-
-  <!-- Main -->
-  <div class="ml-20 h-screen overflow-y-auto px-6">
-    <div class="flex justify-between items-center mt-6">
-      <h1 class="text-3xl font-bold text-[#00ff2a]">Gerenciar Alertas</h1>
-      <button class="bg-[#00ff2a] text-black px-4 py-2 rounded-xl hover:bg-green-400 transition" onclick="openAlertModal()">+ Criar Alerta</button>
-    </div>
-
-    <!-- Modal -->
-    <div id="alertModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-      <div class="bg-[#1e1e1e] p-6 rounded-2xl w-full max-w-md shadow-lg border border-[#333]">
-        <h2 id="alertModalTitle" class="text-2xl font-bold text-white mb-4">Criar Alerta</h2>
-        <div class="flex flex-col gap-3">
-          <input id="alertName" type="text" placeholder="Nome do alerta" class="p-2 rounded bg-[#1a1a1a] text-white outline-none border border-[#333]">
-          <input id="alertLimit" type="number" placeholder="Limite (kWh)" class="p-2 rounded bg-[#1a1a1a] text-white outline-none border border-[#333]">
-          <select id="alertType" class="p-2 rounded bg-[#1a1a1a] text-white outline-none border border-[#333]">
-            <option value="Consumo em tempo real">Tempo Real</option>
-            <option value="Consumo Total">Total</option>
-          </select>
-          <button id="saveAlertBtn" class="bg-[#00ff2a] text-black px-4 py-2 rounded-xl hover:bg-green-400 transition" onclick="saveAlert()">Salvar</button>
-          <button class="text-gray-400 hover:text-white mt-2" onclick="closeAlertModal()">Cancelar</button>
+<body class="bg-bg-primary text-white font-sans">
+    <!-- Sidebar -->
+    <div class="fixed left-0 top-0 w-20 hover:w-64 h-full bg-bg-secondary border-r border-border-dark z-50 transition-all duration-300 ease-in-out group">
+        <div class="p-4">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 mb-8">
+                <a href="index.html" class="w-10 h-10 object-contain flex-shrink-0"><img src="img/iconsemfundo.png" alt="Power Manager Logo"></a>
+                <a href="index.html" class="font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap"><h3>Power Manager</h3></a>
+            </div>
+            
+            <!-- Navigation -->
+            <nav>
+                <ul class="space-y-4">
+                    <li>
+                        <a href="dashboard.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
+                            <span class="text-xl flex-shrink-0"><i class="ph ph-chart-bar"></i></span>
+                            <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="relatorio.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
+                            <span class="text-xl flex-shrink-0"><i class="ph ph-chart-line"></i></span>
+                            <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Relatórios</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="alerta.html" class="flex items-center py-3 px-2 text-accent-green bg-green-500/10 rounded-lg border-2 border-accent-green group-hover:px-4 transition-all duration-300">
+                            <span class="text-xl flex-shrink-0"><i class="ph ph-bell-ringing"></i></span>
+                            <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Alertas</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
-      </div>
     </div>
 
-    <!-- Lista -->
-    <div class="mt-10">
-      <h3 class="text-2xl font-semibold text-[#00ff2a] mb-4">Alertas Criados</h3>
-      <div id="alertsContainer" class="flex flex-col gap-3">
-        <p class="text-gray-400">Carregando alertas...</p>
-      </div>
-    </div>
-  </div>
+    <!-- Main Content -->
+    <div class="ml-20 h-screen overflow-y-auto transition-all duration-300 ease-in-out">
+        <div class="p-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="text-sm text-gray-400 mb-2">Configurações</div>
+                <h1 class="text-3xl font-semibold text-accent-green mb-4">Gerenciar Alertas</h1>
+                
+                <!-- Connection Status -->
+                <div class="fixed top-8 right-8 bg-bg-card border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2 z-40" id="connectionStatus">
+                    <div class="w-2 h-2 bg-accent-green rounded-full animate-pulse" id="statusDot"></div>
+                    <span class="text-sm">Conectando ao Firebase...</span>
+                </div>
+            </div>
 
-  <!-- ========================= SCRIPT ========================= -->
-  <script type="module" src="scriptal.js"></script>
+            <!-- Action Button -->
+            <div class="mb-8">
+                <button onclick="openAlertModal()" class="bg-accent-green text-black font-semibold px-6 py-3 rounded-lg hover:bg-green-400 transition-all flex items-center gap-2">
+                    <i class="ph ph-plus-circle text-xl"></i>
+                    <span>Criar Novo Alerta</span>
+                </button>
+            </div>
+
+            <!-- Alerts Info Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-accent-yellow/20 rounded-lg flex items-center justify-center">
+                            <i class="ph ph-lightning text-accent-yellow text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">Consumo em Tempo Real</h3>
+                    </div>
+                    <p class="text-sm text-gray-400">Monitora o consumo instantâneo e alerta quando ultrapassar o limite definido (em Watts).</p>
+                </div>
+                
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="ph ph-chart-line-up text-blue-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">Consumo Total</h3>
+                    </div>
+                    <p class="text-sm text-gray-400">Monitora o consumo acumulado mensal e alerta quando atingir o limite (em kWh).</p>
+                </div>
+            </div>
+
+            <!-- Alerts List -->
+            <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold">Alertas Criados</h3>
+                    <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                </div>
+                
+                <div id="alertsContainer" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="ph ph-bell-slash text-4xl mb-3 block text-gray-600"></i>
+                        <p>Carregando alertas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Criar/Editar Alerta -->
+    <div id="alertModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
+        <div class="bg-bg-card border border-border-dark rounded-xl p-6 w-full max-w-md mx-4 transform transition-all">
+            <h2 id="alertModalTitle" class="text-xl font-semibold text-accent-green mb-6">Criar Novo Alerta</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Nome do Alerta</label>
+                    <input type="text" id="alertName" placeholder="Ex: Alerta de Consumo Alto" 
+                           class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Limite <span id="limitUnit">(W)</span></label>
+                    <input type="number" id="alertLimit" placeholder="Ex: 1500" 
+                           class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Tipo de Alerta</label>
+                    <select id="alertType" 
+                            class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                        <option value="Consumo em tempo real">Consumo em Tempo Real</option>
+                        <option value="Consumo Total">Consumo Total</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-2" id="typeDescription">
+                        Monitora o consumo instantâneo em Watts
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeAlertModal()" class="flex-1 px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg hover:bg-red-500/10 hover:border-accent-red transition-all">
+                    Cancelar
+                </button>
+                <button id="saveAlertBtn" onclick="saveAlert()" class="flex-1 px-4 py-2 bg-accent-green text-black rounded-lg font-semibold hover:bg-green-400 transition-all">
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Button -->
+    <button id="logoutBtn" class="fixed top-4 right-10 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 z-50 flex items-center gap-2">
+        <span>Sair</span>
+    </button>
+
+    <script type="module" src="scriptal.js"></script>
+    <script>
+        // Atualizar descrição e unidade quando mudar o tipo
+        document.addEventListener('DOMContentLoaded', function() {
+            const alertType = document.getElementById('alertType');
+            const typeDescription = document.getElementById('typeDescription');
+            const limitUnit = document.getElementById('limitUnit');
+            
+            if (alertType) {
+                alertType.addEventListener('change', function() {
+                    if (this.value === 'Consumo em tempo real') {
+                        typeDescription.textContent = 'Monitora o consumo instantâneo em Watts';
+                        limitUnit.textContent = '(W)';
+                        document.getElementById('alertLimit').placeholder = 'Ex: 1500';
+                    } else {
+                        typeDescription.textContent = 'Monitora o consumo acumulado mensal em kWh';
+                        limitUnit.textContent = '(kWh)';
+                        document.getElementById('alertLimit').placeholder = 'Ex: 500';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
