@@ -40,34 +40,42 @@
     />  
 </head>
 <body class="bg-bg-primary text-white font-sans">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden lg:hidden"></div>
+
     <!-- Sidebar -->
-    <div class="fixed left-0 top-0 w-20 hover:w-64 h-full bg-bg-secondary border-r border-border-dark z-50 transition-all duration-300 ease-in-out group">
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-bg-secondary border-r border-border-dark z-50 transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:w-20 lg:hover:w-64 group">
         <div class="p-4">
+            <!-- Close button (mobile only) -->
+            <button id="closeSidebarBtn" class="lg:hidden absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+
             <!-- Logo -->
             <div class="flex items-center gap-3 mb-8">
                 <a href="index.html" class="w-10 h-10 object-contain flex-shrink-0"><img src="img/iconsemfundo.png" alt="Power Manager Logo"></a>
-                <a href="index.html" class="font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap"><h3 >Power Manager</h3></a>
+                <a href="index.html" class="font-bold text-lg opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap"><h3>Power Manager</h3></a>
             </div>
             
             <!-- Navigation -->
             <nav>
                 <ul class="space-y-4">
                     <li>
-                        <a href="dashboard.html" class="flex items-center py-3 px-2 text-accent-green bg-green-500/10 rounded-lg border-2 border-accent-green group-hover:px-4 transition-all duration-300">
+                        <a href="dashboard.html" class="flex items-center py-3 px-2 text-accent-green bg-green-500/10 rounded-lg border-2 border-accent-green lg:group-hover:px-4 transition-all duration-300">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-chart-bar"></i></span>
-                            <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Dashboard</span>
+                            <span class="ml-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Dashboard</span>
                         </a>
                     </li>
                     <li>
-                        <a href="relatorio.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
+                        <a href="relatorio.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 lg:group-hover:px-4">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-chart-line"></i></span>
-                            <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Relatórios</span>
+                            <span class="ml-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Relatórios</span>
                         </a>
                     </li>
                     <li>
-                        <a href="alerta.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 group-hover:px-4">
+                        <a href="alerta.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 lg:group-hover:px-4">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-bell-ringing"></i></span>
-                            <span class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Alertas</span>
+                            <span class="ml-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Alertas</span>
                         </a>
                     </li>
                 </ul>
@@ -75,57 +83,63 @@
         </div>
     </div>
 
+    <!-- Mobile Menu Button -->
+    <button id="mobileMenuBtn" class="lg:hidden fixed top-4 left-4 z-30 bg-bg-secondary border border-border-dark rounded-lg p-3 hover:bg-bg-card transition-colors">
+        <i class="ph ph-list text-accent-green text-2xl"></i>
+    </button>
+
     <!-- Main Content -->
-    <div class="ml-20 h-screen transition-all duration-300 ease-in-out">
-        <div class="p-8">
-        <!-- Header -->
+    <div class="lg:ml-20 h-screen overflow-y-auto transition-all duration-300 ease-in-out">
+        <div class="p-4 md:p-8 pt-20 lg:pt-8">
+            <!-- Header -->
             <div class="mb-8">
                 <div class="text-sm text-gray-400 mb-2">Energia</div>
-                <h1 class="text-3xl font-semibold text-accent-green mb-4">Consumo de energia</h1>
+                <h1 class="text-2xl md:text-3xl font-semibold text-accent-green mb-4">Consumo de energia</h1>
                 
                 <!-- Connection Status -->
-                <div class="fixed top-8 right-8 bg-bg-card border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2 connection-status" id="connectionStatus">
-                    <div class="text-sm text-gray-400 mb-2 w-2 h-2 bg-accent-green rounded-full animate-pulse status-dot" id="statusDot"></div>
-                    <span class="text-sm">Conectando ao Firebase...</span>
+                <div class="fixed top-4 right-4 md:right-8 bg-bg-card border border-border-dark rounded-lg px-3 md:px-4 py-2 md:py-3 flex items-center gap-2 z-20" id="connectionStatus">
+                    <div class="w-2 h-2 bg-accent-green rounded-full animate-pulse" id="statusDot"></div>
+                    <span class="text-xs md:text-sm hidden sm:inline">Conectando ao Firebase...</span>
+                    <span class="text-xs sm:hidden">Conectando...</span>
                 </div>
             </div>
 
             <!-- Location Tabs -->
-            <div class="flex gap-4 mb-8 overflow-x-auto pb-2">
-                <div class="bg-bg-card border-2 border-accent-yellow rounded-xl p-6 min-w-52 cursor-pointer relative">
+            <div class="flex gap-3 md:gap-4 mb-8 overflow-x-auto pb-2">
+                <div class="bg-bg-card border-2 border-accent-yellow rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer relative flex-shrink-0">
                     <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
-                    <div class="font-semibold mb-2">São Paulo</div>
-                    <div class="text-2xl font-bold text-accent-yellow mb-1">R$ 463,50</div>
-                    <div class="text-sm text-gray-400">342 kWh</div>
+                    <div class="font-semibold mb-2 text-sm md:text-base">São Paulo</div>
+                    <div class="text-xl md:text-2xl font-bold text-accent-yellow mb-1">R$ 463,50</div>
+                    <div class="text-xs md:text-sm text-gray-400">342 kWh</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6 min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative">
+                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative flex-shrink-0">
                     <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
-                    <div class="font-semibold mb-2">Rio Claro</div>
-                    <div class="text-2xl font-bold text-accent-red mb-1">R$ 497,88</div>
-                    <div class="text-sm text-gray-400">412 kWh</div>
+                    <div class="font-semibold mb-2 text-sm md:text-base">Rio Claro</div>
+                    <div class="text-xl md:text-2xl font-bold text-accent-red mb-1">R$ 497,88</div>
+                    <div class="text-xs md:text-sm text-gray-400">412 kWh</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6 min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative">
+                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative flex-shrink-0">
                     <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
-                    <div class="font-semibold mb-2">Campinas</div>
-                    <div class="text-2xl font-bold text-accent-green mb-1">R$ 256,40</div>
-                    <div class="text-sm text-gray-400">229 kWh</div>
+                    <div class="font-semibold mb-2 text-sm md:text-base">Campinas</div>
+                    <div class="text-xl md:text-2xl font-bold text-accent-green mb-1">R$ 256,40</div>
+                    <div class="text-xs md:text-sm text-gray-400">229 kWh</div>
                 </div>
 
-                <div class="min-w-52 flex items-center justify-center">
-                    <button onclick="openLocationModal()" class="bg-bg-card border-2 border-dashed border-border-dark rounded-xl p-6 w-full h-full hover:border-accent-green hover:bg-green-500/5 transition-all duration-300 group">
+                <div class="min-w-[180px] md:min-w-52 flex items-center justify-center flex-shrink-0">
+                    <button onclick="openLocationModal()" class="bg-bg-card border-2 border-dashed border-border-dark rounded-xl p-4 md:p-6 w-full h-full hover:border-accent-green hover:bg-green-500/5 transition-all duration-300 group">
                         <div class="text-center">
-                            <div class="text-4xl mb-2 text-gray-500 group-hover:text-accent-green transition-colors">+</div>
-                            <div class="font-semibold text-gray-400 group-hover:text-accent-green transition-colors">Adicionar Local</div>
+                            <div class="text-3xl md:text-4xl mb-2 text-gray-500 group-hover:text-accent-green transition-colors">+</div>
+                            <div class="text-sm md:text-base font-semibold text-gray-400 group-hover:text-accent-green transition-colors">Adicionar Local</div>
                         </div>
                     </button>
                 </div>
             </div>
 
             <!-- Modal para Adicionar Local -->
-            <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-70 modal-backdrop hidden z-50 flex items-center justify-center">
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6 w-full max-w-md mx-4 transform transition-all">
+            <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-70 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6 w-full max-w-md transform transition-all">
                     <h2 class="text-xl font-semibold text-accent-green mb-6">Adicionar Novo Local</h2>
                     
                     <div class="space-y-4">
@@ -162,156 +176,172 @@
             </div>
 
             <!-- Dashboard Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
                 <!-- Left Column - Charts -->
-                <div class="lg:col-span-1 space-y-8">
+                <div class="lg:col-span-1 space-y-6 md:space-y-8">
                     <!-- Monthly Cost Chart -->
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold">Custo do Mês</h3>
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <h3 class="text-base md:text-lg font-semibold">Custo do Mês</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
                         </div>
                         <div class="text-center">
-                            <div class="relative w-32 h-32 mx-auto mb-4">
-                                <svg class="w-32 h-32 transform -rotate-90">
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
+                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
+                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke="#ef4444" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="75" stroke-linecap="round" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
                                     <circle cx="64" cy="64" r="56" stroke="#ef4444" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="88" stroke-linecap="round"/>
+                                            stroke-dasharray="351" stroke-dashoffset="88" stroke-linecap="round" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-red">R$ 463,50</div>
-                            <div class="text-sm text-gray-400">342 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold text-accent-red">R$ 463,50</div>
+                            <div class="text-xs md:text-sm text-gray-400">342 kWh</div>
                         </div>
                     </div>
 
                     <!-- Daily Cost Chart -->
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold">Custo do Dia</h3>
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <h3 class="text-base md:text-lg font-semibold">Custo do Dia</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
                         </div>
                         <div class="text-center">
-                            <div class="relative w-32 h-32 mx-auto mb-4">
-                                <svg class="w-32 h-32 transform -rotate-90">
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
+                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
+                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke="#eeea10" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="88" stroke-linecap="round" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
                                     <circle cx="64" cy="64" r="56" stroke="#eeea10" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="102" stroke-linecap="round"/>
+                                            stroke-dasharray="351" stroke-dashoffset="102" stroke-linecap="round" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-yellow">R$ 15,45</div>
-                            <div class="text-sm text-gray-400">11.4 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold text-accent-yellow">R$ 15,45</div>
+                            <div class="text-xs md:text-sm text-gray-400">11.4 kWh</div>
                         </div>
                     </div>
-
                 </div>
 
                 <!--Coluna 2-->
-                <div class="lg:col-span-1 space-y-8">
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6" data-device="ar-cond">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold">Ar-Condicionado</h3>
+                <div class="lg:col-span-1 space-y-6 md:space-y-8">
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6" data-device="ar-cond">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <h3 class="text-base md:text-lg font-semibold">Ar-Condicionado</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
                         </div>
                         <div class="text-center">
-                            <div class="relative w-32 h-32 mx-auto mb-4">
-                                <svg class="w-32 h-32 transform -rotate-90">
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
+                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
+                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke="#eeea10" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="96" stroke-linecap="round" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
                                     <circle cx="64" cy="64" r="56" stroke="#eeea10" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="112" stroke-linecap="round"/>
+                                            stroke-dasharray="351" stroke-dashoffset="112" stroke-linecap="round" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-yellow cost-value">R$ 3,20</div>
-                            <div class="text-sm text-gray-400">4 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold text-accent-yellow cost-value">R$ 3,20</div>
+                            <div class="text-xs md:text-sm text-gray-400">4 kWh</div>
                         </div>
                     </div>
 
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6" data-device="lampada">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold">Lâmpada do Quarto</h3>
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6" data-device="lampada">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <h3 class="text-base md:text-lg font-semibold">Lâmpada do Quarto</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
                         </div>
                         <div class="text-center">
-                            <div class="relative w-32 h-32 mx-auto mb-4">
-                                <svg class="w-32 h-32 transform -rotate-90">
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
+                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
+                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke="#00ff2a" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="265" stroke-linecap="round" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
                                     <circle cx="64" cy="64" r="56" stroke="#00ff2a" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="309" stroke-linecap="round"/>
+                                            stroke-dasharray="351" stroke-dashoffset="309" stroke-linecap="round" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-green cost-value">R$ 0,48</div>
-                            <div class="text-sm text-gray-400">0.60 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold text-accent-green cost-value">R$ 0,48</div>
+                            <div class="text-xs md:text-sm text-gray-400">0.60 kWh</div>
                         </div>
                     </div>
                 </div>
 
                 <!--Coluna 3-->
-                <div class="lg:col-span-1 space-y-8">
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6" data-device="ventilador">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold">Ventilador</h3>
+                <div class="lg:col-span-1 space-y-6 md:space-y-8">
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6" data-device="ventilador">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <h3 class="text-base md:text-lg font-semibold">Ventilador</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
                         </div>
                         <div class="text-center">
-                            <div class="relative w-32 h-32 mx-auto mb-4">
-                                <svg class="w-32 h-32 transform -rotate-90">
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
+                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
+                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke="#00ff2a" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="240" stroke-linecap="round" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
                                     <circle cx="64" cy="64" r="56" stroke="#00ff2a" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="280" stroke-linecap="round"/>
+                                            stroke-dasharray="351" stroke-dashoffset="280" stroke-linecap="round" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-green cost-value">R$ 0,80</div>
-                            <div class="text-sm text-gray-400">1 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold text-accent-green cost-value">R$ 0,80</div>
+                            <div class="text-xs md:text-sm text-gray-400">1 kWh</div>
                         </div>
                     </div>
 
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-6" data-device="chuveiro">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold">Chuveiro</h3>
+                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6" data-device="chuveiro">
+                        <div class="flex items-center justify-between mb-4 md:mb-6">
+                            <h3 class="text-base md:text-lg font-semibold">Chuveiro</h3>
                             <div class="w-2 h-2 bg-accent-green rounded-full"></div>
                         </div>
                         <div class="text-center">
-                            <div class="relative w-32 h-32 mx-auto mb-4">
-                                <svg class="w-32 h-32 transform -rotate-90">
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none"/>
+                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
+                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
+                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke="#ef4444" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="73" stroke-linecap="round" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
                                     <circle cx="64" cy="64" r="56" stroke="#ef4444" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="85" stroke-linecap="round"/>
+                                            stroke-dasharray="351" stroke-dashoffset="85" stroke-linecap="round" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-2xl font-bold text-accent-red cost-value">R$ 4,64</div>
-                            <div class="text-sm text-gray-400">5.8 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold text-accent-red cost-value">R$ 4,64</div>
+                            <div class="text-xs md:text-sm text-gray-400">5.8 kWh</div>
                         </div>
                     </div>
                 </div>                
             </div>
 
             <!-- Stats Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                    <div class="text-3xl font-bold text-accent-green mb-2">R$ 387,66</div>
-                    <div class="text-sm text-gray-400">Média de custo mensal</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 text-center">
+                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-2">R$ 387,66</div>
+                    <div class="text-xs md:text-sm text-gray-400">Média de custo mensal</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                    <div class="text-3xl font-bold text-accent-green mb-2">R$ 14,89</div>
-                    <div class="text-sm text-gray-400">Média de custo diário</div>
+                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 text-center">
+                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-2">R$ 14,89</div>
+                    <div class="text-xs md:text-sm text-gray-400">Média de custo diário</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                    <div class="text-3xl font-bold text-accent-green mb-2">0.47 kW</div>
-                    <div class="text-sm text-gray-400">Potência atual</div>
+                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 text-center">
+                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-2">0.47 kW</div>
+                    <div class="text-xs md:text-sm text-gray-400">Potência atual</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6 text-center">
-                    <div class="text-3xl font-bold text-accent-green mb-2">12</div>
-                    <div class="text-sm text-gray-400">Dispositivos ativos</div>
+                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 text-center">
+                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-2">12</div>
+                    <div class="text-xs md:text-sm text-gray-400">Dispositivos ativos</div>
                 </div>
             </div>
 
-
             <!-- IoT Section -->
-            <div class="mt-12">
-                <h2 class="text-2xl font-semibold text-accent-green mb-4">Power Manager IoT</h2>
-                <p class="text-gray-400 mb-8">Monitoramento em tempo real da rede</p>
+            <div class="mt-8 md:mt-12">
+                <h2 class="text-xl md:text-2xl font-semibold text-accent-green mb-3 md:mb-4">Power Manager IoT</h2>
+                <p class="text-sm md:text-base text-gray-400 mb-6 md:mb-8">Monitoramento em tempo real da rede</p>
 
                 <!-- Sensor Value Card -->
                 <div id="mainContent" style="display: none;">
@@ -353,13 +383,15 @@
                             </div>
                         </div>
                         <!-- fim barra alerta 2 -->
-
                     </div>
                 </div>
                 
-                <button class="add-device-btn" id="addDeviceBtn">+ Adicionar Dispositivo</button>
-                <button class="add-device-btn" id="energyPriceBtn" onclick="openEnergyPriceModal()" style="background: linear-gradient(135deg, #eeea10 0%, #d4d010 100%); margin-left: 10px;">Preço da Energia</button>
-                <div class="smart-devices-limit" id="smartDevicesLimit">
+                <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                    <button class="add-device-btn w-full sm:w-auto" id="addDeviceBtn">+ Adicionar Dispositivo</button>
+                    <button class="add-device-btn w-full sm:w-auto" id="energyPriceBtn" onclick="openEnergyPriceModal()" style="background: linear-gradient(135deg, #eeea10 0%, #d4d010 100%);">Preço da Energia</button>
+                </div>
+                
+                <div class="smart-devices-limit text-sm md:text-base" id="smartDevicesLimit">
                     Dispositivos inteligentes: 0/8 (máximo permitido)
                 </div>
                 
@@ -369,7 +401,6 @@
             </div>
         </div>
     </div>
-
 
     <!-- Modal para adicionar dispositivo -->
     <div id="deviceModal" class="modal">
@@ -390,7 +421,6 @@
             </div>
         </div>
     </div>
-
 
     <!-- Modal de confirmação de exclusão -->
     <div id="deleteModal" class="modal">
@@ -430,19 +460,43 @@
         </div>
     </div>
 
-
-    <button id="logoutBtn" class="fixed top-4 right-10 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 z-50 flex items-center gap-2">
-        <span>Sair</span>
-    </button>
-
-
-    <!-- Mobile Menu Button (hidden on desktop) -->
-    <button class="fixed top-4 left-4 lg:hidden bg-bg-secondary border border-border-dark rounded-lg p-3 z-50">
-        <div class="w-6 h-0.5 bg-white mb-1"></div>
-        <div class="w-6 h-0.5 bg-white mb-1"></div>
-        <div class="w-6 h-0.5 bg-white"></div>
+    <!-- Logout Button -->
+    <button id="logoutBtn" class="fixed top-4 right-4 md:right-10 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 px-4 md:px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 z-30 text-sm md:text-base">
+        <span class="hidden sm:inline">Sair</span>
+        <i class="ph ph-sign-out sm:hidden text-lg"></i>
     </button>
 
     <script type="module" src="dashantiga.js"></script>
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+
+        function openMobileMenu() {
+            sidebar.classList.remove('-translate-x-full');
+            mobileMenuOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            sidebar.classList.add('-translate-x-full');
+            mobileMenuOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', openMobileMenu);
+        }
+
+        if (closeSidebarBtn) {
+            closeSidebarBtn.addEventListener('click', closeMobileMenu);
+        }
+
+        if (mobileMenuOverlay) {
+            mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+        }
+    </script>
 </body>
 </html>
