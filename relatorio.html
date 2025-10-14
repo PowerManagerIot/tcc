@@ -3,21 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatórios</title>
+    <title>Relatórios - Power Manager IoT</title>
+    <link rel="icon" type="image/png" href="img/iconsemfundo.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
-    <link rel="stylesheet" href="stylerl.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css"/>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css"/> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-primary': '#0a0a0a',
+                        'bg-secondary': '#1a1a1a',
+                        'bg-card': '#1e1e1e',
+                        'accent-green': '#00ff2a',
+                        'accent-red': '#ef4444',
+                        'border-dark': '#333333',
+                        'accent-yellow': '#eeea10'
+                    }
+                }
+            }
+        }
+    </script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css"
+    />
 </head>
-<body class="bg-bg-primary text-white font-sans p-8">
-
+<body class="bg-bg-primary text-white font-sans">
+    <!-- Sidebar -->
     <div class="fixed left-0 top-0 w-20 hover:w-64 h-full bg-bg-secondary border-r border-border-dark z-50 transition-all duration-300 ease-in-out group">
         <div class="p-4">
             <!-- Logo -->
             <div class="flex items-center gap-3 mb-8">
                 <a href="index.html" class="w-10 h-10 object-contain flex-shrink-0"><img src="img/iconsemfundo.png" alt="Power Manager Logo"></a>
-                <a href="index.html" class="font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap"><h3 >Power Manager</h3></a>
+                <a href="index.html" class="font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap"><h3>Power Manager</h3></a>
             </div>
             
             <!-- Navigation -->
@@ -46,111 +74,164 @@
         </div>
     </div>
 
-    <div class="ml-20 h-screen transition-all duration-300 ease-in-out">
-
-        <div class="mb-8">
-            <button onclick="openLocationModal()">            
-                <div class="fixed top-8 right-8 border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2 connection-status register-btn" id="connectionStatus">
-                    <i class="ph ph-plus"></i><span class="text-sm">Crie um alerta</span>
-                </div>
-            </button>
-        </div>
-
-        <!-- Modal para Adicionar Local -->
-        <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-70 modal-backdrop hidden z-50 flex items-center justify-center">
-            <div class="bg-bg-card border border-border-dark rounded-xl p-6 w-full max-w-md mx-4 transform transition-all">
-                <h2 class="text-xl font-semibold text-accent-green mb-6">Crie um alerta</h2>
+    <!-- Main Content -->
+    <div class="ml-20 h-screen overflow-y-auto transition-all duration-300 ease-in-out">
+        <div class="p-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="text-sm text-gray-400 mb-2">Análise</div>
+                <h1 class="text-3xl font-semibold text-accent-green mb-4">Relatórios de Consumo</h1>
                 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-2">Nome do Alerta</label>
-                        <input type="text" id="locationName" placeholder="Ex: Alto consumo!" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-2">Tipo do Alerta (R$)</label>
-                        <input type="number" id="locationCost" placeholder="Ex: Notificação ou Automação" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-2">Valor para disparo (kW)</label>
-                        <input type="number" id="locationConsumption" placeholder="Ex: 18000" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
-                    </div>
-                </div>
-                
-                <div class="flex gap-3 mt-6">
-                    <button onclick="closeLocationModal()" class="flex-1 px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg hover:bg-red-500/10 hover:border-accent-red transition-all">
-                        Cancelar
-                    </button>
-                    <button onclick="addLocation()" class="flex-1 px-4 py-2 bg-accent-green text-black rounded-lg font-semibold hover:bg-green-400 transition-all">
-                        Criar
-                    </button>
+                <!-- Connection Status -->
+                <div class="fixed top-8 right-8 bg-bg-card border border-border-dark rounded-lg px-4 py-3 flex items-center gap-2 z-40" id="connectionStatus">
+                    <div class="w-2 h-2 bg-accent-green rounded-full animate-pulse" id="statusDot"></div>
+                    <span class="text-sm">Conectando ao Firebase...</span>
                 </div>
             </div>
-        </div>
-    
-        <!-- Seção de Locais com Botão Adicionar -->
-        <div class="mb-12">
-            <h2 class="text-2xl font-semibold text-accent-green mb-6">Relatórios</h2>
-            
-            <!-- Container de Locais -->
-            <div class="flex gap-4 overflow-x-auto pb-2" id="locationsContainer">
-                <!-- Locais serão adicionados aqui dinamicamente -->
-            
 
-                <div class="flex gap-4 overflow-x-auto pb-2" id="locationsContainer">
-                    <!-- Locais serão adicionados aqui dinamicamente -->
-                    
-                    <!-- Botão Adicionar Local -->
-                    <div class="min-w-52 flex items-center justify-center">
-                        <button onclick="openLocationModal()" class="bg-bg-card border-2 border-dashed border-border-dark rounded-xl p-6 w-full h-full hover:border-accent-green hover:bg-green-500/5 transition-all duration-300 group">
-                            <div class="text-center">
-                                <div class="text-4xl mb-2 text-gray-500 group-hover:text-accent-green transition-colors">+</div>
-                                <div class="font-semibold text-gray-400 group-hover:text-accent-green transition-colors">Gerar Relatório</div>
-                            </div>
-                        </button>
+            <!-- Period Filter -->
+            <div class="mb-8 flex gap-4 items-center flex-wrap">
+                <div class="bg-bg-card border border-border-dark rounded-lg px-4 py-2">
+                    <label class="text-sm text-gray-400 mr-2">Período:</label>
+                    <select id="periodFilter" class="bg-bg-secondary border-none text-white rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-accent-green">
+                        <option value="7">Últimos 7 dias</option>
+                        <option value="30" selected>Últimos 30 dias</option>
+                        <option value="90">Últimos 90 dias</option>
+                        <option value="365">Último ano</option>
+                        <option value="all">Todos os registros</option>
+                    </select>
+                </div>
+                
+                <button id="refreshBtn" class="bg-accent-green text-black font-semibold px-6 py-2 rounded-lg hover:bg-green-400 transition-all flex items-center gap-2">
+                    <i class="ph ph-arrows-clockwise"></i>
+                    Atualizar
+                </button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-400">Consumo Total</div>
+                        <i class="ph ph-lightning text-accent-yellow text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-accent-green mb-1" id="totalConsumption">-- kWh</div>
+                    <div class="text-xs text-gray-500">Período selecionado</div>
+                </div>
+                
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-400">Custo Total</div>
+                        <i class="ph ph-currency-circle-dollar text-accent-green text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-accent-green mb-1" id="totalCost">R$ --</div>
+                    <div class="text-xs text-gray-500">Baseado em R$ 0,80/kWh</div>
+                </div>
+                
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-400">Média Diária</div>
+                        <i class="ph ph-chart-line-up text-accent-yellow text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-accent-yellow mb-1" id="dailyAverage">-- kWh</div>
+                    <div class="text-xs text-gray-500">Consumo por dia</div>
+                </div>
+                
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-400">Pico de Consumo</div>
+                        <i class="ph ph-trend-up text-accent-red text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-accent-red mb-1" id="peakConsumption">-- kWh</div>
+                    <div class="text-xs text-gray-500" id="peakDate">--</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Monthly Consumption Chart -->
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold">Consumo Mensal</h3>
+                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                    </div>
+                    <div class="relative h-64">
+                        <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
 
+                <!-- Daily Consumption Chart -->
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold">Consumo Diário</h3>
+                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                    </div>
+                    <div class="relative h-64">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Seção do Gráfico Aprimorado -->
-        <div class="mb-12">
+            <!-- Hourly and Trends Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Hourly Consumption Chart -->
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold">Consumo por Hora do Dia</h3>
+                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                    </div>
+                    <div class="relative h-64">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Comparison Chart -->
+                <div class="bg-bg-card border border-border-dark rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold">Tendência de Consumo</h3>
+                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                    </div>
+                    <div class="relative h-64">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Table -->
             <div class="bg-bg-card border border-border-dark rounded-xl p-6">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold">Gráfico de Consumo Detalhado</h3>
-                    <div class="flex gap-2">
-                        <button onclick="updateChart('day')" id="btnDay" class="px-4 py-2 text-sm border border-border-dark rounded text-gray-400 hover:bg-accent-green hover:text-black hover:border-accent-green transition-all">Dia</button>
-                        <button onclick="updateChart('month')" id="btnMonth" class="px-4 py-2 text-sm bg-accent-green text-black rounded border border-accent-green">Mês</button>
-                        <button onclick="updateChart('year')" id="btnYear" class="px-4 py-2 text-sm border border-border-dark rounded text-gray-400 hover:bg-accent-green hover:text-black hover:border-accent-green transition-all">Ano</button>
-                    </div>
+                    <h3 class="text-lg font-semibold">Histórico Detalhado</h3>
+                    <button id="exportBtn" class="bg-bg-secondary border border-border-dark px-4 py-2 rounded-lg hover:bg-accent-green hover:text-black hover:border-accent-green transition-all text-sm font-semibold">
+                        <i class="ph ph-download-simple"></i> Exportar CSV
+                    </button>
                 </div>
-                
-                <!-- Container do Gráfico -->
-                <div class="relative h-96">
-                    <canvas id="consumptionChart"></canvas>
-                </div>
-                
-                <!-- Estatísticas do Período -->
-                <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border-dark">
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-accent-green" id="totalConsumption">0 kWh</div>
-                        <div class="text-sm text-gray-400">Consumo Total</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-yellow-400" id="averageConsumption">0 kWh</div>
-                        <div class="text-sm text-gray-400">Média do Período</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-blue-400" id="peakConsumption">0 kWh</div>
-                        <div class="text-sm text-gray-400">Pico de Consumo</div>
-                    </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="detailedTable">
+                        <thead>
+                            <tr class="border-b border-border-dark">
+                                <th class="text-left py-3 px-4 text-sm text-gray-400 font-semibold">Data</th>
+                                <th class="text-right py-3 px-4 text-sm text-gray-400 font-semibold">Consumo (kWh)</th>
+                                <th class="text-right py-3 px-4 text-sm text-gray-400 font-semibold">Custo (R$)</th>
+                                <th class="text-right py-3 px-4 text-sm text-gray-400 font-semibold">Média/Hora</th>
+                                <th class="text-center py-3 px-4 text-sm text-gray-400 font-semibold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-gray-500">Carregando dados...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="scriptrl.js"></script>
+    <!-- Logout Button -->
+    <button id="logoutBtn" class="fixed top-4 right-10 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 z-50 flex items-center gap-2">
+        <span>Sair</span>
+    </button>
+
+    <script type="module" src="scriptrelatorio.js"></script>
 </body>
 </html>
