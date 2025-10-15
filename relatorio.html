@@ -27,52 +27,43 @@
             }
         }
     </script>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css"
-    />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme.js"></script>
 </head>
-<body class="bg-bg-primary text-white font-sans">
+<body style="background-color: var(--bg-primary); color: var(--text-primary);" class="font-sans">
     <!-- Mobile Menu Overlay -->
     <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden lg:hidden"></div>
 
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-bg-secondary border-r border-border-dark z-50 transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:w-20 lg:hover:w-64 group">
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full border-r z-50 transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:w-20 lg:hover:w-64 group" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
         <div class="p-4">
-            <!-- Close button (mobile only) -->
-            <button id="closeSidebarBtn" class="lg:hidden absolute top-4 right-4 text-gray-400 hover:text-white">
+            <button id="closeSidebarBtn" class="lg:hidden absolute top-4 right-4" style="color: var(--text-secondary);">
                 <i class="ph ph-x text-2xl"></i>
             </button>
 
-            <!-- Logo -->
             <div class="flex items-center gap-3 mb-8">
                 <a href="index.html" class="w-10 h-10 object-contain flex-shrink-0"><img src="img/iconsemfundo.png" alt="Power Manager Logo"></a>
                 <a href="index.html" class="font-bold text-lg opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap"><h3>Power Manager</h3></a>
             </div>
             
-            <!-- Navigation -->
             <nav>
                 <ul class="space-y-4">
                     <li>
-                        <a href="dashboard.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 lg:group-hover:px-4">
+                        <a href="dashboard.html" class="flex items-center py-3 px-2 rounded-lg transition-all duration-300 lg:group-hover:px-4 hover:bg-green-500/10" style="color: var(--text-secondary);">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-chart-bar"></i></span>
                             <span class="ml-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Dashboard</span>
                         </a>
                     </li>
                     <li>
-                        <a href="relatorio.html" class="flex items-center py-3 px-2 text-accent-green bg-green-500/10 rounded-lg border-2 border-accent-green lg:group-hover:px-4 transition-all duration-300">
+                        <a href="relatorio.html" class="flex items-center py-3 px-2 rounded-lg border-2 lg:group-hover:px-4 transition-all duration-300" style="color: var(--accent-green); background-color: rgba(0, 255, 42, 0.1); border-color: var(--accent-green);">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-chart-line"></i></span>
                             <span class="ml-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Relatórios</span>
                         </a>
                     </li>
                     <li>
-                        <a href="alerta.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 lg:group-hover:px-4">
+                        <a href="alerta.html" class="flex items-center py-3 px-2 rounded-lg transition-all duration-300 lg:group-hover:px-4 hover:bg-green-500/10" style="color: var(--text-secondary);">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-bell-ringing"></i></span>
                             <span class="ml-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Alertas</span>
                         </a>
@@ -83,8 +74,8 @@
     </div>
 
     <!-- Mobile Menu Button -->
-    <button id="mobileMenuBtn" class="lg:hidden fixed top-4 left-4 z-30 bg-bg-secondary border border-border-dark rounded-lg p-3 hover:bg-bg-card transition-colors">
-        <i class="ph ph-list text-accent-green text-2xl"></i>
+    <button id="mobileMenuBtn" class="lg:hidden fixed top-4 left-4 z-30 border rounded-lg p-3 transition-colors" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
+        <i class="ph ph-list text-2xl" style="color: var(--accent-green);"></i>
     </button>
 
     <!-- Main Content -->
@@ -92,12 +83,12 @@
         <div class="p-4 md:p-8 pt-20 lg:pt-8">
             <!-- Header -->
             <div class="mb-8">
-                <div class="text-sm text-gray-400 mb-2">Análise</div>
-                <h1 class="text-2xl md:text-3xl font-semibold text-accent-green mb-4">Relatórios de Consumo</h1>
+                <div class="text-sm mb-2" style="color: var(--text-secondary);">Análise</div>
+                <h1 class="text-2xl md:text-3xl font-semibold mb-4" style="color: var(--accent-green);">Relatórios de Consumo</h1>
                 
                 <!-- Connection Status -->
-                <div class="fixed top-4 right-4 md:right-8 bg-bg-card border border-border-dark rounded-lg px-3 md:px-4 py-2 md:py-3 flex items-center gap-2 z-20 text-xs md:text-sm" id="connectionStatus">
-                    <div class="w-2 h-2 bg-accent-green rounded-full animate-pulse" id="statusDot"></div>
+                <div class="fixed top-4 right-4 md:right-8 border rounded-lg px-3 md:px-4 py-2 md:py-3 flex items-center gap-2 z-20 text-xs md:text-sm" id="connectionStatus" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="w-2 h-2 rounded-full animate-pulse" id="statusDot" style="background-color: var(--accent-green);"></div>
                     <span class="hidden sm:inline">Conectando ao Firebase...</span>
                     <span class="sm:hidden">Conectando...</span>
                 </div>
@@ -105,9 +96,9 @@
 
             <!-- Period Filter -->
             <div class="mb-8 flex gap-3 md:gap-4 items-center flex-wrap">
-                <div class="bg-bg-card border border-border-dark rounded-lg px-3 md:px-4 py-2 flex-1 min-w-[200px]">
-                    <label class="text-xs md:text-sm text-gray-400 mr-2">Período:</label>
-                    <select id="periodFilter" class="bg-bg-secondary border-none text-white rounded px-2 md:px-3 py-1 focus:outline-none focus:ring-2 focus:ring-accent-green text-sm md:text-base w-full md:w-auto">
+                <div class="border rounded-lg px-3 md:px-4 py-2 flex-1 min-w-[200px]" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <label class="text-xs md:text-sm mr-2" style="color: var(--text-secondary);">Período:</label>
+                    <select id="periodFilter" class="border-none rounded px-2 md:px-3 py-1 focus:outline-none focus:ring-2 text-sm md:text-base w-full md:w-auto" style="background-color: var(--bg-secondary); color: var(--text-primary); border-color: var(--border-dark);">
                         <option value="7">Últimos 7 dias</option>
                         <option value="30" selected>Últimos 30 dias</option>
                         <option value="90">Últimos 90 dias</option>
@@ -116,7 +107,7 @@
                     </select>
                 </div>
                 
-                <button id="refreshBtn" class="bg-accent-green text-black font-semibold px-4 md:px-6 py-2 rounded-lg hover:bg-green-400 transition-all flex items-center gap-2 text-sm md:text-base whitespace-nowrap">
+                <button id="refreshBtn" class="font-semibold px-4 md:px-6 py-2 rounded-lg transition-all flex items-center gap-2 text-sm md:text-base whitespace-nowrap" style="background-color: var(--accent-green); color: #000000;">
                     <i class="ph ph-arrows-clockwise"></i>
                     <span class="hidden sm:inline">Atualizar</span>
                 </button>
@@ -124,61 +115,59 @@
 
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="flex items-center justify-between mb-2">
-                        <div class="text-xs md:text-sm text-gray-400">Consumo Total</div>
-                        <i class="ph ph-lightning text-accent-yellow text-lg md:text-xl"></i>
+                        <div class="text-xs md:text-sm" style="color: var(--text-secondary);">Consumo Total</div>
+                        <i class="ph ph-lightning text-lg md:text-xl" style="color: var(--accent-yellow);"></i>
                     </div>
-                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-1" id="totalConsumption">-- kWh</div>
-                    <div class="text-xs text-gray-500">Período selecionado</div>
+                    <div class="text-2xl md:text-3xl font-bold mb-1" id="totalConsumption" style="color: var(--accent-green);">-- kWh</div>
+                    <div class="text-xs" style="color: var(--text-tertiary);">Período selecionado</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="flex items-center justify-between mb-2">
-                        <div class="text-xs md:text-sm text-gray-400">Custo Total</div>
-                        <i class="ph ph-currency-circle-dollar text-accent-green text-lg md:text-xl"></i>
+                        <div class="text-xs md:text-sm" style="color: var(--text-secondary);">Custo Total</div>
+                        <i class="ph ph-currency-circle-dollar text-lg md:text-xl" style="color: var(--accent-green);"></i>
                     </div>
-                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-1" id="totalCost">R$ --</div>
-                    <div class="text-xs text-gray-500">Baseado em R$ 0,80/kWh</div>
+                    <div class="text-2xl md:text-3xl font-bold mb-1" id="totalCost" style="color: var(--accent-green);">R$ --</div>
+                    <div class="text-xs" style="color: var(--text-tertiary);">Baseado em R$ 0,80/kWh</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="flex items-center justify-between mb-2">
-                        <div class="text-xs md:text-sm text-gray-400">Média Diária</div>
-                        <i class="ph ph-chart-line-up text-accent-yellow text-lg md:text-xl"></i>
+                        <div class="text-xs md:text-sm" style="color: var(--text-secondary);">Média Diária</div>
+                        <i class="ph ph-chart-line-up text-lg md:text-xl" style="color: var(--accent-yellow);"></i>
                     </div>
-                    <div class="text-2xl md:text-3xl font-bold text-accent-yellow mb-1" id="dailyAverage">-- kWh</div>
-                    <div class="text-xs text-gray-500">Consumo por dia</div>
+                    <div class="text-2xl md:text-3xl font-bold mb-1" id="dailyAverage" style="color: var(--accent-yellow);">-- kWh</div>
+                    <div class="text-xs" style="color: var(--text-tertiary);">Consumo por dia</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="flex items-center justify-between mb-2">
-                        <div class="text-xs md:text-sm text-gray-400">Pico de Consumo</div>
-                        <i class="ph ph-trend-up text-accent-red text-lg md:text-xl"></i>
+                        <div class="text-xs md:text-sm" style="color: var(--text-secondary);">Pico de Consumo</div>
+                        <i class="ph ph-trend-up text-lg md:text-xl" style="color: var(--accent-red);"></i>
                     </div>
-                    <div class="text-2xl md:text-3xl font-bold text-accent-red mb-1" id="peakConsumption">-- kWh</div>
-                    <div class="text-xs text-gray-500" id="peakDate">--</div>
+                    <div class="text-2xl md:text-3xl font-bold mb-1" id="peakConsumption" style="color: var(--accent-red);">-- kWh</div>
+                    <div class="text-xs" id="peakDate" style="color: var(--text-tertiary);">--</div>
                 </div>
             </div>
 
             <!-- Charts Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
-                <!-- Monthly Consumption Chart -->
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="flex items-center justify-between mb-4 md:mb-6">
                         <h3 class="text-base md:text-lg font-semibold">Consumo Mensal</h3>
-                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                     </div>
                     <div class="relative h-48 md:h-64">
                         <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Daily Consumption Chart -->
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="flex items-center justify-between mb-4 md:mb-6">
                         <h3 class="text-base md:text-lg font-semibold">Consumo Diário</h3>
-                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                     </div>
                     <div class="relative h-48 md:h-64">
                         <canvas id="dailyChart"></canvas>
@@ -186,24 +175,21 @@
                 </div>
             </div>
 
-            <!-- Hourly and Trends Charts -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
-                <!-- Hourly Consumption Chart -->
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="flex items-center justify-between mb-4 md:mb-6">
                         <h3 class="text-base md:text-lg font-semibold">Consumo por Hora</h3>
-                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                     </div>
                     <div class="relative h-48 md:h-64">
                         <canvas id="hourlyChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Comparison Chart -->
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="flex items-center justify-between mb-4 md:mb-6">
                         <h3 class="text-base md:text-lg font-semibold">Tendência de Consumo</h3>
-                        <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                        <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                     </div>
                     <div class="relative h-48 md:h-64">
                         <canvas id="trendChart"></canvas>
@@ -212,27 +198,27 @@
             </div>
 
             <!-- Detailed Table -->
-            <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+            <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
                     <h3 class="text-base md:text-lg font-semibold">Histórico Detalhado</h3>
-                    <button id="exportBtn" class="bg-bg-secondary border border-border-dark px-4 py-2 rounded-lg hover:bg-accent-green hover:text-black hover:border-accent-green transition-all text-sm font-semibold whitespace-nowrap">
+                    <button id="exportBtn" class="border px-4 py-2 rounded-lg transition-all text-sm font-semibold whitespace-nowrap" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
                         <i class="ph ph-download-simple"></i> Exportar CSV
                     </button>
                 </div>
                 <div class="overflow-x-auto -mx-4 md:mx-0">
                     <table class="w-full" id="detailedTable">
                         <thead>
-                            <tr class="border-b border-border-dark">
-                                <th class="text-left py-3 px-4 text-xs md:text-sm text-gray-400 font-semibold">Data</th>
-                                <th class="text-right py-3 px-4 text-xs md:text-sm text-gray-400 font-semibold">Consumo</th>
-                                <th class="text-right py-3 px-4 text-xs md:text-sm text-gray-400 font-semibold hidden sm:table-cell">Custo</th>
-                                <th class="text-right py-3 px-4 text-xs md:text-sm text-gray-400 font-semibold hidden md:table-cell">Média/Hora</th>
-                                <th class="text-center py-3 px-4 text-xs md:text-sm text-gray-400 font-semibold">Status</th>
+                            <tr style="border-bottom: 1px solid var(--border-dark);">
+                                <th class="text-left py-3 px-4 text-xs md:text-sm font-semibold" style="color: var(--text-secondary);">Data</th>
+                                <th class="text-right py-3 px-4 text-xs md:text-sm font-semibold" style="color: var(--text-secondary);">Consumo</th>
+                                <th class="text-right py-3 px-4 text-xs md:text-sm font-semibold hidden sm:table-cell" style="color: var(--text-secondary);">Custo</th>
+                                <th class="text-right py-3 px-4 text-xs md:text-sm font-semibold hidden md:table-cell" style="color: var(--text-secondary);">Média/Hora</th>
+                                <th class="text-center py-3 px-4 text-xs md:text-sm font-semibold" style="color: var(--text-secondary);">Status</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
                             <tr>
-                                <td colspan="5" class="text-center py-8 text-gray-500 text-sm">Carregando dados...</td>
+                                <td colspan="5" class="text-center py-8 text-sm" style="color: var(--text-tertiary);">Carregando dados...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -249,7 +235,6 @@
 
     <script type="module" src="scriptrelatorio.js"></script>
     <script>
-        // Mobile menu toggle
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const closeSidebarBtn = document.getElementById('closeSidebarBtn');
         const sidebar = document.getElementById('sidebar');

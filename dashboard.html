@@ -28,26 +28,20 @@
         }
     </script>
     <link rel="stylesheet" href="styledash.css">  
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css"
-    />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css"
-    />  
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+    <script src="theme.js"></script>
 </head>
-<body class="bg-bg-primary text-white font-sans">
+<body style="background-color: var(--bg-primary); color: var(--text-primary);" class="font-sans">
     <!-- Mobile Menu Overlay -->
     <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden lg:hidden"></div>
 
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-bg-secondary border-r border-border-dark z-50 transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:w-20 lg:hover:w-64 group">
+    <div id="sidebar" class="fixed left-0 top-0 w-64 h-full border-r z-50 transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:w-20 lg:hover:w-64 group" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
         <div class="p-4">
             <!-- Close button (mobile only) -->
-            <button id="closeSidebarBtn" class="lg:hidden absolute top-4 right-4 text-gray-400 hover:text-white">
+            <button id="closeSidebarBtn" class="lg:hidden absolute top-4 right-4" style="color: var(--text-secondary);">
                 <i class="ph ph-x text-2xl"></i>
             </button>
 
@@ -61,19 +55,19 @@
             <nav>
                 <ul class="space-y-4">
                     <li>
-                        <a href="dashboard.html" class="flex items-center py-3 px-2 text-accent-green bg-green-500/10 rounded-lg border-2 border-accent-green lg:group-hover:px-4 transition-all duration-300">
+                        <a href="dashboard.html" class="flex items-center py-3 px-2 rounded-lg border-2 lg:group-hover:px-4 transition-all duration-300" style="color: var(--accent-green); background-color: rgba(0, 255, 42, 0.1); border-color: var(--accent-green);">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-chart-bar"></i></span>
                             <span class="ml-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Dashboard</span>
                         </a>
                     </li>
                     <li>
-                        <a href="relatorio.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 lg:group-hover:px-4">
+                        <a href="relatorio.html" class="flex items-center py-3 px-2 rounded-lg transition-all duration-300 lg:group-hover:px-4 hover:bg-green-500/10" style="color: var(--text-secondary);">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-chart-line"></i></span>
                             <span class="ml-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Relatórios</span>
                         </a>
                     </li>
                     <li>
-                        <a href="alerta.html" class="flex items-center py-3 px-2 text-gray-400 hover:text-accent-green hover:bg-green-500/10 rounded-lg transition-all duration-300 lg:group-hover:px-4">
+                        <a href="alerta.html" class="flex items-center py-3 px-2 rounded-lg transition-all duration-300 lg:group-hover:px-4 hover:bg-green-500/10" style="color: var(--text-secondary);">
                             <span class="text-xl flex-shrink-0"><i class="ph ph-bell-ringing"></i></span>
                             <span class="ml-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Alertas</span>
                         </a>
@@ -84,8 +78,8 @@
     </div>
 
     <!-- Mobile Menu Button -->
-    <button id="mobileMenuBtn" class="lg:hidden fixed top-4 left-4 z-30 bg-bg-secondary border border-border-dark rounded-lg p-3 hover:bg-bg-card transition-colors">
-        <i class="ph ph-list text-accent-green text-2xl"></i>
+    <button id="mobileMenuBtn" class="lg:hidden fixed top-4 left-4 z-30 border rounded-lg p-3 transition-colors" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
+        <i class="ph ph-list text-2xl" style="color: var(--accent-green);"></i>
     </button>
 
     <!-- Main Content -->
@@ -93,12 +87,12 @@
         <div class="p-4 md:p-8 pt-20 lg:pt-8">
             <!-- Header -->
             <div class="mb-8">
-                <div class="text-sm text-gray-400 mb-2">Energia</div>
-                <h1 class="text-2xl md:text-3xl font-semibold text-accent-green mb-4">Consumo de energia</h1>
+                <div class="text-sm mb-2" style="color: var(--text-secondary);">Energia</div>
+                <h1 class="text-2xl md:text-3xl font-semibold mb-4" style="color: var(--accent-green);">Consumo de energia</h1>
                 
                 <!-- Connection Status -->
-                <div class="fixed top-4 right-4 md:right-8 bg-bg-card border border-border-dark rounded-lg px-3 md:px-4 py-2 md:py-3 flex items-center gap-2 z-20" id="connectionStatus">
-                    <div class="w-2 h-2 bg-accent-green rounded-full animate-pulse" id="statusDot"></div>
+                <div class="fixed top-4 right-4 md:right-8 border rounded-lg px-3 md:px-4 py-2 md:py-3 flex items-center gap-2 z-20" id="connectionStatus" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="w-2 h-2 rounded-full animate-pulse" id="statusDot" style="background-color: var(--accent-green);"></div>
                     <span class="text-xs md:text-sm hidden sm:inline">Conectando ao Firebase...</span>
                     <span class="text-xs sm:hidden">Conectando...</span>
                 </div>
@@ -106,32 +100,32 @@
 
             <!-- Location Tabs -->
             <div class="flex gap-3 md:gap-4 mb-8 overflow-x-auto pb-2">
-                <div class="bg-bg-card border-2 border-accent-yellow rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer relative flex-shrink-0">
-                    <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
+                <div class="border-2 rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer relative flex-shrink-0" style="background-color: var(--bg-card); border-color: var(--accent-yellow);">
+                    <div class="absolute top-4 right-4 w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                     <div class="font-semibold mb-2 text-sm md:text-base">São Paulo</div>
-                    <div class="text-xl md:text-2xl font-bold text-accent-yellow mb-1">R$ 463,50</div>
-                    <div class="text-xs md:text-sm text-gray-400">342 kWh</div>
+                    <div class="text-xl md:text-2xl font-bold mb-1" style="color: var(--accent-yellow);">R$ 463,50</div>
+                    <div class="text-xs md:text-sm" style="color: var(--text-secondary);">342 kWh</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative flex-shrink-0">
-                    <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
+                <div class="border rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative flex-shrink-0" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="absolute top-4 right-4 w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                     <div class="font-semibold mb-2 text-sm md:text-base">Rio Claro</div>
-                    <div class="text-xl md:text-2xl font-bold text-accent-red mb-1">R$ 497,88</div>
-                    <div class="text-xs md:text-sm text-gray-400">412 kWh</div>
+                    <div class="text-xl md:text-2xl font-bold mb-1" style="color: var(--accent-red);">R$ 497,88</div>
+                    <div class="text-xs md:text-sm" style="color: var(--text-secondary);">412 kWh</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative flex-shrink-0">
-                    <div class="absolute top-4 right-4 w-2 h-2 bg-accent-green rounded-full"></div>
+                <div class="border rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer hover:transform hover:-translate-y-1 transition-all duration-300 relative flex-shrink-0" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="absolute top-4 right-4 w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                     <div class="font-semibold mb-2 text-sm md:text-base">Campinas</div>
-                    <div class="text-xl md:text-2xl font-bold text-accent-green mb-1">R$ 256,40</div>
-                    <div class="text-xs md:text-sm text-gray-400">229 kWh</div>
+                    <div class="text-xl md:text-2xl font-bold mb-1" style="color: var(--accent-green);">R$ 256,40</div>
+                    <div class="text-xs md:text-sm" style="color: var(--text-secondary);">229 kWh</div>
                 </div>
 
                 <div class="min-w-[180px] md:min-w-52 flex items-center justify-center flex-shrink-0">
-                    <button onclick="openLocationModal()" class="bg-bg-card border-2 border-dashed border-border-dark rounded-xl p-4 md:p-6 w-full h-full hover:border-accent-green hover:bg-green-500/5 transition-all duration-300 group">
+                    <button onclick="openLocationModal()" class="border-2 border-dashed rounded-xl p-4 md:p-6 w-full h-full transition-all duration-300 group" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                         <div class="text-center">
-                            <div class="text-3xl md:text-4xl mb-2 text-gray-500 group-hover:text-accent-green transition-colors">+</div>
-                            <div class="text-sm md:text-base font-semibold text-gray-400 group-hover:text-accent-green transition-colors">Adicionar Local</div>
+                            <div class="text-3xl md:text-4xl mb-2 transition-colors" style="color: var(--text-tertiary);">+</div>
+                            <div class="text-sm md:text-base font-semibold transition-colors" style="color: var(--text-secondary);">Adicionar Local</div>
                         </div>
                     </button>
                 </div>
@@ -139,36 +133,36 @@
 
             <!-- Modal para Adicionar Local -->
             <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-70 modal-backdrop hidden z-50 flex items-center justify-center p-4">
-                <div class="bg-bg-card border border-border-dark rounded-xl p-6 w-full max-w-md transform transition-all">
-                    <h2 class="text-xl font-semibold text-accent-green mb-6">Adicionar Novo Local</h2>
+                <div class="border rounded-xl p-6 w-full max-w-md transform transition-all" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <h2 class="text-xl font-semibold mb-6" style="color: var(--accent-green);">Adicionar Novo Local</h2>
                     
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm text-gray-400 mb-2">Nome do Local</label>
-                            <input type="text" id="locationName" placeholder="Ex: São Paulo" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                            <label class="block text-sm mb-2" style="color: var(--text-secondary);">Nome do Local</label>
+                            <input type="text" id="locationName" placeholder="Ex: São Paulo" class="w-full px-4 py-2 border rounded-lg focus:outline-none transition-colors" style="background-color: var(--bg-secondary); border-color: var(--border-dark); color: var(--text-primary);">
                         </div>
                         
                         <div>
-                            <label class="block text-sm text-gray-400 mb-2">Custo Mensal (R$)</label>
-                            <input type="number" id="locationCost" placeholder="Ex: 15000" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                            <label class="block text-sm mb-2" style="color: var(--text-secondary);">Custo Mensal (R$)</label>
+                            <input type="number" id="locationCost" placeholder="Ex: 15000" class="w-full px-4 py-2 border rounded-lg focus:outline-none transition-colors" style="background-color: var(--bg-secondary); border-color: var(--border-dark); color: var(--text-primary);">
                         </div>
                         
                         <div>
-                            <label class="block text-sm text-gray-400 mb-2">Consumo (kWh)</label>
-                            <input type="number" id="locationConsumption" placeholder="Ex: 18000" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                            <label class="block text-sm mb-2" style="color: var(--text-secondary);">Consumo (kWh)</label>
+                            <input type="number" id="locationConsumption" placeholder="Ex: 18000" class="w-full px-4 py-2 border rounded-lg focus:outline-none transition-colors" style="background-color: var(--bg-secondary); border-color: var(--border-dark); color: var(--text-primary);">
                         </div>
                         
                         <div>
-                            <label class="block text-sm text-gray-400 mb-2">Emissão de CO₂ (kg)</label>
-                            <input type="number" id="locationEmission" placeholder="Ex: 230" class="w-full px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg text-white focus:border-accent-green focus:outline-none transition-colors">
+                            <label class="block text-sm mb-2" style="color: var(--text-secondary);">Emissão de CO₂ (kg)</label>
+                            <input type="number" id="locationEmission" placeholder="Ex: 230" class="w-full px-4 py-2 border rounded-lg focus:outline-none transition-colors" style="background-color: var(--bg-secondary); border-color: var(--border-dark); color: var(--text-primary);">
                         </div>
                     </div>
                     
                     <div class="flex gap-3 mt-6">
-                        <button onclick="closeLocationModal()" class="flex-1 px-4 py-2 bg-bg-secondary border border-border-dark rounded-lg hover:bg-red-500/10 hover:border-accent-red transition-all">
+                        <button onclick="closeLocationModal()" class="flex-1 px-4 py-2 border rounded-lg transition-all" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
                             Cancelar
                         </button>
-                        <button onclick="addLocation()" class="flex-1 px-4 py-2 bg-accent-green text-black rounded-lg font-semibold hover:bg-green-400 transition-all">
+                        <button onclick="addLocation()" class="flex-1 px-4 py-2 rounded-lg font-semibold transition-all" style="background-color: var(--accent-green); color: #000000;">
                             Adicionar
                         </button>
                     </div>
@@ -177,139 +171,139 @@
 
             <!-- Dashboard Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
-                <!-- Left Column - Charts -->
+                <!-- Left Column -->
                 <div class="lg:col-span-1 space-y-6 md:space-y-8">
                     <!-- Monthly Cost Chart -->
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                    <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
                             <h3 class="text-base md:text-lg font-semibold">Custo do Mês</h3>
-                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                         </div>
                         <div class="text-center">
                             <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
                                 <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke="#ef4444" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="75" stroke-linecap="round" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#ef4444" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="88" stroke-linecap="round" class="hidden md:block"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="75" stroke-linecap="round" style="stroke: var(--accent-red);" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="88" stroke-linecap="round" style="stroke: var(--accent-red);" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-xl md:text-2xl font-bold text-accent-red">R$ 463,50</div>
-                            <div class="text-xs md:text-sm text-gray-400">342 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold" style="color: var(--accent-red);">R$ 463,50</div>
+                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">342 kWh</div>
                         </div>
                     </div>
 
                     <!-- Daily Cost Chart -->
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6">
+                    <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
                             <h3 class="text-base md:text-lg font-semibold">Custo do Dia</h3>
-                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                         </div>
                         <div class="text-center">
                             <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
                                 <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke="#eeea10" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="88" stroke-linecap="round" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#eeea10" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="102" stroke-linecap="round" class="hidden md:block"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="88" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="102" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-xl md:text-2xl font-bold text-accent-yellow">R$ 15,45</div>
-                            <div class="text-xs md:text-sm text-gray-400">11.4 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold" style="color: var(--accent-yellow);">R$ 15,45</div>
+                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">11.4 kWh</div>
                         </div>
                     </div>
                 </div>
 
-                <!--Coluna 2-->
+                <!-- Column 2 -->
                 <div class="lg:col-span-1 space-y-6 md:space-y-8">
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6" data-device="ar-cond">
+                    <div class="border rounded-xl p-4 md:p-6" data-device="ar-cond" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
                             <h3 class="text-base md:text-lg font-semibold">Ar-Condicionado</h3>
-                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                         </div>
                         <div class="text-center">
                             <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
                                 <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke="#eeea10" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="96" stroke-linecap="round" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#eeea10" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="112" stroke-linecap="round" class="hidden md:block"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="96" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="112" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-xl md:text-2xl font-bold text-accent-yellow cost-value">R$ 3,20</div>
-                            <div class="text-xs md:text-sm text-gray-400">4 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold cost-value" style="color: var(--accent-yellow);">R$ 3,20</div>
+                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">4 kWh</div>
                         </div>
                     </div>
 
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6" data-device="lampada">
+                    <div class="border rounded-xl p-4 md:p-6" data-device="lampada" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
                             <h3 class="text-base md:text-lg font-semibold">Lâmpada do Quarto</h3>
-                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                         </div>
                         <div class="text-center">
                             <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
                                 <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke="#00ff2a" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="265" stroke-linecap="round" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#00ff2a" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="309" stroke-linecap="round" class="hidden md:block"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="265" stroke-linecap="round" style="stroke: var(--accent-green);" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="309" stroke-linecap="round" style="stroke: var(--accent-green);" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-xl md:text-2xl font-bold text-accent-green cost-value">R$ 0,48</div>
-                            <div class="text-xs md:text-sm text-gray-400">0.60 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold cost-value" style="color: var(--accent-green);">R$ 0,48</div>
+                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">0.60 kWh</div>
                         </div>
                     </div>
                 </div>
 
-                <!--Coluna 3-->
+                <!-- Column 3 -->
                 <div class="lg:col-span-1 space-y-6 md:space-y-8">
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6" data-device="ventilador">
+                    <div class="border rounded-xl p-4 md:p-6" data-device="ventilador" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
                             <h3 class="text-base md:text-lg font-semibold">Ventilador</h3>
-                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                         </div>
                         <div class="text-center">
                             <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
                                 <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke="#00ff2a" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="240" stroke-linecap="round" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#00ff2a" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="280" stroke-linecap="round" class="hidden md:block"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="240" stroke-linecap="round" style="stroke: var(--accent-green);" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="280" stroke-linecap="round" style="stroke: var(--accent-green);" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-xl md:text-2xl font-bold text-accent-green cost-value">R$ 0,80</div>
-                            <div class="text-xs md:text-sm text-gray-400">1 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold cost-value" style="color: var(--accent-green);">R$ 0,80</div>
+                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">1 kWh</div>
                         </div>
                     </div>
 
-                    <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6" data-device="chuveiro">
+                    <div class="border rounded-xl p-4 md:p-6" data-device="chuveiro" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
                             <h3 class="text-base md:text-lg font-semibold">Chuveiro</h3>
-                            <div class="w-2 h-2 bg-accent-green rounded-full"></div>
+                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                         </div>
                         <div class="text-center">
                             <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
                                 <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke="#333" stroke-width="8" fill="none" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke="#ef4444" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="73" stroke-linecap="round" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#333" stroke-width="8" fill="none" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke="#ef4444" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="85" stroke-linecap="round" class="hidden md:block"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
+                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
+                                            stroke-dasharray="302" stroke-dashoffset="73" stroke-linecap="round" style="stroke: var(--accent-red);" class="md:hidden"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
+                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
+                                            stroke-dasharray="351" stroke-dashoffset="85" stroke-linecap="round" style="stroke: var(--accent-red);" class="hidden md:block"/>
                                 </svg>
                             </div>
-                            <div class="text-xl md:text-2xl font-bold text-accent-red cost-value">R$ 4,64</div>
-                            <div class="text-xs md:text-sm text-gray-400">5.8 kWh</div>
+                            <div class="text-xl md:text-2xl font-bold cost-value" style="color: var(--accent-red);">R$ 4,64</div>
+                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">5.8 kWh</div>
                         </div>
                     </div>
                 </div>                
@@ -317,31 +311,31 @@
 
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 text-center">
-                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-2">R$ 387,66</div>
-                    <div class="text-xs md:text-sm text-gray-400">Média de custo mensal</div>
+                <div class="border rounded-xl p-4 md:p-6 text-center" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="text-2xl md:text-3xl font-bold mb-2" style="color: var(--accent-green);">R$ 387,66</div>
+                    <div class="text-xs md:text-sm" style="color: var(--text-secondary);">Média de custo mensal</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 text-center">
-                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-2">R$ 14,89</div>
-                    <div class="text-xs md:text-sm text-gray-400">Média de custo diário</div>
+                <div class="border rounded-xl p-4 md:p-6 text-center" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="text-2xl md:text-3xl font-bold mb-2" style="color: var(--accent-green);">R$ 14,89</div>
+                    <div class="text-xs md:text-sm" style="color: var(--text-secondary);">Média de custo diário</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 text-center">
-                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-2">0.47 kW</div>
-                    <div class="text-xs md:text-sm text-gray-400">Potência atual</div>
+                <div class="border rounded-xl p-4 md:p-6 text-center" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="text-2xl md:text-3xl font-bold mb-2" style="color: var(--accent-green);">0.47 kW</div>
+                    <div class="text-xs md:text-sm" style="color: var(--text-secondary);">Potência atual</div>
                 </div>
                 
-                <div class="bg-bg-card border border-border-dark rounded-xl p-4 md:p-6 text-center">
-                    <div class="text-2xl md:text-3xl font-bold text-accent-green mb-2">12</div>
-                    <div class="text-xs md:text-sm text-gray-400">Dispositivos ativos</div>
+                <div class="border rounded-xl p-4 md:p-6 text-center" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="text-2xl md:text-3xl font-bold mb-2" style="color: var(--accent-green);">12</div>
+                    <div class="text-xs md:text-sm" style="color: var(--text-secondary);">Dispositivos ativos</div>
                 </div>
             </div>
 
             <!-- IoT Section -->
             <div class="mt-8 md:mt-12">
-                <h2 class="text-xl md:text-2xl font-semibold text-accent-green mb-3 md:mb-4">Power Manager IoT</h2>
-                <p class="text-sm md:text-base text-gray-400 mb-6 md:mb-8">Monitoramento em tempo real da rede</p>
+                <h2 class="text-xl md:text-2xl font-semibold mb-3 md:mb-4" style="color: var(--accent-green);">Power Manager IoT</h2>
+                <p class="text-sm md:text-base mb-6 md:mb-8" style="color: var(--text-secondary);">Monitoramento em tempo real da rede</p>
 
                 <!-- Sensor Value Card -->
                 <div id="mainContent" style="display: none;">
@@ -366,9 +360,8 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- fim barra alerta 1 -->
 
-                        <!-- barra alerta 2 (Consumo Mensal) -->
+                        <!-- barra alerta 2 -->
                         <div class="bar-container">
                             <div class="bar-info">
                                 <span class="bar-label">Consumo Mensal Acumulado</span>
@@ -382,7 +375,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- fim barra alerta 2 -->
                     </div>
                 </div>
                 
@@ -396,7 +388,7 @@
                 </div>
                 
                 <div class="devices-container" id="devicesContainer">
-                    <!-- Dispositivos serão adicionados aqui dinamicamente -->
+                    <!-- Dispositivos serão adicionados aqui -->
                 </div>
             </div>
         </div>
@@ -413,7 +405,7 @@
                 <option value="yes">Inteligente (controlável)</option>
             </select>
             <div id="limitWarning" class="limit-warning hidden">
-                ⚠️ Limite máximo de 8 dispositivos inteligentes atingido! Selecione "Não Inteligente" para continuar.
+                ⚠️ Limite máximo de 8 dispositivos inteligentes atingido!
             </div>
             <div class="modal-buttons">
                 <button class="cancel-btn" id="cancelBtn">Cancelar</button>
@@ -440,18 +432,18 @@
         <div class="modal-content">
             <h2>⚡ Configurar Preço da Energia</h2>
             <p style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 15px;">
-                Insira o preço do kWh cobrado pela sua distribuidora de energia.
+                Insira o preço do kWh cobrado pela sua distribuidora.
             </p>
             <div id="currentPriceDisplay" style="color: var(--accent-green); font-size: 0.95rem; margin-bottom: 15px; font-weight: 600;">
                 Preço atual: R$ 0,80/kWh
             </div>
-            <label for="energyPriceInput" style="display: block; margin-bottom: 8px; color: #ecf0f1; font-size: 0.9rem;">
+            <label for="energyPriceInput" style="display: block; margin-bottom: 8px; font-size: 0.9rem;">
                 Novo preço (R$/kWh):
             </label>
             <input type="number" id="energyPriceInput" placeholder="Ex: 0.85" step="0.01" min="0.01" 
-                   style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: var(--bg-secondary); color: white; font-size: 1rem;">
-            <p style="color: #95a5a6; font-size: 0.85rem; margin-top: 10px;">
-                💡 Os valores de todos os dispositivos serão atualizados automaticamente.
+                   style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid; font-size: 1rem; background-color: var(--bg-secondary); border-color: var(--border-dark); color: var(--text-primary);">
+            <p style="font-size: 0.85rem; margin-top: 10px; color: var(--text-tertiary);">
+                💡 Os valores serão atualizados automaticamente.
             </p>
             <div class="modal-buttons">
                 <button class="cancel-btn" id="cancelPriceBtn" onclick="closeEnergyPriceModal()">Cancelar</button>

@@ -1,0 +1,385 @@
+/* theme.css - Sistema de Temas Melhorado */
+
+:root {
+  /* Modo Escuro (Padrão) */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-card: #1e1e1e;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+  --accent-green: #00ff2a;
+  --accent-red: #ef4444;
+  --accent-yellow: #eeea10;
+  --accent-blue: #3b82f6;
+  --border-dark: #333333;
+  --shadow: rgba(0, 0, 0, 0.5);
+  --overlay: rgba(0, 0, 0, 0.7);
+  --hover-bg: rgba(255, 255, 255, 0.05);
+}
+
+/* Modo Claro - Muito mais bonito! */
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --accent-green: #10b981;
+  --accent-red: #ef4444;
+  --accent-yellow: #f59e0b;
+  --accent-blue: #3b82f6;
+  --border-dark: #e2e8f0;
+  --shadow: rgba(0, 0, 0, 0.08);
+  --overlay: rgba(0, 0, 0, 0.3);
+  --hover-bg: rgba(0, 0, 0, 0.03);
+}
+
+/* Auto-detect system preference */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-tertiary: #94a3b8;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-yellow: #f59e0b;
+    --accent-blue: #3b82f6;
+    --border-dark: #e2e8f0;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --overlay: rgba(0, 0, 0, 0.3);
+    --hover-bg: rgba(0, 0, 0, 0.03);
+  }
+}
+
+/* Transições suaves */
+body,
+.bg-bg-primary,
+.bg-bg-secondary,
+.bg-bg-card,
+[style*="background-color"] {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+}
+
+/* Body */
+body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Cards melhorados no modo claro */
+[data-theme="light"] .bg-bg-card,
+[data-theme="light"] [style*="--bg-card"] {
+  box-shadow: 0 1px 3px var(--shadow), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* Sidebar */
+[data-theme="light"] #sidebar {
+  box-shadow: 2px 0 10px var(--shadow);
+}
+
+/* Toggle de Tema - Mais bonito */
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 120px;
+  z-index: 60;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dark);
+  border-radius: 12px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.theme-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--shadow);
+}
+
+.theme-toggle-option {
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.theme-toggle-option i {
+  font-size: 16px;
+}
+
+.theme-toggle-option.active {
+  background: var(--accent-green);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="light"] .theme-toggle-option.active {
+  color: #ffffff;
+}
+
+.theme-toggle-option:not(.active):hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+@media (max-width: 1024px) {
+  .theme-toggle {
+    right: 16px;
+    top: 72px;
+    padding: 3px;
+  }
+  
+  .theme-toggle-option {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .theme-toggle-option span {
+    display: none;
+  }
+  
+  .theme-toggle-option {
+    padding: 8px;
+  }
+}
+
+/* Status dot mais bonito no modo claro */
+[data-theme="light"] .bg-accent-green,
+[data-theme="light"] [style*="bg-accent-green"] {
+  filter: brightness(1);
+}
+
+/* Inputs e selects */
+input, select, textarea {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-dark) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  box-shadow: 0 1px 2px var(--shadow);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent-green) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Tables */
+table {
+  color: var(--text-primary);
+}
+
+th {
+  color: var(--text-secondary) !important;
+}
+
+tbody tr {
+  border-color: var(--border-dark) !important;
+}
+
+[data-theme="light"] tbody tr:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+/* Buttons */
+button {
+  transition: all 0.2s ease !important;
+}
+
+/* Cards com hover melhorado */
+[data-theme="light"] .hover\:transform:hover {
+  box-shadow: 0 10px 25px var(--shadow) !important;
+}
+
+/* SVG circles (gráficos circulares) - modo claro */
+[data-theme="light"] circle[stroke="#333"],
+[data-theme="light"] circle[stroke="#333333"] {
+  stroke: #e2e8f0 !important;
+}
+
+/* Backgrounds coloridos - modo claro mais suave */
+[data-theme="light"] .bg-green-500\/10,
+[data-theme="light"] [class*="bg-green"] {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+[data-theme="light"] .bg-red-500\/10 {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+[data-theme="light"] .bg-yellow-500\/10 {
+  background-color: rgba(245, 158, 11, 0.08) !important;
+}
+
+[data-theme="light"] .bg-blue-500\/20 {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+[data-theme="light"] .bg-accent-yellow\/20 {
+  background-color: rgba(245, 158, 11, 0.08) !important;
+}
+
+/* Texto colorido mais legível no modo claro */
+[data-theme="light"] .text-accent-green,
+[data-theme="light"] [style*="color: var(--accent-green)"] {
+  color: #059669 !important;
+}
+
+[data-theme="light"] .text-accent-yellow {
+  color: #d97706 !important;
+}
+
+/* Bordas coloridas */
+[data-theme="light"] .border-accent-green,
+[data-theme="light"] [class*="border-accent-green"] {
+  border-color: #10b981 !important;
+}
+
+[data-theme="light"] .border-accent-yellow,
+[data-theme="light"] [class*="border-accent-yellow"] {
+  border-color: #f59e0b !important;
+}
+
+[data-theme="light"] .border-accent-red,
+[data-theme="light"] [class*="border-accent-red"] {
+  border-color: #ef4444 !important;
+}
+
+/* Modal overlay */
+.modal,
+#locationModal,
+#deviceModal,
+#deleteModal,
+#energyPriceModal,
+#alertModal {
+  background-color: var(--overlay) !important;
+}
+
+.modal-content,
+.modal-content * {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-dark) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Device cards */
+[data-theme="light"] .device {
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Mobile menu overlay */
+#mobileMenuOverlay {
+  background-color: var(--overlay) !important;
+}
+
+/* Links */
+a {
+  color: var(--text-primary);
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-green);
+}
+
+/* Connection status mais bonito no modo claro */
+[data-theme="light"] #connectionStatus {
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Gráficos - melhor no modo claro */
+[data-theme="light"] canvas {
+  filter: none;
+}
+
+/* Logout button */
+#logoutBtn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+/* Ajustes específicos para o styledash.css */
+[data-theme="light"] .value-container,
+[data-theme="light"] .bar-container,
+[data-theme="light"] .devices-container,
+[data-theme="light"] .device {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-dark) !important;
+}
+
+[data-theme="light"] .bar-bg {
+  background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="light"] .value,
+[data-theme="light"] .bar-label {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .timestamp,
+[data-theme="light"] .bar-values,
+[data-theme="light"] .device-value {
+  color: var(--text-secondary) !important;
+}
+
+/* Badges e tags */
+[data-theme="light"] .device-type {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #059669 !important;
+}
+
+[data-theme="light"] .device-type.smart {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #2563eb !important;
+}
+
+/* Status indicators */
+[data-theme="light"] .animate-pulse {
+  filter: brightness(1.2);
+}

@@ -221,9 +221,9 @@ function renderAlerts(alerts) {
   if (keys.length === 0) {
     alertsContainer.innerHTML = `
       <div class="text-center py-8">
-        <i class="ph ph-bell-slash text-4xl mb-3 block text-gray-600"></i>
-        <p class="text-gray-400 mb-2">Nenhum alerta criado ainda</p>
-        <p class="text-sm text-gray-500">Clique em "Criar Novo Alerta" para começar</p>
+        <i class="ph ph-bell-slash text-4xl mb-3 block" style="color: var(--text-tertiary);"></i>
+        <p class="mb-2" style="color: var(--text-secondary);">Nenhum alerta criado ainda</p>
+        <p class="text-sm" style="color: var(--text-tertiary);">Clique em "Criar Novo Alerta" para começar</p>
       </div>
     `;
     return;
@@ -232,10 +232,10 @@ function renderAlerts(alerts) {
   keys.forEach(id => {
     const a = alerts[id];
     const isRealTime = a.type === "Consumo em tempo real";
-    const color = isRealTime ? "accent-yellow" : "blue-400";
+    const color = isRealTime ? "var(--accent-yellow)" : "#3b82f6";
     const icon = isRealTime ? "ph-lightning" : "ph-chart-line-up";
-    const bgColor = isRealTime ? "bg-accent-yellow/10" : "bg-blue-500/10";
-    const borderColor = isRealTime ? "border-accent-yellow/30" : "border-blue-500/30";
+    const bgColor = isRealTime ? "rgba(245, 158, 11, 0.15)" : "rgba(59, 130, 246, 0.15)";
+    const borderColor = isRealTime ? "rgba(245, 158, 11, 0.3)" : "rgba(59, 130, 246, 0.3)";
     const unit = isRealTime ? "W" : "kWh";
     const date = new Date(a.timestamp).toLocaleString('pt-BR', {
       day: '2-digit',
@@ -246,23 +246,24 @@ function renderAlerts(alerts) {
     });
 
     const alertDiv = document.createElement('div');
-    alertDiv.className = `bg-bg-secondary border ${borderColor} rounded-xl p-4 hover:border-accent-green transition-all duration-300 transform hover:-translate-y-1`;
+    alertDiv.className = 'border rounded-xl p-4 transition-all duration-300 transform hover:-translate-y-1';
+    alertDiv.style.cssText = `background-color: var(--bg-secondary); border-color: ${borderColor};`;
     alertDiv.innerHTML = `
       <div class="flex justify-between items-start">
         <div class="flex gap-4 flex-1">
-          <div class="w-12 h-12 ${bgColor} rounded-lg flex items-center justify-center flex-shrink-0">
-            <i class="ph ${icon} text-${color} text-2xl"></i>
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: ${bgColor};">
+            <i class="ph ${icon} text-2xl" style="color: ${color};"></i>
           </div>
           <div class="flex-1">
             <div class="flex items-start justify-between mb-2">
               <h4 class="font-semibold text-lg">${a.name}</h4>
             </div>
             <div class="space-y-1">
-              <p class="text-sm text-gray-400">
-                <span class="text-${color} font-semibold">${a.limit} ${unit}</span> • 
-                <span class="text-${color}">${a.type}</span>
+              <p class="text-sm" style="color: var(--text-secondary);">
+                <span class="font-semibold" style="color: ${color};">${a.limit} ${unit}</span> • 
+                <span style="color: ${color};">${a.type}</span>
               </p>
-              <p class="text-xs text-gray-500">
+              <p class="text-xs" style="color: var(--text-tertiary);">
                 <i class="ph ph-clock"></i> Criado em ${date}
               </p>
             </div>
@@ -270,14 +271,16 @@ function renderAlerts(alerts) {
         </div>
         <div class="flex gap-2 ml-4">
           <button onclick="openAlertModal('${id}')" 
-                  class="w-10 h-10 bg-bg-card border border-border-dark rounded-lg hover:bg-accent-yellow/10 hover:border-accent-yellow transition-all flex items-center justify-center"
+                  class="w-10 h-10 border rounded-lg transition-all flex items-center justify-center"
+                  style="background-color: var(--bg-card); border-color: var(--border-dark);"
                   title="Editar">
-            <i class="ph ph-pencil-simple text-accent-yellow"></i>
+            <i class="ph ph-pencil-simple" style="color: var(--accent-yellow);"></i>
           </button>
           <button onclick="deleteAlert('${id}')" 
-                  class="w-10 h-10 bg-bg-card border border-border-dark rounded-lg hover:bg-accent-red/10 hover:border-accent-red transition-all flex items-center justify-center"
+                  class="w-10 h-10 border rounded-lg transition-all flex items-center justify-center"
+                  style="background-color: var(--bg-card); border-color: var(--border-dark);"
                   title="Excluir">
-            <i class="ph ph-trash text-accent-red"></i>
+            <i class="ph ph-trash" style="color: var(--accent-red);"></i>
           </button>
         </div>
       </div>
