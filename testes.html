@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico WebView - Power Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #0a0a0a;
+            color: white;
+        }
+        
+        h1 {
+            color: #00ff2a;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .subtitle {
+            color: #9ca3af;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .test {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background: #1a1a1a;
+        }
+        
+        .test-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .test-icon {
+            font-size: 24px;
+        }
+        
+        .test-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .test-details {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 8px;
+            padding-left: 34px;
+            word-break: break-all;
+        }
+        
+        .success {
+            border-left-color: #00ff2a;
+        }
+        
+        .error {
+            border-left-color: #ef4444;
+        }
+        
+        .warning {
+            border-left-color: #eeea10;
+        }
+        
+        .info {
+            background: #1e3a5f;
+            border-left-color: #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .info-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        button {
+            background: #00ff2a;
+            color: black;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 16px;
+        }
+        
+        button:active {
+            opacity: 0.8;
+        }
+        
+        .summary {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .summary-item {
+            display: inline-block;
+            margin: 0 15px;
+        }
+        
+        .summary-number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .summary-label {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnóstico WebView</h1>
+    <p class="subtitle">Power Manager IoT</p>
+    
+    <div class="info">
+        <div class="info-title">ℹ️ Sobre este teste</div>
+        <small>Esta página verifica se todas as funcionalidades necessárias estão disponíveis no WebView.</small>
+    </div>
+    
+    <div id="summary" class="summary" style="display: none;">
+        <div class="summary-item">
+            <div class="summary-number" style="color: #00ff2a;" id="passedCount">0</div>
+            <div class="summary-label">Passaram</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-number" style="color: #ef4444;" id="failedCount">0</div>
+            <div class="summary-label">Falharam</div>
+        </div>
+    </div>
+    
+    <div id="results"></div>
+    
+    <button onclick="runTests()">🔄 Executar Testes Novamente</button>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <script>
+        let passedTests = 0;
+        let failedTests = 0;
+        
+        function addTest(name, passed, details = '', type = 'normal') {
+            const resultsDiv = document.getElementById('results');
+            const testDiv = document.createElement('div');
+            
+            let className = type === 'warning' ? 'warning' : (passed ? 'success' : 'error');
+            let icon = type === 'warning' ? '⚠️' : (passed ? '✅' : '❌');
+            
+            testDiv.className = `test ${className}`;
+            testDiv.innerHTML = `
+                <div class="test-header">
+                    <span class="test-icon">${icon}</span>
+                    <span class="test-name">${name}</span>
+                </div>
+                ${details ? `<div class="test-details">${details}</div>` : ''}
+            `;
+            
+            resultsDiv.appendChild(testDiv);
+            
+            if (type !== 'warning') {
+                if (passed) passedTests++;
+                else failedTests++;
+            }
+        }
+        
+        function updateSummary() {
+            document.getElementById('passedCount').textContent = passedTests;
+            document.getElementById('failedCount').textContent = failedTests;
+            document.getElementById('summary').style.display = 'block';
+        }
+        
+        function runTests() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            passedTests = 0;
+            failedTests = 0;
+            
+            // Teste 1: JavaScript Básico
+            addTest('JavaScript Básico', true, 'JavaScript está executando corretamente');
+            
+            // Teste 2: User Agent
+            const ua = navigator.userAgent;
+            const isAndroid = /Android/i.test(ua);
+            const isWebView = /wv/.test(ua) || /WebView/.test(ua);
+            addTest(
+                'User Agent', 
+                true, 
+                `${ua}<br><br>Android: ${isAndroid ? 'Sim' : 'Não'} | WebView: ${isWebView ? 'Sim' : 'Não'}`
+            );
+            
+            // Teste 3: LocalStorage
+            try {
+                localStorage.setItem('power_manager_test', 'ok');
+                const value = localStorage.getItem('power_manager_test');
+                const passed = value === 'ok';
+                addTest('LocalStorage', passed, passed ? 'Leitura e escrita funcionando' : 'Erro ao ler/escrever');
+                localStorage.removeItem('power_manager_test');
+            } catch(e) {
+                addTest('LocalStorage', false, `Erro: ${e.message}`);
+            }
+            
+            // Teste 4: SessionStorage
+            try {
+                sessionStorage.setItem('power_manager_test', 'ok');
+                const value = sessionStorage.getItem('power_manager_test');
+                const passed = value === 'ok';
+                addTest('SessionStorage', passed, passed ? 'Leitura e escrita funcionando' : 'Erro ao ler/escrever');
+                sessionStorage.removeItem('power_manager_test');
+            } catch(e) {
+                addTest('SessionStorage', false, `Erro: ${e.message}`);
+            }
+            
+            // Teste 5: Cookies
+            try {
+                document.cookie = "power_manager_test=ok; path=/";
+                const passed = document.cookie.includes('power_manager_test');
+                addTest('Cookies', passed, passed ? 'Cookies habilitados' : 'Cookies bloqueados');
+            } catch(e) {
+                addTest('Cookies', false, `Erro: ${e.message}`);
+            }
+            
+            // Teste 6: Fetch API
+            addTest('Fetch API', typeof fetch !== 'undefined', 'Necessário para requisições HTTP');
+            
+            // Teste 7: Promises
+            addTest('Promises', typeof Promise !== 'undefined', 'Necessário para código assíncrono');
+            
+            // Teste 8: ES6 Features
+            try {
+                eval('const test = (x) => x * 2');
+                addTest('ES6 Arrow Functions', true, 'Suporte a sintaxe moderna');
+            } catch(e) {
+                addTest('ES6 Arrow Functions', false, 'Sintaxe moderna não suportada');
+            }
+            
+            // Teste 9: Console
+            addTest('Console API', typeof console !== 'undefined' && typeof console.log === 'function', 
+                'Necessário para debug');
+            
+            // Teste 10: Viewport
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            addTest('Viewport', true, `${width}x${height}px`);
+            
+            // Teste 11: Touch Events (Mobile)
+            const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            addTest('Touch Events', hasTouch, hasTouch ? 'Dispositivo touch detectado' : 'Sem suporte touch', 
+                hasTouch ? 'normal' : 'warning');
+            
+            // Teste 12: Conexão Internet
+            const isOnline = navigator.onLine;
+            addTest('Conexão Internet', isOnline, isOnline ? 'Conectado' : 'Desconectado');
+            
+            // Teste 13: Firebase SDK
+            const firebaseLoaded = typeof firebase !== 'undefined';
+            addTest('Firebase SDK', firebaseLoaded, firebaseLoaded ? 'Biblioteca carregada' : 'Biblioteca não encontrada');
+            
+            // Teste 14: Firebase Init
+            if (firebaseLoaded) {
+                try {
+                    // Suas credenciais aqui
+                    const config = {
+                        apiKey: "SUA_API_KEY",
+                        authDomain: "SEU_PROJECT.firebaseapp.com",
+                        databaseURL: "https://SEU_PROJECT.firebaseio.com",
+                        projectId: "SEU_PROJECT_ID",
+                        storageBucket: "SEU_PROJECT.appspot.com",
+                        messagingSenderId: "SEU_SENDER_ID",
+                        appId: "SEU_APP_ID"
+                    };
+                    
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(config);
+                    }
+                    addTest('Firebase Inicialização', true, 'Firebase inicializado com sucesso');
+                    
+                    // Teste 15: Firebase Auth
+                    const authAvailable = typeof firebase.auth === 'function';
+                    addTest('Firebase Auth', authAvailable, authAvailable ? 'Módulo disponível' : 'Módulo não encontrado');
+                    
+                    // Teste 16: Firebase Database
+                    const dbAvailable = typeof firebase.database === 'function';
+                    addTest('Firebase Database', dbAvailable, dbAvailable ? 'Módulo disponível' : 'Módulo não encontrado');
+                    
+                } catch(e) {
+                    addTest('Firebase Inicialização', false, `Erro: ${e.message}`);
+                }
+            }
+            
+            // Teste 17: IndexedDB
+            const indexedDBAvailable = 'indexedDB' in window;
+            addTest('IndexedDB', indexedDBAvailable, 'Banco de dados local');
+            
+            // Teste 18: WebSQL (deprecated mas ainda usado)
+            const webSQLAvailable = 'openDatabase' in window;
+            addTest('WebSQL', webSQLAvailable, webSQLAvailable ? 'Disponível (legacy)' : 'Não disponível', 'warning');
+            
+            // Teste 19: Geolocation
+            const geoAvailable = 'geolocation' in navigator;
+            addTest('Geolocation API', geoAvailable, geoAvailable ? 'Disponível' : 'Não disponível', 'warning');
+            
+            // Teste 20: Service Workers
+            const swAvailable = 'serviceWorker' in navigator;
+            addTest('Service Workers', swAvailable, swAvailable ? 'Disponível' : 'Não disponível', 'warning');
+            
+            updateSummary();
+        }
+        
+        // Executar testes automaticamente ao carregar
+        window.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>
