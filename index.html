@@ -13,13 +13,16 @@
 <nav class="navbar">
     <div class="nav-container">
         <div class="logo">
-            <img src="img/iconsemfundo.png" alt="PowerManager Logo" class="logoicon">
-            PowerManager
+            <a href="index.html">
+                <img src="img/iconsemfundo.png" alt="PowerManager Logo" class="logoicon">
+                PowerManager
+            </a>
         </div>
         <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="testebarra.html">Sobre</a></li>
-            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#features">Recursos</a></li>
+            <li><a href="#about">Sobre</a></li>
+            <li><a href="#contact">Contato</a></li>
         </ul>
         <div class="nav-right">
             <button class="theme-toggle-btn" id="themeToggle" aria-label="Alternar tema">
@@ -30,42 +33,524 @@
     </div>
 </nav>
 
-    <!-- Main Content -->
-    <main class="main-container">
-        <div class="geometric-bg">
-            <div class="geometric-shpe shape-1"></div>
-            <div class="geometric-shape shape-2"></div>
-            <div class="geometric-shape shape-3"></div>
+<!-- Hero Section -->
+<main class="main-container" id="home">
+    <div class="geometric-bg">
+        <div class="geometric-shape shape-1"></div>
+        <div class="geometric-shape shape-2"></div>
+        <div class="geometric-shape shape-3"></div>
+    </div>
+
+    <div class="content-wrapper">
+        <div class="text-content">
+            <h1 class="main-title">
+                <span class="highlight">Power Manager</span><br>
+                IoT Today
+            </h1>
+            <p class="subtitle">
+                Bem-vindo ao nosso mundo de monitoramento inteligente e 
+                controle avançado de energia. Juntos, vamos embarcar em uma 
+                jornada notável onde a tecnologia IoT se torna realidade tangível.
+            </p>
+            <div class="cta-buttons">
+                <a href="#features" class="btn-primary">
+                    Ver Dashboard
+                    <span>→</span>
+                </a>
+                <a href="#about" class="btn-secondary">
+                    Saiba Mais
+                    <span>→</span>
+                </a>
+            </div>
         </div>
 
-        <div class="content-wrapper">
-            <div class="text-content">
-                <h1 class="main-title">
-                    <span class="highlight">Power Manager</span><br>
-                    IoT Today
-                </h1>
-                <p class="subtitle">
-                    Bem-vindo ao nosso mundo de monitoramento inteligente e 
-                    controle avançado de energia. Juntos, vamos embarcar em uma 
-                    jornada notável onde a tecnologia IoT se torna realidade tangível.
-                </p>
-                <div class="cta-buttons">
-                    <a href="testes.html" class="btn-primary">
-                        Ver Dashboard
-                        <span>→</span>
-                    </a>
-                    <a href="#demo" class="btn-secondary">
-                        Saiba Mais
-                        <span>→</span>
-                    </a>
+        <div class="dashboard-container">
+            <img src="img/dashboard1.png" alt="Dashboard Power Manager" class="dashimg">
+        </div>
+    </div>
+</main>
+
+<!-- Features Section -->
+<section class="features-section" id="features">
+    <h2 class="section-title">Recursos <span class="highlight">Principais</span></h2>
+    <p class="section-subtitle">Descubra tudo o que o Power Manager pode fazer pela sua gestão de energia</p>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Monitoramento em Tempo Real</h3>
+            <p>Acompanhe o consumo de energia de todos os seus dispositivos em tempo real, com atualizações instantâneas e gráficos interativos para análise detalhada.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Análise Inteligente</h3>
+            <p>Receba relatórios detalhados sobre padrões de consumo, identifique oportunidades de economia e otimize seu uso de energia com nossa IA integrada.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">🔔</div>
+            <h3>Alertas Personalizados</h3>
+            <p>Configure notificações para picos de consumo, falhas de energia ou quando limites pré-definidos forem atingidos. Fique sempre informado.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3>Controle Remoto</h3>
+            <p>Gerencie seus dispositivos de qualquer lugar através do aplicativo mobile ou interface web. Economia de energia na palma da sua mão.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">🌍</div>
+            <h3>Sustentabilidade</h3>
+            <p>Contribua para um planeta mais verde. Monitore sua pegada de carbono e receba dicas personalizadas para reduzir o impacto ambiental.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>Economia Garantida</h3>
+            <p>Reduza sua conta de energia em até 30% com insights inteligentes, automação e controle preciso do consumo energético.</p>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works-section">
+    <h2 class="section-title">Como <span class="highlight">Funciona</span></h2>
+    <p class="section-subtitle">Três passos simples para começar a economizar energia</p>
+    
+    <div class="steps-container">
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <h3>Instalação</h3>
+            <p>Nossos técnicos instalam os sensores IoT nos pontos estratégicos da sua residência ou empresa. O processo é rápido e não invasivo.</p>
+        </div>
+        
+        <div class="step-arrow">→</div>
+        
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <h3>Configuração</h3>
+            <p>Configure seus dispositivos através do app ou dashboard web. Defina alertas, metas de consumo e preferências personalizadas.</p>
+        </div>
+        
+        <div class="step-arrow">→</div>
+        
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <h3>Economia</h3>
+            <p>Acompanhe em tempo real e receba insights para otimizar seu consumo. Veja sua conta de energia diminuir mês a mês.</p>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about-section" id="about">
+    <div class="about-content">
+        <div class="about-text">
+            <h2>Sobre o <span class="highlight">Power Manager</span></h2>
+            <p>O Power Manager é uma solução completa de Internet das Coisas (IoT) desenvolvida para revolucionar a forma como você monitora e gerencia o consumo de energia.</p>
+            <p>Nosso sistema integra hardware de última geração com software inteligente, oferecendo uma plataforma robusta, intuitiva e escalável para residências, empresas e indústrias.</p>
+            <p>Através de sensores conectados e algoritmos de machine learning, transformamos dados complexos em insights acionáveis, permitindo decisões mais inteligentes sobre o uso de energia.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">30%</div>
+                    <div class="stat-label">Economia Média</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Monitoramento</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">1000+</div>
+                    <div class="stat-label">Clientes Ativos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">99.9%</div>
+                    <div class="stat-label">Uptime</div>
                 </div>
             </div>
+        </div>
+        
+        <div>
+            <svg viewBox="0 0 400 400" style="width: 100%;">
+                <circle cx="200" cy="200" r="150" fill="none" stroke="#00ff2a" stroke-width="2" opacity="0.2"/>
+                <circle cx="200" cy="200" r="120" fill="none" stroke="#00ff2a" stroke-width="2" opacity="0.3"/>
+                <circle cx="200" cy="200" r="90" fill="none" stroke="#00ff2a" stroke-width="2" opacity="0.4"/>
+                <circle cx="200" cy="200" r="60" fill="#00ff2a" opacity="0.2"/>
+                <circle cx="200" cy="50" r="15" fill="#00ff2a"/>
+                <circle cx="350" cy="200" r="15" fill="#00ff2a"/>
+                <circle cx="200" cy="350" r="15" fill="#00ff2a"/>
+                <circle cx="50" cy="200" r="15" fill="#00ff2a"/>
+                <line x1="200" y1="200" x2="200" y2="50" stroke="#00ff2a" stroke-width="2"/>
+                <line x1="200" y1="200" x2="350" y2="200" stroke="#00ff2a" stroke-width="2"/>
+                <line x1="200" y1="200" x2="200" y2="350" stroke="#00ff2a" stroke-width="2"/>
+                <line x1="200" y1="200" x2="50" y2="200" stroke="#00ff2a" stroke-width="2"/>
+            </svg>
+        </div>
+    </div>
+</section>
 
-            <div class="dashboard-container">
-                <img src="img/dashboard1.png" alt="Dashboard Power Manager" class="dashimg">
+<!-- Technology Section -->
+<section class="tech-section">
+    <div class="tech-content">
+        <div class="tech-text">
+            <h2 class="section-title" style="text-align: left;">Tecnologia de <span class="highlight">Ponta</span></h2>
+            <p class="section-subtitle" style="text-align: left; margin-left: 0;">Conheça o que está por trás do Power Manager</p>
+            
+            <div class="tech-list">
+                <div class="tech-item">
+                    <div class="tech-icon">🔌</div>
+                    <div>
+                        <h4>Sensores IoT Avançados</h4>
+                        <p>Medidores de corrente não invasivos com precisão de 99.5%, capazes de detectar até pequenas variações no consumo.</p>
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-icon">☁️</div>
+                    <div>
+                        <h4>Cloud Computing</h4>
+                        <p>Infraestrutura em nuvem escalável com processamento em tempo real e armazenamento seguro de dados históricos.</p>
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-icon">🤖</div>
+                    <div>
+                        <h4>Inteligência Artificial</h4>
+                        <p>Algoritmos de machine learning que aprendem com seus padrões de consumo e sugerem otimizações automáticas.</p>
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-icon">🔐</div>
+                    <div>
+                        <h4>Segurança Avançada</h4>
+                        <p>Criptografia end-to-end, autenticação de dois fatores e conformidade com LGPD e padrões internacionais.</p>
+                    </div>
+                </div>
             </div>
         </div>
-    </main>
-    <script src="theme-toggle.js"></script>
+        
+        <div class="tech-specs">
+            <h3>Especificações Técnicas</h3>
+            <div class="spec-item">
+                <span>Protocolo de Comunicação</span>
+                <strong>MQTT, WebSocket</strong>
+            </div>
+            <div class="spec-item">
+                <span>Conectividade</span>
+                <strong>WiFi, 4G, LoRaWAN</strong>
+            </div>
+            <div class="spec-item">
+                <span>Precisão</span>
+                <strong>±0.5% de margem de erro</strong>
+            </div>
+            <div class="spec-item">
+                <span>Frequência de Atualização</span>
+                <strong>1 segundo em tempo real</strong>
+            </div>
+            <div class="spec-item">
+                <span>Capacidade</span>
+                <strong>Até 50 dispositivos por hub</strong>
+            </div>
+            <div class="spec-item">
+                <span>Compatibilidade</span>
+                <strong>110V e 220V</strong>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials-section">
+    <h2 class="section-title">O Que Nossos <span class="highlight">Clientes</span> Dizem</h2>
+    <p class="section-subtitle">Histórias reais de economia e sustentabilidade</p>
+    
+    <div class="testimonials-grid">
+        <div class="testimonial-card">
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+            <p>"Reduzi minha conta de energia em 35% no primeiro mês! O Power Manager me mostrou que minha geladeira antiga estava consumindo muito mais do que deveria."</p>
+            <div class="testimonial-author">
+                <div class="author-avatar">MC</div>
+                <div>
+                    <strong>Maria Clara Silva</strong>
+                    <span>Usuária Residencial</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="testimonial-card">
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+            <p>"Como gestor de facilities, o Power Manager foi essencial para identificar desperdícios em nosso prédio comercial. ROI em menos de 6 meses."</p>
+            <div class="testimonial-author">
+                <div class="author-avatar">RS</div>
+                <div>
+                    <strong>Roberto Santos</strong>
+                    <span>Gerente de Facilities</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="testimonial-card">
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+            <p>"Interface intuitiva e os alertas em tempo real me salvaram várias vezes de picos de consumo. Recomendo para qualquer empresa."</p>
+            <div class="testimonial-author">
+                <div class="author-avatar">AP</div>
+                <div>
+                    <strong>Ana Paula Costa</strong>
+                    <span>Proprietária de Restaurante</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="faq-section">
+    <h2 class="section-title">Perguntas <span class="highlight">Frequentes</span></h2>
+    <p class="section-subtitle">Tire suas dúvidas sobre o Power Manager</p>
+    
+    <div class="faq-container">
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Como é feita a instalação do sistema?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>A instalação é realizada por técnicos certificados e leva em média 2-4 horas. Os sensores são instalados de forma não invasiva no quadro de distribuição e não requerem obras ou alterações na estrutura elétrica existente. Nossa equipe agenda o melhor horário com você e garante que tudo funcione perfeitamente antes de sair.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>O sistema funciona em qualquer tipo de instalação elétrica?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Sim! O Power Manager é compatível com instalações monofásicas, bifásicas e trifásicas, tanto em 110V quanto 220V. Nossos sensores se adaptam a diferentes configurações elétricas e podem ser utilizados em residências, comércios e indústrias de todos os tamanhos.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Quanto tempo leva para ver resultados?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Os dados começam a aparecer imediatamente após a instalação! Em 7 dias, o sistema já terá mapeado seus padrões de consumo e começará a fornecer insights valiosos. A economia efetiva geralmente é visível já na primeira conta de energia após a instalação, com média de 20-30% de redução.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>O sistema consome muita energia?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Não! Cada sensor consome menos de 2W de energia, equivalente a uma lâmpada LED pequena. O consumo total dos dispositivos é insignificante (cerca de R$ 2-3 por mês) comparado à economia que você terá na conta de energia.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Preciso de internet para usar o sistema?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Sim, os sensores precisam de conexão WiFi ou 4G para enviar dados para a nuvem em tempo real. Oferecemos também opções com conectividade LoRaWAN para áreas sem cobertura WiFi adequada. O sistema armazena dados localmente em caso de queda de conexão e sincroniza automaticamente quando a internet retorna.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Os meus dados estão seguros?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Absolutamente! Utilizamos criptografia de ponta a ponta (AES-256), servidores em datacenter certificado e estamos em total conformidade com a LGPD. Seus dados nunca são compartilhados com terceiros e você tem controle total sobre suas informações, podendo exportar ou deletar a qualquer momento.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Qual é o investimento necessário?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Oferecemos diferentes planos de acordo com o tamanho da sua instalação. O investimento inicial inclui os sensores e instalação, com mensalidade a partir de R$ 89,90 para residências. Para empresas, fazemos um orçamento personalizado. O ROI médio é de 8-12 meses considerando a economia gerada.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Posso controlar dispositivos remotamente?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Sim! Com nossos módulos de automação (vendidos separadamente), você pode ligar/desligar dispositivos remotamente, criar agendamentos e até mesmo configurar automações baseadas em horários ou condições de consumo. Tudo controlado pelo app ou dashboard web.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Partners Section -->
+<section class="partners-section">
+    <h2 class="section-title">Parceiros e <span class="highlight">Certificações</span></h2>
+    <p class="section-subtitle">Empresas e instituições que confiam em nossa tecnologia</p>
+    
+    <div class="partners-grid">
+        <div class="partner-logo">AWS Cloud</div>
+        <div class="partner-logo">Google Cloud</div>
+        <div class="partner-logo">ANEEL</div>
+        <div class="partner-logo">INMETRO</div>
+        <div class="partner-logo">IEEE</div>
+        <div class="partner-logo">ISO 27001</div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <h2>Pronto para <span class="highlight">Economizar Energia</span>?</h2>
+    <p>Comece hoje mesmo a monitorar e otimizar seu consumo de energia com o Power Manager</p>
+    <div class="cta-buttons-center">
+        <a href="#login" class="btn-primary">
+            Começar Agora
+            <span>→</span>
+        </a>
+        <a href="#contact" class="btn-secondary">
+            Agendar Demo
+            <span>📅</span>
+        </a>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer" id="contact">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h3>Power Manager</h3>
+            <p>Transformando a gestão de energia através da tecnologia IoT. Monitoramento inteligente para um futuro sustentável.</p>
+            <div class="social-links">
+                <a href="#" aria-label="Facebook">f</a>
+                <a href="#" aria-label="Twitter">𝕏</a>
+                <a href="#" aria-label="LinkedIn">in</a>
+                <a href="#" aria-label="Instagram">📷</a>
+            </div>
+        </div>
+        
+        <div class="footer-section">
+            <h3>Links Rápidos</h3>
+            <ul class="footer-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Recursos</a></li>
+                <li><a href="#about">Sobre</a></li>
+                <li><a href="#contact">Contato</a></li>
+                <li><a href="#">Documentação</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-section">
+            <h3>Suporte</h3>
+            <ul class="footer-links">
+                <li><a href="#">Central de Ajuda</a></li>
+                <li><a href="#">FAQ</a></li>
+                <li><a href="#">Tutoriais</a></li>
+                <li><a href="#">API</a></li>
+                <li><a href="#">Status do Sistema</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-section">
+            <h3>Contato</h3>
+            <p>📧 contato@powermanager.com.br</p>
+            <p>📞 (11) 9999-9999</p>
+            <p>📍 São Paulo, SP - Brasil</p>
+        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        <p>&copy; 2025 Power Manager IoT. Todos os direitos reservados. | <a href="#">Política de Privacidade</a> | <a href="#">Termos de Uso</a></p>
+    </div>
+</footer>
+
+<script src="theme-toggle.js"></script>
+<script>
+    // Theme Toggle (respects system preference)
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+
+    // Check system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    themeIcon.textContent = prefersDark ? '🌙' : '☀️';
+
+    themeToggle.addEventListener('click', () => {
+        const html = document.documentElement;
+        const currentScheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        
+        // Toggle icon
+        const newIcon = themeIcon.textContent === '☀️' ? '🌙' : '☀️';
+        themeIcon.textContent = newIcon;
+        
+        // Note: Actual theme toggle would require CSS custom properties override
+        // This is a visual indicator - actual implementation depends on your setup
+    });
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // FAQ Accordion
+    document.querySelectorAll('.faq-question').forEach(question => {
+        question.addEventListener('click', () => {
+            const faqItem = question.parentElement;
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all FAQ items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Open clicked item if it wasn't active
+            if (!isActive) {
+                faqItem.classList.add('active');
+            }
+        });
+    });
+
+    // Animate on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .stat-item, .step-card, .testimonial-card, .tech-item').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'all 0.6s ease';
+        observer.observe(el);
+    });
+</script>
 </body>
 </html>

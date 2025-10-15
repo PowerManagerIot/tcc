@@ -203,7 +203,6 @@ function getAlertLimit() {
                 }
             });
             
-            // Processar alerta de tempo real
             if (foundRealtimeAlert?.limit) {
                 alertLimit = foundRealtimeAlert.limit;
                 updateBar(currentPowerValue, alertLimit);
@@ -222,7 +221,6 @@ function getAlertLimit() {
                 }
             }
             
-            // Processar alerta de consumo total
             if (foundTotalAlert?.limit) {
                 monthlyLimit = foundTotalAlert.limit;
             } else {
@@ -259,7 +257,6 @@ function monitorPower() {
     function updateCurrentValue() {
         currentPowerValue = s1Power + s2Power;
         
-        // Atualizar display principal
         if (currentValue) {
             currentValue.textContent = currentPowerValue.toFixed(2);
         }
@@ -272,7 +269,6 @@ function monitorPower() {
             connectionStatus.className = "status connected";
         }
         
-        // Atualizar barra de potência
         updateBar(currentPowerValue, alertLimit);
     }
     
@@ -342,12 +338,9 @@ function updateEnergyPrice() {
     }
     
     energyPrice = newPrice;
-    
-    // Salvar no localStorage
     localStorage.setItem('energyPrice', energyPrice.toString());
     
-    // Atualizar todos os valores dos dispositivos
-    updateDevicePrices();
+    renderDynamicDeviceCards();
     
     closeEnergyPriceModal();
     
@@ -361,45 +354,103 @@ function updateEnergyPrice() {
     }
 }
 
-function updateDevicePrices() {
-    // Ar-Condicionado - 4 kWh
-    const arCondCost = 4 * energyPrice;
-    const arCondElement = document.querySelector('[data-device="ar-cond"]');
-    if (arCondElement) {
-        arCondElement.querySelector('.cost-value').textContent = `R$ ${arCondCost.toFixed(2)}`;
-    }
-    
-    // Lâmpada do Quarto - 0.60 kWh
-    const lampadaCost = 0.60 * energyPrice;
-    const lampadaElement = document.querySelector('[data-device="lampada"]');
-    if (lampadaElement) {
-        lampadaElement.querySelector('.cost-value').textContent = `R$ ${lampadaCost.toFixed(2)}`;
-    }
-    
-    // Ventilador - 1 kWh
-    const ventiladorCost = 1 * energyPrice;
-    const ventiladorElement = document.querySelector('[data-device="ventilador"]');
-    if (ventiladorElement) {
-        ventiladorElement.querySelector('.cost-value').textContent = `R$ ${ventiladorCost.toFixed(2)}`;
-    }
-    
-    // Chuveiro - 5.8 kWh
-    const chuveiroCost = 5.8 * energyPrice;
-    const chuveiroElement = document.querySelector('[data-device="chuveiro"]');
-    if (chuveiroElement) {
-        chuveiroElement.querySelector('.cost-value').textContent = `R$ ${chuveiroCost.toFixed(2)}`;
-    }
-}
-
 function loadEnergyPrice() {
     const savedPrice = localStorage.getItem('energyPrice');
     if (savedPrice) {
         energyPrice = parseFloat(savedPrice);
     }
-    updateDevicePrices();
 }
 
-// ========== FUNÇÕES DE DISPOSITIVOS ==========
+// ========== FUNÇÕES DE DISPOSITIVOS - CARDS DINÂMICOS ==========
+
+function getColorByPercentage(percentage) {
+    if (percentage >= 75) return 'var(--accent-red)';
+    if (percentage >= 40) return 'var(--accent-yellow)';
+    return 'var(--accent-green)';
+}
+
+function renderDynamicDeviceCards() {
+    const dashboardGrid = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-3');
+    
+    if (!dashboardGrid) {
+        console.error('Grid do dashboard não encontrado');
+        return;
+    }
+    
+    // Remove cards existentes (mantém apenas os 3 primeiros divs - leftColumn e 2 outras colunas fixas se existirem)
+    const existingCards = dashboardGrid.querySelectorAll('.dynamic-device-card');
+    existingCards.forEach(card => card.remove());
+    
+    // Combina todos os dispositivos
+    const allDevices = [];
+    
+    Object.keys(regularDevices).forEach(key => {
+        allDevices.push({
+            ...regularDevices[key],
+            key: key,
+            isSmart: false
+        });
+    });
+    
+    Object.keys(smartDevices).forEach(key => {
+        allDevices.push({
+            ...smartDevices[key],
+            key: key,
+            isSmart: true
+        });
+    });
+    
+    // Se não há dispositivos, não renderiza nada
+    if (allDevices.length === 0) {
+        return;
+    }
+    
+    // Calcula o consumo total para porcentagens
+    const totalConsumption = allDevices.reduce((sum, device) => sum + (device.number || 0), 0);
+    
+    // Cria cards para cada dispositivo
+    allDevices.forEach((device, index) => {
+        const consumptionWatts = device.number || 0;
+        const consumptionKwh = consumptionWatts / 1000;
+        const cost = consumptionKwh * energyPrice;
+        const percentage = totalConsumption > 0 ? (consumptionWatts / totalConsumption) * 100 : 0;
+        const color = getColorByPercentage(percentage);
+        
+        // Calcula strokeDashoffset para o círculo
+        const circumference = 2 * Math.PI * 48; // mobile (r=48)
+        const circumferenceMd = 2 * Math.PI * 56; // desktop (r=56)
+        const offset = circumference - (percentage / 100 * circumference);
+        const offsetMd = circumferenceMd - (percentage / 100 * circumferenceMd);
+        
+        const deviceCard = document.createElement('div');
+        deviceCard.className = 'lg:col-span-1 space-y-6 md:space-y-8 dynamic-device-card';
+        
+        deviceCard.innerHTML = `
+            <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                <div class="flex items-center justify-between mb-4 md:mb-6">
+                    <h3 class="text-base md:text-lg font-semibold">${device.name}</h3>
+                    <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
+                </div>
+                <div class="text-center">
+                    <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
+                        <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
+                            <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
+                            <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
+                                    stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round" style="stroke: ${color};" class="md:hidden"/>
+                            <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
+                            <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
+                                    stroke-dasharray="${circumferenceMd}" stroke-dashoffset="${offsetMd}" stroke-linecap="round" style="stroke: ${color};" class="hidden md:block"/>
+                        </svg>
+                    </div>
+                    <div class="text-xl md:text-2xl font-bold" style="color: ${color};">R$ ${cost.toFixed(2)}</div>
+                    <div class="text-xs md:text-sm" style="color: var(--text-secondary);">${consumptionKwh.toFixed(2)} kWh</div>
+                </div>
+            </div>
+        `;
+        
+        dashboardGrid.appendChild(deviceCard);
+    });
+}
 
 function updateSmartDevicesCounter() {
     const smartDeviceCount = Object.keys(smartDevices).length;
@@ -428,6 +479,7 @@ function loadDevicesFromFirebase() {
     regularDevicesRef.on('value', (snapshot) => {
         regularDevices = snapshot.val() || {};
         renderDevices();
+        renderDynamicDeviceCards();
         updateSmartDevicesCounter();
     });
     
@@ -435,6 +487,7 @@ function loadDevicesFromFirebase() {
     devicesRef.on('value', (snapshot) => {
         smartDevices = snapshot.val() || {};
         renderDevices();
+        renderDynamicDeviceCards();
         updateSmartDevicesCounter();
     });
 }

@@ -171,7 +171,7 @@
 
             <!-- Dashboard Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
-                <!-- Left Column -->
+                <!-- Left Column - Cards Fixos -->
                 <div class="lg:col-span-1 space-y-6 md:space-y-8">
                     <!-- Monthly Cost Chart -->
                     <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
@@ -193,120 +193,52 @@
                             <div class="text-xl md:text-2xl font-bold" style="color: var(--accent-red);">R$ 463,50</div>
                             <div class="text-xs md:text-sm" style="color: var(--text-secondary);">342 kWh</div>
                         </div>
-                    </div>
+                    </div>               
+                </div>
 
-                    <!-- Daily Cost Chart -->
-                    <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
-                        <div class="flex items-center justify-between mb-4 md:mb-6">
-                            <h3 class="text-base md:text-lg font-semibold">Custo do Dia</h3>
-                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
+                <!-- Daily Cost Chart -->
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="flex items-center justify-between mb-4 md:mb-6">
+                        <h3 class="text-base md:text-lg font-semibold">Custo da Semana</h3>
+                        <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
+                    </div>
+                    <div class="text-center">
+                        <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
+                            <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
+                                <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
+                                <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
+                                        stroke-dasharray="302" stroke-dashoffset="88" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="md:hidden"/>
+                                <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
+                                <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
+                                        stroke-dasharray="351" stroke-dashoffset="102" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="hidden md:block"/>
+                            </svg>
                         </div>
-                        <div class="text-center">
-                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
-                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="88" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="102" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="hidden md:block"/>
-                                </svg>
-                            </div>
-                            <div class="text-xl md:text-2xl font-bold" style="color: var(--accent-yellow);">R$ 15,45</div>
-                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">11.4 kWh</div>
-                        </div>
+                        <div class="text-xl md:text-2xl font-bold" style="color: var(--accent-yellow);">R$ 15,45</div>
+                        <div class="text-xs md:text-sm" style="color: var(--text-secondary);">11.4 kWh</div>
                     </div>
                 </div>
 
-                <!-- Column 2 -->
-                <div class="lg:col-span-1 space-y-6 md:space-y-8">
-                    <div class="border rounded-xl p-4 md:p-6" data-device="ar-cond" style="background-color: var(--bg-card); border-color: var(--border-dark);">
-                        <div class="flex items-center justify-between mb-4 md:mb-6">
-                            <h3 class="text-base md:text-lg font-semibold">Ar-Condicionado</h3>
-                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
-                        </div>
-                        <div class="text-center">
-                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
-                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="96" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="112" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="hidden md:block"/>
-                                </svg>
-                            </div>
-                            <div class="text-xl md:text-2xl font-bold cost-value" style="color: var(--accent-yellow);">R$ 3,20</div>
-                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">4 kWh</div>
-                        </div>
+                <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                    <div class="flex items-center justify-between mb-4 md:mb-6">
+                        <h3 class="text-base md:text-lg font-semibold">Custo do Dia</h3>
+                        <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
                     </div>
-
-                    <div class="border rounded-xl p-4 md:p-6" data-device="lampada" style="background-color: var(--bg-card); border-color: var(--border-dark);">
-                        <div class="flex items-center justify-between mb-4 md:mb-6">
-                            <h3 class="text-base md:text-lg font-semibold">Lâmpada do Quarto</h3>
-                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
+                    <div class="text-center">
+                        <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
+                            <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
+                                <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
+                                <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
+                                        stroke-dasharray="302" stroke-dashoffset="88" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="md:hidden"/>
+                                <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
+                                <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
+                                        stroke-dasharray="351" stroke-dashoffset="102" stroke-linecap="round" style="stroke: var(--accent-yellow);" class="hidden md:block"/>
+                            </svg>
                         </div>
-                        <div class="text-center">
-                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
-                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="265" stroke-linecap="round" style="stroke: var(--accent-green);" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="309" stroke-linecap="round" style="stroke: var(--accent-green);" class="hidden md:block"/>
-                                </svg>
-                            </div>
-                            <div class="text-xl md:text-2xl font-bold cost-value" style="color: var(--accent-green);">R$ 0,48</div>
-                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">0.60 kWh</div>
-                        </div>
+                        <div class="text-xl md:text-2xl font-bold" style="color: var(--accent-yellow);">R$ 15,45</div>
+                        <div class="text-xs md:text-sm" style="color: var(--text-secondary);">11.4 kWh</div>
                     </div>
                 </div>
-
-                <!-- Column 3 -->
-                <div class="lg:col-span-1 space-y-6 md:space-y-8">
-                    <div class="border rounded-xl p-4 md:p-6" data-device="ventilador" style="background-color: var(--bg-card); border-color: var(--border-dark);">
-                        <div class="flex items-center justify-between mb-4 md:mb-6">
-                            <h3 class="text-base md:text-lg font-semibold">Ventilador</h3>
-                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
-                        </div>
-                        <div class="text-center">
-                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
-                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="240" stroke-linecap="round" style="stroke: var(--accent-green);" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="280" stroke-linecap="round" style="stroke: var(--accent-green);" class="hidden md:block"/>
-                                </svg>
-                            </div>
-                            <div class="text-xl md:text-2xl font-bold cost-value" style="color: var(--accent-green);">R$ 0,80</div>
-                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">1 kWh</div>
-                        </div>
-                    </div>
-
-                    <div class="border rounded-xl p-4 md:p-6" data-device="chuveiro" style="background-color: var(--bg-card); border-color: var(--border-dark);">
-                        <div class="flex items-center justify-between mb-4 md:mb-6">
-                            <h3 class="text-base md:text-lg font-semibold">Chuveiro</h3>
-                            <div class="w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
-                        </div>
-                        <div class="text-center">
-                            <div class="relative w-28 h-28 md:w-32 md:h-32 mx-auto mb-4">
-                                <svg class="w-28 h-28 md:w-32 md:h-32 transform -rotate-90">
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="md:hidden"/>
-                                    <circle cx="56" cy="56" r="48" stroke-width="8" fill="none" 
-                                            stroke-dasharray="302" stroke-dashoffset="73" stroke-linecap="round" style="stroke: var(--accent-red);" class="md:hidden"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" style="stroke: var(--border-dark);" class="hidden md:block"/>
-                                    <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
-                                            stroke-dasharray="351" stroke-dashoffset="85" stroke-linecap="round" style="stroke: var(--accent-red);" class="hidden md:block"/>
-                                </svg>
-                            </div>
-                            <div class="text-xl md:text-2xl font-bold cost-value" style="color: var(--accent-red);">R$ 4,64</div>
-                            <div class="text-xs md:text-sm" style="color: var(--text-secondary);">5.8 kWh</div>
-                        </div>
-                    </div>
-                </div>                
+                <!-- Colunas 2 e 3 serão preenchidas dinamicamente com dispositivos do Firebase -->
             </div>
 
             <!-- Stats Grid -->
@@ -458,7 +390,7 @@
         <i class="ph ph-sign-out sm:hidden text-lg"></i>
     </button>
 
-    <script type="module" src="dashantiga.js"></script>
+    <script type="module" src="scriptdash.js"></script>
     <script>
         // Mobile menu toggle
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
