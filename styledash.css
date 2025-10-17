@@ -154,7 +154,70 @@
     margin-bottom: 1.5rem;
 }
 
+
 /* Modals */
+
+/* Watts Input Container e Help Icon */
+.watts-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.help-icon {
+    position: relative;
+    cursor: pointer;
+    color: var(--accent-yellow);
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.help-icon:hover {
+    color: var(--accent-green);
+    transform: scale(1.1);
+}
+
+.tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-dark);
+    white-space: nowrap;
+    font-size: 0.875rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    margin-bottom: 0.5rem;
+    z-index: 1000;
+}
+
+.help-icon:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--border-dark);
+}
+
+/* Modals */
+
+
 .modal {
     display: none;
     position: fixed;
@@ -164,6 +227,7 @@
     width: 100%;
     height: 100%;
     background-color: var(--overlay);
+    overflow-y: auto;
 }
 
 .modal-content {
@@ -185,6 +249,7 @@
     color: var(--accent-green);
 }
 
+
 .modal-content input,
 .modal-content select {
     width: 100%;
@@ -194,6 +259,12 @@
     border: 1px solid var(--border-dark);
     border-radius: 6px;
     color: var(--text-primary);
+}
+
+.modal-content input:focus,
+.modal-content select:focus {
+    outline: 2px solid var(--accent-green);
+    outline-offset: 2px;
 }
 
 .modal-buttons {
@@ -507,4 +578,29 @@
     .value {
         font-size: 2rem;
     }
+}
+
+/* Scrollbar personalizado para o chat */
+#chatMessages::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chatMessages::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 4px;
+}
+
+#chatMessages::-webkit-scrollbar-thumb {
+    background: var(--border-dark);
+    border-radius: 4px;
+}
+
+#chatMessages::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-green);
+}
+
+/* Firefox */
+#chatMessages {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-dark) var(--bg-primary);
 }

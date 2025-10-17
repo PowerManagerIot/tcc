@@ -331,7 +331,13 @@
         <div class="modal-content">
             <h2>Adicionar Novo Dispositivo</h2>
             <input type="text" id="deviceName" placeholder="Nome do Dispositivo">
-            <input type="number" id="deviceNumber" placeholder="Consumo em Watts">
+            <div class="watts-input-container">
+                <input type="number" id="deviceNumber" placeholder="Consumo em Watts" style="flex: 1;">
+                <div class="help-icon" onclick="openWattsChatbot()">
+                    <i class="ph-fill ph-lightbulb"></i>
+                    <span class="tooltip">Não sei quantos watts tem meu dispositivo</span>
+                </div>
+            </div>
             <select id="hasButton">
                 <option value="no">Não Inteligente</option>
                 <option value="yes">Inteligente (controlável)</option>
@@ -358,6 +364,84 @@
             </div>
         </div>
     </div>
+
+
+    <!-- Modal do Chatbot de Watts -->
+<div id="wattsChatbotModal" class="modal">
+    <div class="modal-content" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0;">Assistente de Consumo</h2>
+            <button onclick="closeWattsChatbot()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1;">×</button>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+            Olá! Vou te ajudar a descobrir quantos watts seu dispositivo consome. Me conte sobre ele!
+        </p>
+        
+        <div id="chatMessages" style="flex: 1; overflow-y: auto; background: var(--bg-secondary); border: 1px solid var(--border-dark); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; max-height: 400px;">
+            <!-- Mensagens do chat aparecerão aqui -->
+        </div>
+        
+        <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="chatInput" placeholder="Ex: é uma geladeira duplex..." style="flex: 1; padding: 0.75rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-dark); border-radius: 6px; color: var(--text-primary);">
+            <button onclick="sendChatMessage()" style="padding: 0.75rem 1.5rem; background: var(--accent-green); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                Enviar
+            </button>
+        </div>
+        
+        <div id="chatLoading" style="display: none; text-align: center; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+            <i class="ph ph-circle-notch" style="animation: spin 1s linear infinite;"></i> Pensando...
+        </div>
+        
+        <style>
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            
+            .chat-message {
+                margin-bottom: 1rem;
+                padding: 0.75rem;
+                border-radius: 8px;
+                max-width: 85%;
+            }
+            
+            .chat-message.user {
+                background: var(--accent-green);
+                color: #000;
+                margin-left: auto;
+                text-align: right;
+            }
+            
+            .chat-message.assistant {
+                background: var(--bg-card);
+                border: 1px solid var(--border-dark);
+                color: var(--text-primary);
+            }
+            
+            .chat-message.watts-result {
+                background: rgba(0, 255, 42, 0.1);
+                border: 2px solid var(--accent-green);
+                color: var(--text-primary);
+                font-weight: bold;
+                text-align: center;
+                max-width: 100%;
+            }
+            
+            .use-watts-btn {
+                margin-top: 0.5rem;
+                padding: 0.5rem 1rem;
+                background: var(--accent-green);
+                color: #000;
+                border: none;
+                border-radius: 6px;
+                font-weight: bold;
+                cursor: pointer;
+                width: 100%;
+            }
+        </style>
+    </div>
+</div>
+
 
     <!-- Modal para configurar preço da energia -->
     <div id="energyPriceModal" class="modal">
