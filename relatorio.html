@@ -113,6 +113,40 @@
                 </button>
             </div>
 
+
+            <!-- AI Analysis Section - NOVA SEÇÃO -->
+            <div class="mb-8 border rounded-xl p-4 md:p-6" style="background: linear-gradient(135deg, rgba(0, 255, 42, 0.05) 0%, rgba(238, 234, 16, 0.05) 100%); border-color: var(--border-dark);">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg" style="background-color: var(--accent-green); color: #000;">
+                            <i class="ph-fill ph-brain text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold">Análise Inteligente com IA</h3>
+                            <p class="text-sm" style="color: var(--text-secondary);">Sugestões personalizadas para economizar energia</p>
+                        </div>
+                    </div>
+                    <button id="generateAIReportBtn" class="font-semibold px-4 md:px-6 py-2 rounded-lg transition-all flex items-center gap-2 text-sm md:text-base whitespace-nowrap" style="background-color: var(--accent-green); color: #000000;">
+                        <i class="ph ph-sparkle"></i>
+                        <span>Gerar Análise</span>
+                    </button>
+                </div>
+                
+                <div id="aiAnalysisContainer" class="hidden">
+                    <div class="border-t pt-4 mt-4" style="border-color: var(--border-dark);">
+                        <div id="aiAnalysisContent" class="prose prose-invert max-w-none">
+                            <!-- Conteúdo da análise será inserido aqui -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="aiLoadingContainer" class="hidden text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 mb-4" style="border-color: var(--accent-green);"></div>
+                    <p style="color: var(--text-secondary);">Analisando seus dados de consumo...</p>
+                </div>
+            </div>
+
+
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                 <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">

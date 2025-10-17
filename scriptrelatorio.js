@@ -1,5 +1,13 @@
 import {auth, database} from "./auth.js"
 
+// ========== CONFIGURAÇÃO GEMINI AI ==========
+// IMPORTANTE: Substitua pela sua API Key do Google Gemini
+const GEMINI_API_KEY = 'AIzaSyDfhomKTh_2WhvVveb7KSfsY_9Ri1IrUyg'; // Obtenha em: https://makersuite.google.com/app/apikey
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+
+
+
+
 // ========== VARIÁVEIS GLOBAIS ==========
 let USER_ID = null;
 let energyPrice = 0.80; // Preço padrão do kWh
@@ -24,11 +32,279 @@ const peakConsumption = document.getElementById('peakConsumption');
 const peakDate = document.getElementById('peakDate');
 const tableBody = document.getElementById('tableBody');
 
+// Elementos da IA
+const generateAIReportBtn = document.getElementById('generateAIReportBtn');
+const aiAnalysisContainer = document.getElementById('aiAnalysisContainer');
+const aiAnalysisContent = document.getElementById('aiAnalysisContent');
+const aiLoadingContainer = document.getElementById('aiLoadingContainer');
+
 // Charts
 let monthlyChart = null;
 let dailyChart = null;
 let hourlyChart = null;
 let trendChart = null;
+
+// ========== FUNÇÕES DE IA - GEMINI ==========
+
+async function generateAIAnalysis() {
+    console.log('🔍 1. Iniciando...');
+    
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SUA_API_KEY_AQUI') {
+        showAIError('Configure sua API Key');
+        return;
+    }
+
+    aiAnalysisContainer.classList.add('hidden');
+    aiLoadingContainer.classList.remove('hidden');
+    generateAIReportBtn.disabled = true;
+
+    try {
+        const analysisData = prepareDataForAI();
+        console.log('📊 Dados:', analysisData);
+        
+        const prompt = createAIPrompt(analysisData);
+        console.log('📝 Prompt:', prompt.length, 'chars');
+        
+        console.log('🌐 Chamando API...');
+        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 8192,
+                }
+            })
+        });
+
+        console.log('📡 Status:', response.status);
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('📦 Resposta completa:', JSON.stringify(data, null, 2));
+        
+        if (!data.candidates?.[0]) {
+            throw new Error('Sem candidates');
+        }
+        
+        const candidate = data.candidates[0];
+        console.log('🔍 Candidate:', JSON.stringify(candidate, null, 2));
+        
+        // Tentar extrair o texto de TODAS as formas possíveis
+        let aiResponse = null;
+        
+        // Forma 1: content.parts[0].text
+        if (candidate.content?.parts?.[0]?.text) {
+            aiResponse = candidate.content.parts[0].text;
+            console.log('✅ Método 1: content.parts[0].text');
+        }
+        // Forma 2: content.text
+        else if (candidate.content?.text) {
+            aiResponse = candidate.content.text;
+            console.log('✅ Método 2: content.text');
+        }
+        // Forma 3: text direto
+        else if (candidate.text) {
+            aiResponse = candidate.text;
+            console.log('✅ Método 3: text');
+        }
+        // Forma 4: output
+        else if (candidate.output) {
+            aiResponse = candidate.output;
+            console.log('✅ Método 4: output');
+        }
+        // Forma 5: message
+        else if (candidate.message) {
+            aiResponse = candidate.message;
+            console.log('✅ Método 5: message');
+        }
+        // Forma 6: response
+        else if (candidate.response) {
+            aiResponse = candidate.response;
+            console.log('✅ Método 6: response');
+        }
+        else {
+            console.error('❌ TODAS as tentativas falharam!');
+            console.error('Keys do candidate:', Object.keys(candidate));
+            console.error('Keys do content:', Object.keys(candidate.content || {}));
+            
+            // Tentar pegar QUALQUER texto que encontrar
+            const allText = JSON.stringify(candidate);
+            console.error('Candidate completo como string:', allText);
+            
+            throw new Error('Não encontrei o texto em nenhum lugar. Veja o console.');
+        }
+        
+        if (!aiResponse || aiResponse.trim() === '') {
+            throw new Error('Texto vazio');
+        }
+        
+        console.log('✅ Sucesso! Tamanho:', aiResponse.length);
+        displayAIAnalysis(aiResponse);
+        
+    } catch (error) {
+        console.error('❌ ERRO:', error);
+        showAIError(error.message);
+    } finally {
+        aiLoadingContainer.classList.add('hidden');
+        generateAIReportBtn.disabled = false;
+    }
+}
+
+
+
+
+function prepareDataForAI() {
+    const selectedPeriod = periodFilter.value;
+    const days = selectedPeriod === 'all' ? 'all' : parseInt(selectedPeriod);
+    const filteredDaily = getFilteredData(allStatistics.diario, days);
+    const stats = calculateStatistics(filteredDaily);
+    
+    // Análise por hora
+    const hourlyData = allStatistics.horario || {};
+    const hourlyValues = Object.values(hourlyData);
+    const peakHour = Object.entries(hourlyData).reduce((max, [hour, value]) => 
+        value > (max.value || 0) ? { hour: parseInt(hour), value } : max, 
+        { hour: 0, value: 0 }
+    );
+    
+    // Análise mensal
+    const monthlyData = allStatistics.mensal || {};
+    const monthlyValues = Object.values(monthlyData);
+    const monthlyAvg = monthlyValues.length > 0 
+        ? monthlyValues.reduce((a, b) => a + b, 0) / monthlyValues.length 
+        : 0;
+    
+    // Tendência (últimos 7 dias vs 7 anteriores)
+    const sortedDays = Object.keys(filteredDaily).sort();
+    let trend = 'estável';
+    if (sortedDays.length >= 14) {
+        const recent7 = sortedDays.slice(-7).reduce((sum, day) => sum + filteredDaily[day], 0) / 7;
+        const previous7 = sortedDays.slice(-14, -7).reduce((sum, day) => sum + filteredDaily[day], 0) / 7;
+        const change = ((recent7 - previous7) / previous7) * 100;
+        
+        if (change > 10) trend = 'crescente';
+        else if (change < -10) trend = 'decrescente';
+    }
+    
+    return {
+        periodo: selectedPeriod === '7' ? '7 dias' : 
+                 selectedPeriod === '30' ? '30 dias' : 
+                 selectedPeriod === '90' ? '90 dias' : 
+                 selectedPeriod === '365' ? '1 ano' : 'todos os registros',
+        consumoTotal: stats.total.toFixed(2),
+        custoTotal: (stats.total * energyPrice).toFixed(2),
+        mediaDiaria: stats.average.toFixed(2),
+        picoConsumo: stats.peak.value.toFixed(2),
+        picoData: stats.peak.date,
+        horaico: peakHour.hour,
+        consumoHoraPico: peakHour.value.toFixed(2),
+        mediaHoraria: hourlyValues.length > 0 
+            ? (hourlyValues.reduce((a, b) => a + b, 0) / hourlyValues.length).toFixed(2) 
+            : '0',
+        mediaMensal: monthlyAvg.toFixed(2),
+        tendencia: trend,
+        precokWh: energyPrice
+    };
+}
+
+function createAIPrompt(data) {
+    return `Você é um especialista em eficiência energética. Analise os dados e forneça um relatório CONCISO e DIRETO em português do Brasil.
+
+DADOS:
+- Período: ${data.periodo}
+- Consumo: ${data.consumoTotal} kWh (R$ ${data.custoTotal})
+- Média diária: ${data.mediaDiaria} kWh
+- Pico: ${data.picoConsumo} kWh (${data.picoData})
+- Hora crítica: ${data.horaico}:00 (${data.consumoHoraPico} kWh)
+- Tendência: ${data.tendencia}
+
+Forneça um relatório com NO MÁXIMO 800 palavras contendo:
+
+1. **DIAGNÓSTICO** (2-3 parágrafos)
+   - Avalie se o consumo está adequado
+   - Identifique o principal problema
+
+2. **TOP 3 AÇÕES DE ECONOMIA** (liste apenas 3 sugestões práticas)
+   - Para cada uma: ação específica + economia estimada em %
+
+3. **META REALISTA**
+   - Uma meta de redução objetiva
+   - Economia mensal em R$
+
+REGRAS IMPORTANTES:
+- Seja OBJETIVO e DIRETO
+- Use negrito APENAS para números importantes (kWh, R$, %)
+- Evite listas longas e repetições
+- Foque no que realmente importa para economizar
+- Máximo de 800 palavras
+
+Formate com markdown simples (##, -, **apenas para números**).`;
+}
+
+function displayAIAnalysis(aiResponse) {
+    // Converter markdown com formatação mais sutil
+    let formattedHTML = aiResponse
+        // Negrito apenas para números e valores monetários (mais discreto)
+        .replace(/\*\*(\d+[.,]?\d*\s*(?:kWh|R\$|%)?)\*\*/g, '<strong style="color: var(--accent-green); font-weight: 600;">$1</strong>')
+        // Remover outros negritos excessivos, mantendo o texto normal
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        // Headers secundários menores
+        .replace(/###\s(.*?)$/gm, '<h3 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem;">$1</h3>')
+        // Headers principais mais discretos
+        .replace(/##\s(.*?)$/gm, '<h2 style="color: var(--accent-green); font-size: 1.35rem; font-weight: 600; margin-top: 1.75rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-dark);">$1</h2>')
+        // Listas
+        .replace(/^-\s(.*?)$/gm, '<li style="margin-left: 1.5rem; margin-bottom: 0.4rem; color: var(--text-primary); line-height: 1.5;">$1</li>')
+        .replace(/^\d+\.\s(.*?)$/gm, '<li style="margin-left: 1.5rem; margin-bottom: 0.4rem; list-style-type: decimal; color: var(--text-primary); line-height: 1.5;">$1</li>')
+        // Parágrafos
+        .replace(/\n\n/g, '</p><p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-secondary);">');
+    
+    // Tag inicial
+    if (!formattedHTML.startsWith('<h2>') && !formattedHTML.startsWith('<h3>')) {
+        formattedHTML = '<p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-secondary);">' + formattedHTML + '</p>';
+    }
+    
+    aiAnalysisContent.innerHTML = `
+        <div class="space-y-3" style="color: var(--text-primary);">
+            ${formattedHTML}
+        </div>
+        <div class="mt-6 p-3 rounded-lg" style="background-color: rgba(0, 255, 42, 0.08); border-left: 3px solid var(--accent-green);">
+            <p style="color: var(--text-secondary); font-size: 0.875rem;">
+                <i class="ph ph-info"></i> 
+                Análise gerada por IA. Para alterações significativas, consulte um profissional qualificado.
+            </p>
+        </div>
+    `;
+    
+    aiLoadingContainer.classList.add('hidden');
+    aiAnalysisContainer.classList.remove('hidden');
+    
+    // Scroll suave
+    aiAnalysisContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showAIError(message) {
+    aiLoadingContainer.classList.add('hidden');
+    aiAnalysisContainer.classList.remove('hidden');
+    aiAnalysisContent.innerHTML = `
+        <div class="p-4 rounded-lg" style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--accent-red);">
+            <p style="color: var(--accent-red); font-weight: 600;">
+                <i class="ph ph-warning"></i> Erro ao gerar análise
+            </p>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+                ${message}
+            </p>
+        </div>
+    `;
+}
 
 // ========== FUNÇÕES DE AUTENTICAÇÃO ==========
 
@@ -691,6 +967,11 @@ if (logoutBtn) {
         e.preventDefault();
         logout();
     });
+}
+
+// Event listener para botão de análise com IA
+if (generateAIReportBtn) {
+    generateAIReportBtn.addEventListener('click', generateAIAnalysis);
 }
 
 // ========== INICIALIZAÇÃO ==========
