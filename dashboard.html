@@ -325,12 +325,13 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal para adicionar dispositivo -->
+  <!-- Modal para adicionar/editar dispositivo -->
     <div id="deviceModal" class="modal">
         <div class="modal-content">
-            <h2>Adicionar Novo Dispositivo</h2>
+            <h2 id="modalTitle">Adicionar Novo Dispositivo</h2>
             <input type="text" id="deviceName" placeholder="Nome do Dispositivo">
+            <input type="text" id="deviceBrand" placeholder="Marca (opcional)">
+            <input type="text" id="deviceModel" placeholder="Modelo (opcional)">
             <div class="watts-input-container">
                 <input type="number" id="deviceNumber" placeholder="Consumo em Watts" style="flex: 1;">
                 <div class="help-icon" onclick="openWattsChatbot()">

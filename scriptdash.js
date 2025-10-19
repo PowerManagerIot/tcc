@@ -51,6 +51,7 @@ let regularDevices = {};
 let smartDevices = {};
 const MAX_SMART_DEVICES = 8;
 let deviceToDelete = null;
+let editingDevice = null;
 
 // Variáveis de monitoramento
 let alertLimit = 100;
@@ -64,7 +65,7 @@ let s2Power = 0;
 let energyPrice = 0.80;
 
 let chatHistory = [];
-const GEMINI_API_KEY = 'AIzaSyDfhomKTh_2WhvVveb7KSfsY_9Ri1IrUyg'; // ← SUBSTITUA pela sua chave
+const GEMINI_API_KEY = 'AIzaSyDfhomKTh_2WhvVveb7KSfsY_9Ri1IrUyg';
 
 // Locais
 let locations = [
@@ -380,11 +381,9 @@ function renderDynamicDeviceCards() {
         return;
     }
     
-    // Remove cards existentes (mantém apenas os 3 primeiros divs - leftColumn e 2 outras colunas fixas se existirem)
     const existingCards = dashboardGrid.querySelectorAll('.dynamic-device-card');
     existingCards.forEach(card => card.remove());
     
-    // Combina todos os dispositivos
     const allDevices = [];
     
     Object.keys(regularDevices).forEach(key => {
@@ -403,15 +402,12 @@ function renderDynamicDeviceCards() {
         });
     });
     
-    // Se não há dispositivos, não renderiza nada
     if (allDevices.length === 0) {
         return;
     }
     
-    // Calcula o consumo total para porcentagens
     const totalConsumption = allDevices.reduce((sum, device) => sum + (device.number || 0), 0);
     
-    // Cria cards para cada dispositivo
     allDevices.forEach((device, index) => {
         const consumptionWatts = device.number || 0;
         const consumptionKwh = consumptionWatts / 1000;
@@ -419,9 +415,8 @@ function renderDynamicDeviceCards() {
         const percentage = totalConsumption > 0 ? (consumptionWatts / totalConsumption) * 100 : 0;
         const color = getColorByPercentage(percentage);
         
-        // Calcula strokeDashoffset para o círculo
-        const circumference = 2 * Math.PI * 48; // mobile (r=48)
-        const circumferenceMd = 2 * Math.PI * 56; // desktop (r=56)
+        const circumference = 2 * Math.PI * 48;
+        const circumferenceMd = 2 * Math.PI * 56;
         const offset = circumference - (percentage / 100 * circumference);
         const offsetMd = circumferenceMd - (percentage / 100 * circumferenceMd);
         
@@ -498,10 +493,41 @@ function loadDevicesFromFirebase() {
 function toggleDeviceState(deviceKey) {
     if (!USER_ID) return;
     
-    smartDevices[deviceKey].state = !smartDevices[deviceKey].state;
+    const newState = !smartDevices[deviceKey].state;
+    const timestamp = new Date().toISOString();
+    const action = newState ? 'ligado' : 'desligado';
     
-    database.ref(`users/${USER_ID}/devices/${deviceKey}/state`).set(smartDevices[deviceKey].state)
-        .then(() => renderDevices())
+    smartDevices[deviceKey].state = newState;
+    
+    const updates = {
+        state: newState,
+        lastStateChange: timestamp,
+        lastModified: timestamp
+    };
+    
+    const historyRef = database.ref(`users/${USER_ID}/devices/${deviceKey}/stateHistory`).push();
+    historyRef.set({
+        timestamp: timestamp,
+        state: newState,
+        action: action,
+        date: new Date().toLocaleString('pt-BR', { 
+            timeZone: 'America/Sao_Paulo',
+            dateStyle: 'short',
+            timeStyle: 'medium'
+        })
+    });
+    
+    database.ref(`users/${USER_ID}/devices/${deviceKey}`).update(updates)
+        .then(() => {
+            renderDevices();
+            if (connectionStatus) {
+                connectionStatus.textContent = `Dispositivo ${action} em ${new Date().toLocaleTimeString('pt-BR')}`;
+                connectionStatus.className = "status connected";
+                setTimeout(() => {
+                    connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
+                }, 3000);
+            }
+        })
         .catch((error) => console.error("Erro ao atualizar estado:", error));
 }
 
@@ -518,6 +544,23 @@ function deleteDevice() {
         ? `users/${USER_ID}/devices/${deviceToDelete.key}`
         : `users/${USER_ID}/regularDevices/${deviceToDelete.key}`;
 
+    const timestamp = new Date().toISOString();
+    const deletedDevice = deviceToDelete.isSmart 
+        ? smartDevices[deviceToDelete.key]
+        : regularDevices[deviceToDelete.key];
+    
+    const deletionRecord = {
+        ...deletedDevice,
+        deletedAt: timestamp,
+        deletedDate: new Date().toLocaleString('pt-BR', { 
+            timeZone: 'America/Sao_Paulo',
+            dateStyle: 'short',
+            timeStyle: 'medium'
+        })
+    };
+    
+    database.ref(`users/${USER_ID}/deletedDevices`).push().set(deletionRecord);
+
     database.ref(path).remove()
         .then(() => {
             deleteModal.style.display = 'none';
@@ -525,7 +568,7 @@ function deleteDevice() {
             deviceToDelete = null;
             
             if (connectionStatus) {
-                connectionStatus.textContent = `Dispositivo "${deletedName}" excluído com sucesso!`;
+                connectionStatus.textContent = `Dispositivo "${deletedName}" excluído em ${new Date().toLocaleTimeString('pt-BR')}`;
                 connectionStatus.className = "status connected";
                 
                 setTimeout(() => {
@@ -541,14 +584,55 @@ function deleteDevice() {
         });
 }
 
+function openEditModal(deviceKey, device, isSmart) {
+    console.log('Abrindo modal para editar:', device);
+    editingDevice = { key: deviceKey, isSmart: isSmart, originalType: device.hasButton };
+    
+    const modalTitle = document.getElementById('modalTitle');
+    const deviceBrand = document.getElementById('deviceBrand');
+    const deviceModel = document.getElementById('deviceModel');
+    
+    if (modalTitle) modalTitle.textContent = 'Editar Dispositivo';
+    deviceName.value = device.name || '';
+    if (deviceBrand) deviceBrand.value = device.brand || '';
+    if (deviceModel) deviceModel.value = device.model || '';
+    deviceNumber.value = device.number || '';
+    hasButton.value = device.hasButton || 'no';
+    
+    hasButton.disabled = true;
+    
+    deviceModal.style.display = 'block';
+    updateSmartDevicesCounter();
+}
+
+function closeDeviceModal() {
+    deviceModal.style.display = 'none';
+    limitWarning.style.display = 'none';
+    editingDevice = null;
+    
+    const modalTitle = document.getElementById('modalTitle');
+    const deviceBrand = document.getElementById('deviceBrand');
+    const deviceModel = document.getElementById('deviceModel');
+    
+    if (modalTitle) modalTitle.textContent = 'Adicionar Novo Dispositivo';
+    deviceName.value = '';
+    if (deviceBrand) deviceBrand.value = '';
+    if (deviceModel) deviceModel.value = '';
+    deviceNumber.value = '';
+    hasButton.value = 'no';
+    hasButton.disabled = false;
+}
+
 function renderDevices() {
     devicesContainer.innerHTML = '';
     
-    // Renderizar dispositivos regulares
     Object.keys(regularDevices).forEach((key) => {
         const device = regularDevices[key];
         const deviceElement = document.createElement('div');
         deviceElement.className = 'device';
+        
+        const createdInfo = device.createdDate ? `<div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px;">Criado em: ${device.createdDate}</div>` : '';
+        const brandModelInfo = (device.brand || device.model) ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">${device.brand || ''} ${device.model || ''}</div>` : '';
         
         deviceElement.innerHTML = `
             <div class="device-info">
@@ -556,26 +640,40 @@ function renderDevices() {
                     ${device.name}
                     <span class="device-type">Regular</span>
                 </div>
+                ${brandModelInfo}
                 <div class="device-value">${device.number} W</div>
                 <div class="device-state">Dispositivo não controlável</div>
+                ${createdInfo}
             </div>
             <div class="device-controls">
+                <button class="edit-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 8px; color: white;">✏️ Editar</button>
                 <button class="delete-btn">🗑️ Excluir</button>
             </div>
         `;
         
         devicesContainer.appendChild(deviceElement);
         
+        deviceElement.querySelector('.edit-btn').addEventListener('click', () => {
+            openEditModal(key, device, false);
+        });
         deviceElement.querySelector('.delete-btn').addEventListener('click', () => {
             showDeleteConfirmation(key, device.name, false);
         });
     });
     
-    // Renderizar dispositivos inteligentes
     Object.keys(smartDevices).forEach((key) => {
         const device = smartDevices[key];
         const deviceElement = document.createElement('div');
         deviceElement.className = 'device has-button';
+        
+        let lastChangeInfo = '';
+        if (device.lastStateChange) {
+            const lastChangeDate = new Date(device.lastStateChange);
+            lastChangeInfo = `<div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px;">Última ação: ${lastChangeDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'medium' })}</div>`;
+        }
+        
+        const createdInfo = device.createdDate ? `<div style="font-size: 0.75rem; color: var(--text-tertiary);">Criado em: ${device.createdDate}</div>` : '';
+        const brandModelInfo = (device.brand || device.model) ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">${device.brand || ''} ${device.model || ''}</div>` : '';
         
         deviceElement.innerHTML = `
             <div class="device-info">
@@ -583,13 +681,17 @@ function renderDevices() {
                     ${device.name}
                     <span class="device-type smart">Inteligente</span>
                 </div>
+                ${brandModelInfo}
                 <div class="device-value">${device.number} W</div>
                 <div class="device-state">Estado: ${device.state ? 'Ligado' : 'Desligado'}</div>
+                ${lastChangeInfo}
+                ${createdInfo}
             </div>
             <div class="device-controls">
                 <button class="device-btn" data-state="${device.state ? 'on' : 'off'}">
                     ${device.state ? 'Ligado' : 'Desligado'}
                 </button>
+                <button class="edit-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 8px; color: white;">✏️ Editar</button>
                 <button class="delete-btn">🗑️ Excluir</button>
             </div>
         `;
@@ -597,6 +699,9 @@ function renderDevices() {
         devicesContainer.appendChild(deviceElement);
         
         deviceElement.querySelector('.device-btn').addEventListener('click', () => toggleDeviceState(key));
+        deviceElement.querySelector('.edit-btn').addEventListener('click', () => {
+            openEditModal(key, device, true);
+        });
         deviceElement.querySelector('.delete-btn').addEventListener('click', () => {
             showDeleteConfirmation(key, device.name, true);
         });
@@ -621,16 +726,15 @@ cancelDeleteBtn.addEventListener('click', () => {
 });
 
 addDeviceBtn.addEventListener('click', () => {
+    editingDevice = null;
+    const modalTitle = document.getElementById('modalTitle');
+    if (modalTitle) modalTitle.textContent = 'Adicionar Novo Dispositivo';
     deviceModal.style.display = 'block';
     updateSmartDevicesCounter();
 });
 
 cancelBtn.addEventListener('click', () => {
-    deviceModal.style.display = 'none';
-    limitWarning.style.display = 'none';
-    deviceName.value = '';
-    deviceNumber.value = '';
-    hasButton.value = 'no';
+    closeDeviceModal();
 });
 
 hasButton.addEventListener('change', () => {
@@ -648,6 +752,8 @@ hasButton.addEventListener('change', () => {
 });
 
 confirmBtn.addEventListener('click', () => {
+    console.log('Botão confirmar clicado');
+    
     if (!USER_ID) {
         alert('Erro: Usuário não identificado. Por favor, faça login novamente.');
         redirecionarParaLogin();
@@ -655,14 +761,85 @@ confirmBtn.addEventListener('click', () => {
     }
     
     const name = deviceName.value.trim();
+    const deviceBrand = document.getElementById('deviceBrand');
+    const deviceModel = document.getElementById('deviceModel');
+    const brand = deviceBrand ? deviceBrand.value.trim() : '';
+    const model = deviceModel ? deviceModel.value.trim() : '';
     const number = parseInt(deviceNumber.value.trim());
     const isSmart = hasButton.value === 'yes';
     
+    console.log('Dados capturados:', { name, brand, model, number, isSmart, editingDevice });
+    
     if (!name || !number || isNaN(number)) {
-        alert("Por favor, preencha todos os campos corretamente.");
+        alert("Por favor, preencha os campos obrigatórios (Nome e Consumo).");
         return;
     }
     
+    const timestamp = new Date().toISOString();
+    const formattedDate = new Date().toLocaleString('pt-BR', { 
+        timeZone: 'America/Sao_Paulo',
+        dateStyle: 'short',
+        timeStyle: 'medium'
+    });
+    
+    // Se está editando
+    if (editingDevice) {
+        console.log('Modo edição ativado');
+        const path = editingDevice.isSmart ? 'devices' : 'regularDevices';
+        const deviceRef = database.ref(`users/${USER_ID}/${path}/${editingDevice.key}`);
+        
+        deviceRef.once('value', (snapshot) => {
+            const currentData = snapshot.val();
+            
+            const updatedDevice = {
+                ...currentData,
+                name,
+                brand: brand || null,
+                model: model || null,
+                number,
+                lastModified: timestamp,
+                lastModifiedDate: formattedDate
+            };
+            
+            console.log('Atualizando dispositivo:', updatedDevice);
+            
+            deviceRef.update(updatedDevice)
+                .then(() => {
+                    console.log('Dispositivo atualizado com sucesso');
+                    
+                    const editHistoryRef = database.ref(`users/${USER_ID}/${path}/${editingDevice.key}/editHistory`).push();
+                    editHistoryRef.set({
+                        timestamp: timestamp,
+                        date: formattedDate,
+                        changes: {
+                            name: currentData.name !== name ? { old: currentData.name, new: name } : null,
+                            brand: currentData.brand !== brand ? { old: currentData.brand, new: brand } : null,
+                            model: currentData.model !== model ? { old: currentData.model, new: model } : null,
+                            number: currentData.number !== number ? { old: currentData.number, new: number } : null
+                        }
+                    });
+                    
+                    closeDeviceModal();
+                    
+                    if (connectionStatus) {
+                        connectionStatus.textContent = `Dispositivo "${name}" atualizado com sucesso!`;
+                        connectionStatus.className = "status connected";
+                        setTimeout(() => {
+                            connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
+                        }, 3000);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Erro ao atualizar dispositivo:", error);
+                    alert("Erro ao atualizar dispositivo: " + error.message);
+                });
+        });
+        
+        return;
+    }
+    
+    // Se está adicionando novo dispositivo
+    console.log('Modo adição ativado');
     const smartDeviceCount = Object.keys(smartDevices).length;
     
     if (isSmart && smartDeviceCount >= MAX_SMART_DEVICES) {
@@ -672,22 +849,49 @@ confirmBtn.addEventListener('click', () => {
     
     const newDevice = {
         name,
+        brand: brand || null,
+        model: model || null,
         number,
         hasButton: isSmart ? 'yes' : 'no',
-        state: false
+        state: false,
+        createdAt: timestamp,
+        lastModified: timestamp,
+        createdDate: formattedDate
     };
+    
+    if (isSmart) {
+        newDevice.lastStateChange = timestamp;
+    }
     
     const path = isSmart ? 'devices' : 'regularDevices';
     const devices = isSmart ? smartDevices : regularDevices;
     const nextId = getNextDeviceId(devices);
     
+    console.log('Salvando novo dispositivo:', newDevice);
+    console.log('Path:', `users/${USER_ID}/${path}/${nextId}`);
+    
     database.ref(`users/${USER_ID}/${path}/${nextId}`).set(newDevice)
         .then(() => {
-            deviceModal.style.display = 'none';
-            limitWarning.style.display = 'none';
-            deviceName.value = '';
-            deviceNumber.value = '';
-            hasButton.value = 'no';
+            console.log('Dispositivo salvo com sucesso no Firebase');
+            
+            if (isSmart) {
+                database.ref(`users/${USER_ID}/${path}/${nextId}/stateHistory`).push().set({
+                    timestamp: timestamp,
+                    state: false,
+                    action: 'criado',
+                    date: formattedDate
+                });
+            }
+            
+            closeDeviceModal();
+            
+            if (connectionStatus) {
+                connectionStatus.textContent = `Dispositivo "${name}" adicionado com sucesso!`;
+                connectionStatus.className = "status connected";
+                setTimeout(() => {
+                    connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
+                }, 3000);
+            }
         })
         .catch((error) => {
             console.error("Erro ao salvar dispositivo:", error);
@@ -741,7 +945,6 @@ function closeLocationModal() {
     document.getElementById('locationEmission').value = '';
 }
 
-
 // ========== FUNÇÕES DO CHATBOT DE WATTS ==========
 
 function openWattsChatbot() {
@@ -749,18 +952,14 @@ function openWattsChatbot() {
     const chatMessages = document.getElementById('chatMessages');
     
     if (modal && chatMessages) {
-        // Limpa o histórico e adiciona mensagem inicial
         chatHistory = [];
         chatMessages.innerHTML = '';
         
         addChatMessage('assistant', 'Olá! Vou te ajudar a descobrir quantos watts seu dispositivo consome.\n\nPor favor, me conte:\n• Que tipo de dispositivo é? (ex: geladeira, TV, micro-ondas)\n• Qual a marca e modelo, se souber\n• Alguma característica especial? (ex: tamanho, capacidade)');
         
         modal.style.display = 'block';
-        
-        // BLOQUEIA SCROLL DA PÁGINA
         document.body.style.overflow = 'hidden';
         
-        // Foco no input
         setTimeout(() => {
             document.getElementById('chatInput').focus();
         }, 300);
@@ -772,8 +971,6 @@ function closeWattsChatbot() {
     if (modal) {
         modal.style.display = 'none';
         chatHistory = [];
-        
-        // LIBERA SCROLL DA PÁGINA
         document.body.style.overflow = '';
     }
 }
@@ -785,13 +982,10 @@ function addChatMessage(role, content, isWattsResult = false) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${role}${isWattsResult ? ' watts-result' : ''}`;
     
-    // Formata o conteúdo com quebras de linha
     const formattedContent = content.replace(/\n/g, '<br>');
     messageDiv.innerHTML = formattedContent;
     
     chatMessages.appendChild(messageDiv);
-    
-    // Scroll para o final
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
@@ -830,21 +1024,17 @@ async function sendChatMessage() {
     const userMessage = chatInput.value.trim();
     chatInput.value = '';
     
-    // Verifica se a API key está configurada
     if (!GEMINI_API_KEY || GEMINI_API_KEY === 'COLE_SUA_CHAVE_AQUI') {
         addChatMessage('assistant', '⚠️ A chave da API do Gemini não foi configurada. Por favor, configure no arquivo scriptdash.js.');
         return;
     }
     
-    // Adiciona mensagem do usuário
     addChatMessage('user', userMessage);
     chatHistory.push({ role: 'user', content: userMessage });
     
-    // Mostra loading
     if (chatLoading) chatLoading.style.display = 'block';
     
     try {
-        // ✅ URL CORRIGIDA - gemini-2.5-flash
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         
         const response = await fetch(apiUrl, {
@@ -899,10 +1089,8 @@ Responda de forma clara e objetiva em português do Brasil.`
         const data = await response.json();
         const assistantMessage = data.candidates[0].content.parts[0].text;
         
-        // Adiciona ao histórico
         chatHistory.push({ role: 'assistant', content: assistantMessage });
         
-        // Verifica se a resposta contém uma estimativa de watts
         const wattsMatch = assistantMessage.match(/ESTIMATIVA:\s*(\d+)\s*W/i);
         
         if (wattsMatch) {
@@ -911,7 +1099,6 @@ Responda de forma clara e objetiva em português do Brasil.`
             
             addWattsResultMessage(watts, explanation || 'Estimativa baseada nas informações fornecidas.');
         } else {
-            // Adiciona mensagem normal do assistente
             addChatMessage('assistant', assistantMessage);
         }
         
@@ -923,7 +1110,6 @@ Responda de forma clara e objetiva em português do Brasil.`
     }
 }
 
-// Enter para enviar mensagem
 document.addEventListener('DOMContentLoaded', () => {
     const chatInput = document.getElementById('chatInput');
     if (chatInput) {
@@ -935,7 +1121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
 
 function addLocation() {
     const name = document.getElementById('locationName').value;
@@ -963,10 +1148,8 @@ async function inicializarDashboard() {
         if (loginForm) loginForm.style.display = 'none';
         if (mainContent) mainContent.style.display = 'block';
         
-        // Carregar preço da energia salvo
         loadEnergyPrice();
         
-        // Iniciar todos os monitoramentos
         getAlertLimit();
         monitorPower();
         loadDevicesFromFirebase();
@@ -982,11 +1165,9 @@ async function inicializarDashboard() {
 
 document.addEventListener('DOMContentLoaded', inicializarDashboard);
 
-// Fechar modais ao clicar fora
 window.addEventListener('click', (event) => {
     if (event.target === deviceModal) {
-        deviceModal.style.display = 'none';
-        limitWarning.style.display = 'none';
+        closeDeviceModal();
     }
     if (event.target === deleteModal) {
         deleteModal.style.display = 'none';
@@ -1001,7 +1182,6 @@ window.addEventListener('click', (event) => {
     }
 });
 
-// Event listener do modal de location
 const locationModal = document.getElementById('locationModal');
 if (locationModal) {
     locationModal.addEventListener('click', function(e) {
@@ -1009,7 +1189,6 @@ if (locationModal) {
     });
 }
 
-// Botão de logout
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', function(e) {
@@ -1018,7 +1197,6 @@ if (logoutBtn) {
     });
 }
 
-// Tornar funções globais para o HTML
 window.logout = logout;
 window.openLocationModal = openLocationModal;
 window.closeLocationModal = closeLocationModal;
