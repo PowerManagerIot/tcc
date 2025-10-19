@@ -65,7 +65,6 @@ let s2Power = 0;
 let energyPrice = 0.80;
 
 let chatHistory = [];
-const GEMINI_API_KEY = 'AIzaSyDfhomKTh_2WhvVveb7KSfsY_9Ri1IrUyg';
 
 // Locais
 let locations = [
@@ -1157,66 +1156,34 @@ async function sendChatMessage() {
     const userMessage = chatInput.value.trim();
     chatInput.value = '';
     
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'COLE_SUA_CHAVE_AQUI') {
-        addChatMessage('assistant', '⚠️ A chave da API do Gemini não foi configurada. Por favor, configure no arquivo scriptdash.js.');
-        return;
-    }
-    
     addChatMessage('user', userMessage);
     chatHistory.push({ role: 'user', content: userMessage });
     
     if (chatLoading) chatLoading.style.display = 'block';
     
     try {
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-        
-        const response = await fetch(apiUrl, {
+        // Pegar o token do usuário autenticado
+        const user = auth.currentUser;
+        if (!user) {
+            throw new Error('Usuário não autenticado');
+        }
+        const token = await user.getIdToken();
+
+        // Chamar SUA Cloud Function (não a API do Gemini diretamente)
+        const response = await fetch('https://us-central1-SEU-PROJECT-ID.cloudfunctions.net/chatWithGemini', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: `Você é um assistente especializado em ajudar pessoas a descobrir o consumo de energia de dispositivos domésticos e comerciais em Watts.
-
-IMPORTANTE: Sua resposta final DEVE incluir uma estimativa clara do consumo em Watts.
-
-INSTRUÇÕES:
-1. Analise as informações fornecidas pelo usuário sobre o dispositivo
-2. Faça perguntas esclarecedoras se necessário (marca, modelo, tamanho, etc)
-3. Quando tiver informações suficientes, forneça uma estimativa de consumo em Watts
-4. Sua resposta final DEVE seguir este formato exato:
-
-ESTIMATIVA: [número] W
-[Breve explicação sobre o consumo]
-
-Exemplos de respostas finais corretas:
-"ESTIMATIVA: 150 W
-Uma geladeira duplex comum consome entre 130-200W quando o compressor está funcionando."
-
-"ESTIMATIVA: 80 W
-Um notebook médio consome entre 65-100W durante uso normal."
-
-Histórico da conversa:
-${chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
-
-Mensagem atual do usuário: ${userMessage}
-
-Responda de forma clara e objetiva em português do Brasil.`
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 3000,
-                }
+                message: userMessage,
+                chatHistory: chatHistory
             })
         });
         
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Erro da API:', errorText);
-            throw new Error(`Erro ${response.status}: ${errorText}`);
+            throw new Error(`Erro ${response.status}`);
         }
         
         const data = await response.json();
@@ -1229,7 +1196,6 @@ Responda de forma clara e objetiva em português do Brasil.`
         if (wattsMatch) {
             const watts = parseInt(wattsMatch[1]);
             const explanation = assistantMessage.replace(/ESTIMATIVA:\s*\d+\s*W/i, '').trim();
-            
             addWattsResultMessage(watts, explanation || 'Estimativa baseada nas informações fornecidas.');
         } else {
             addChatMessage('assistant', assistantMessage);
@@ -1237,7 +1203,7 @@ Responda de forma clara e objetiva em português do Brasil.`
         
     } catch (error) {
         console.error('Erro no chatbot:', error);
-        addChatMessage('assistant', '❌ Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente ou insira o valor manualmente se você já souber.');
+        addChatMessage('assistant', '❌ Desculpe, ocorreu um erro ao processar sua mensagem.');
     } finally {
         if (chatLoading) chatLoading.style.display = 'none';
     }
