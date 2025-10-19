@@ -623,11 +623,87 @@ function closeDeviceModal() {
     hasButton.disabled = false;
 }
 
+// ========== FUNÇÕES PARA CALCULAR TEMPO LIGADO ==========
+
+function calculateDeviceUptime(device, isSmart) {
+    if (!isSmart) {
+        // Dispositivo não controlável - considerado sempre ligado desde a criação
+        const createdDate = new Date(device.createdAt || device.createdDate);
+        const now = new Date();
+        const diffMs = now - createdDate;
+        
+        return {
+            totalMs: diffMs,
+            hours: Math.floor(diffMs / (1000 * 60 * 60)),
+            minutes: Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)),
+            days: Math.floor(diffMs / (1000 * 60 * 60 * 24))
+        };
+    } else {
+        // Dispositivo inteligente - calcular baseado no histórico de estados
+        return calculateSmartDeviceUptime(device);
+    }
+}
+
+function calculateSmartDeviceUptime(device) {
+    if (!device.stateHistory) {
+        return { totalMs: 0, hours: 0, minutes: 0, days: 0 };
+    }
+    
+    let totalUptimeMs = 0;
+    let lastOnTime = null;
+    const now = new Date();
+    
+    // Ordenar histórico por timestamp
+    const historyEntries = Object.values(device.stateHistory)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    // Percorrer o histórico para calcular períodos ligado
+    historyEntries.forEach(entry => {
+        const entryTime = new Date(entry.timestamp);
+        
+        if (entry.state === true && lastOnTime === null) {
+            // Início de um período ligado
+            lastOnTime = entryTime;
+        } else if (entry.state === false && lastOnTime !== null) {
+            // Fim de um período ligado - calcular duração
+            const periodMs = entryTime - lastOnTime;
+            totalUptimeMs += periodMs;
+            lastOnTime = null;
+        }
+    });
+    
+    // Se está atualmente ligado, adicionar tempo desde o último "ligado"
+    if (device.state === true && lastOnTime !== null) {
+        const currentPeriodMs = now - lastOnTime;
+        totalUptimeMs += currentPeriodMs;
+    }
+    
+    return {
+        totalMs: totalUptimeMs,
+        hours: Math.floor(totalUptimeMs / (1000 * 60 * 60)),
+        minutes: Math.floor((totalUptimeMs % (1000 * 60 * 60)) / (1000 * 60)),
+        days: Math.floor(totalUptimeMs / (1000 * 60 * 60 * 24))
+    };
+}
+
+function formatUptime(uptime) {
+    if (uptime.days > 0) {
+        return `${uptime.days}d ${uptime.hours % 24}h ${uptime.minutes}m`;
+    } else if (uptime.hours > 0) {
+        return `${uptime.hours}h ${uptime.minutes}m`;
+    } else {
+        return `${uptime.minutes}m`;
+    }
+}
+
 function renderDevices() {
     devicesContainer.innerHTML = '';
     
     Object.keys(regularDevices).forEach((key) => {
         const device = regularDevices[key];
+        const uptime = calculateDeviceUptime(device, false);
+        const uptimeText = formatUptime(uptime);
+        
         const deviceElement = document.createElement('div');
         deviceElement.className = 'device';
         
@@ -643,6 +719,9 @@ function renderDevices() {
                 ${brandModelInfo}
                 <div class="device-value">${device.number} W</div>
                 <div class="device-state">Dispositivo não controlável</div>
+                <div class="uptime-info" style="font-size: 0.75rem; color: var(--accent-green); margin-top: 4px;">
+                    ⏱️ Tempo ligado: ${uptimeText}
+                </div>
                 ${createdInfo}
             </div>
             <div class="device-controls">
@@ -663,6 +742,9 @@ function renderDevices() {
     
     Object.keys(smartDevices).forEach((key) => {
         const device = smartDevices[key];
+        const uptime = calculateDeviceUptime(device, true);
+        const uptimeText = formatUptime(uptime);
+        
         const deviceElement = document.createElement('div');
         deviceElement.className = 'device has-button';
         
@@ -684,6 +766,9 @@ function renderDevices() {
                 ${brandModelInfo}
                 <div class="device-value">${device.number} W</div>
                 <div class="device-state">Estado: ${device.state ? 'Ligado' : 'Desligado'}</div>
+                <div class="uptime-info" style="font-size: 0.75rem; color: var(--accent-green); margin-top: 4px;">
+                    ⏱️ Tempo total ligado: ${uptimeText}
+                </div>
                 ${lastChangeInfo}
                 ${createdInfo}
             </div>
@@ -1110,18 +1195,6 @@ Responda de forma clara e objetiva em português do Brasil.`
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const chatInput = document.getElementById('chatInput');
-    if (chatInput) {
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                sendChatMessage();
-            }
-        });
-    }
-});
-
 function addLocation() {
     const name = document.getElementById('locationName').value;
     const cost = parseFloat(document.getElementById('locationCost').value);
@@ -1135,6 +1208,17 @@ function addLocation() {
     } else {
         alert('Por favor, preencha todos os campos');
     }
+}
+
+// ========== ATUALIZAÇÃO AUTOMÁTICA DOS TEMPOS ==========
+
+function startUptimeCounter() {
+    // Atualizar os tempos a cada minuto
+    setInterval(() => {
+        if (Object.keys(regularDevices).length > 0 || Object.keys(smartDevices).length > 0) {
+            renderDevices();
+        }
+    }, 60000); // Atualiza a cada 1 minuto
 }
 
 // ========== INICIALIZAÇÃO ==========
@@ -1154,6 +1238,9 @@ async function inicializarDashboard() {
         monitorPower();
         loadDevicesFromFirebase();
         renderLocations();
+        
+        // Iniciar contador de tempo ligado
+        startUptimeCounter();
         
     } catch (error) {
         console.error('Erro ao inicializar dashboard:', error);
@@ -1197,9 +1284,19 @@ if (logoutBtn) {
     });
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+    }
+});
 
-
-
+// ========== EXPORTAÇÕES PARA O HTML ==========
 
 window.logout = logout;
 window.openLocationModal = openLocationModal;
