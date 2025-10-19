@@ -1197,6 +1197,10 @@ if (logoutBtn) {
     });
 }
 
+
+
+
+
 window.logout = logout;
 window.openLocationModal = openLocationModal;
 window.closeLocationModal = closeLocationModal;
