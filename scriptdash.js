@@ -365,6 +365,102 @@ function loadEnergyPrice() {
     }
 }
 
+// ========== FUNÇÕES PARA CALCULAR TEMPO LIGADO E ENERGIA CONSUMIDA ==========
+
+function calculateDeviceUptime(device, isSmart) {
+    if (!isSmart) {
+        // Dispositivo não controlável - considerado sempre ligado desde a criação
+        const createdDate = new Date(device.createdAt || device.createdDate);
+        const now = new Date();
+        const diffMs = now - createdDate;
+        
+        return {
+            totalMs: diffMs,
+            hours: Math.floor(diffMs / (1000 * 60 * 60)),
+            minutes: Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)),
+            days: Math.floor(diffMs / (1000 * 60 * 60 * 24))
+        };
+    } else {
+        // Dispositivo inteligente - calcular baseado no histórico de estados
+        return calculateSmartDeviceUptime(device);
+    }
+}
+
+function calculateSmartDeviceUptime(device) {
+    if (!device.stateHistory) {
+        return { totalMs: 0, hours: 0, minutes: 0, days: 0 };
+    }
+    
+    let totalUptimeMs = 0;
+    let lastOnTime = null;
+    const now = new Date();
+    
+    // Ordenar histórico por timestamp
+    const historyEntries = Object.values(device.stateHistory)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    // Percorrer o histórico para calcular períodos ligado
+    historyEntries.forEach(entry => {
+        const entryTime = new Date(entry.timestamp);
+        
+        if (entry.state === true && lastOnTime === null) {
+            // Início de um período ligado
+            lastOnTime = entryTime;
+        } else if (entry.state === false && lastOnTime !== null) {
+            // Fim de um período ligado - calcular duração
+            const periodMs = entryTime - lastOnTime;
+            totalUptimeMs += periodMs;
+            lastOnTime = null;
+        }
+    });
+    
+    // Se está atualmente ligado, adicionar tempo desde o último "ligado"
+    if (device.state === true && lastOnTime !== null) {
+        const currentPeriodMs = now - lastOnTime;
+        totalUptimeMs += currentPeriodMs;
+    }
+    
+    return {
+        totalMs: totalUptimeMs,
+        hours: Math.floor(totalUptimeMs / (1000 * 60 * 60)),
+        minutes: Math.floor((totalUptimeMs % (1000 * 60 * 60)) / (1000 * 60)),
+        days: Math.floor(totalUptimeMs / (1000 * 60 * 60 * 24))
+    };
+}
+
+function calculateEnergyConsumption(device, uptime) {
+    const watts = device.number || 0;
+    const hours = uptime.totalMs / (1000 * 60 * 60); // Converter ms para horas
+    const kWh = (watts * hours) / 1000; // Watts * horas / 1000 = kWh
+    const cost = kWh * energyPrice;
+    
+    return {
+        kWh: kWh,
+        cost: cost,
+        watts: watts,
+        hours: hours
+    };
+}
+
+function formatUptime(uptime) {
+    if (uptime.days > 0) {
+        return `${uptime.days}d ${uptime.hours % 24}h ${uptime.minutes}m`;
+    } else if (uptime.hours > 0) {
+        return `${uptime.hours}h ${uptime.minutes}m`;
+    } else {
+        return `${uptime.minutes}m`;
+    }
+}
+
+function formatEnergy(energy) {
+    return {
+        kWh: energy.kWh.toFixed(2),
+        cost: energy.cost.toFixed(2),
+        watts: energy.watts.toFixed(0),
+        hours: energy.hours.toFixed(1)
+    };
+}
+
 // ========== FUNÇÕES DE DISPOSITIVOS - CARDS DINÂMICOS ==========
 
 function getColorByPercentage(percentage) {
@@ -406,13 +502,20 @@ function renderDynamicDeviceCards() {
         return;
     }
     
-    const totalConsumption = allDevices.reduce((sum, device) => sum + (device.number || 0), 0);
+    // Calcular consumo total para porcentagem
+    const totalConsumption = allDevices.reduce((sum, device) => {
+        const uptime = calculateDeviceUptime(device, device.isSmart);
+        const energy = calculateEnergyConsumption(device, uptime);
+        return sum + energy.cost;
+    }, 0);
     
     allDevices.forEach((device, index) => {
-        const consumptionWatts = device.number || 0;
-        const consumptionKwh = consumptionWatts / 1000;
-        const cost = consumptionKwh * energyPrice;
-        const percentage = totalConsumption > 0 ? (consumptionWatts / totalConsumption) * 100 : 0;
+        const uptime = calculateDeviceUptime(device, device.isSmart);
+        const energy = calculateEnergyConsumption(device, uptime);
+        const formattedEnergy = formatEnergy(energy);
+        
+        // Calcular porcentagem baseada no custo total
+        const percentage = totalConsumption > 0 ? (energy.cost / totalConsumption) * 100 : 0;
         const color = getColorByPercentage(percentage);
         
         const circumference = 2 * Math.PI * 48;
@@ -440,8 +543,11 @@ function renderDynamicDeviceCards() {
                                     stroke-dasharray="${circumferenceMd}" stroke-dashoffset="${offsetMd}" stroke-linecap="round" style="stroke: ${color};" class="hidden md:block"/>
                         </svg>
                     </div>
-                    <div class="text-xl md:text-2xl font-bold" style="color: ${color};">R$ ${cost.toFixed(2)}</div>
-                    <div class="text-xs md:text-sm" style="color: var(--text-secondary);">${consumptionKwh.toFixed(2)} kWh</div>
+                    <div class="text-xl md:text-2xl font-bold mb-2" style="color: ${color};">R$ ${formattedEnergy.cost}</div>
+                    <div class="text-xs md:text-sm mb-1" style="color: var(--text-secondary);">${formattedEnergy.kWh} kWh consumidos</div>
+                    <div class="text-xs" style="color: var(--text-tertiary);">
+                        ${formattedEnergy.watts}W × ${formattedEnergy.hours}h
+                    </div>
                 </div>
             </div>
         `;
@@ -520,6 +626,7 @@ function toggleDeviceState(deviceKey) {
     database.ref(`users/${USER_ID}/devices/${deviceKey}`).update(updates)
         .then(() => {
             renderDevices();
+            renderDynamicDeviceCards(); // Atualizar cards com novo consumo
             if (connectionStatus) {
                 connectionStatus.textContent = `Dispositivo ${action} em ${new Date().toLocaleTimeString('pt-BR')}`;
                 connectionStatus.className = "status connected";
@@ -566,6 +673,8 @@ function deleteDevice() {
             deleteModal.style.display = 'none';
             const deletedName = deviceToDelete.name;
             deviceToDelete = null;
+            
+            renderDynamicDeviceCards(); // Atualizar cards após exclusão
             
             if (connectionStatus) {
                 connectionStatus.textContent = `Dispositivo "${deletedName}" excluído em ${new Date().toLocaleTimeString('pt-BR')}`;
@@ -623,79 +732,6 @@ function closeDeviceModal() {
     hasButton.disabled = false;
 }
 
-// ========== FUNÇÕES PARA CALCULAR TEMPO LIGADO ==========
-
-function calculateDeviceUptime(device, isSmart) {
-    if (!isSmart) {
-        // Dispositivo não controlável - considerado sempre ligado desde a criação
-        const createdDate = new Date(device.createdAt || device.createdDate);
-        const now = new Date();
-        const diffMs = now - createdDate;
-        
-        return {
-            totalMs: diffMs,
-            hours: Math.floor(diffMs / (1000 * 60 * 60)),
-            minutes: Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)),
-            days: Math.floor(diffMs / (1000 * 60 * 60 * 24))
-        };
-    } else {
-        // Dispositivo inteligente - calcular baseado no histórico de estados
-        return calculateSmartDeviceUptime(device);
-    }
-}
-
-function calculateSmartDeviceUptime(device) {
-    if (!device.stateHistory) {
-        return { totalMs: 0, hours: 0, minutes: 0, days: 0 };
-    }
-    
-    let totalUptimeMs = 0;
-    let lastOnTime = null;
-    const now = new Date();
-    
-    // Ordenar histórico por timestamp
-    const historyEntries = Object.values(device.stateHistory)
-        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    
-    // Percorrer o histórico para calcular períodos ligado
-    historyEntries.forEach(entry => {
-        const entryTime = new Date(entry.timestamp);
-        
-        if (entry.state === true && lastOnTime === null) {
-            // Início de um período ligado
-            lastOnTime = entryTime;
-        } else if (entry.state === false && lastOnTime !== null) {
-            // Fim de um período ligado - calcular duração
-            const periodMs = entryTime - lastOnTime;
-            totalUptimeMs += periodMs;
-            lastOnTime = null;
-        }
-    });
-    
-    // Se está atualmente ligado, adicionar tempo desde o último "ligado"
-    if (device.state === true && lastOnTime !== null) {
-        const currentPeriodMs = now - lastOnTime;
-        totalUptimeMs += currentPeriodMs;
-    }
-    
-    return {
-        totalMs: totalUptimeMs,
-        hours: Math.floor(totalUptimeMs / (1000 * 60 * 60)),
-        minutes: Math.floor((totalUptimeMs % (1000 * 60 * 60)) / (1000 * 60)),
-        days: Math.floor(totalUptimeMs / (1000 * 60 * 60 * 24))
-    };
-}
-
-function formatUptime(uptime) {
-    if (uptime.days > 0) {
-        return `${uptime.days}d ${uptime.hours % 24}h ${uptime.minutes}m`;
-    } else if (uptime.hours > 0) {
-        return `${uptime.hours}h ${uptime.minutes}m`;
-    } else {
-        return `${uptime.minutes}m`;
-    }
-}
-
 function renderDevices() {
     devicesContainer.innerHTML = '';
     
@@ -703,6 +739,8 @@ function renderDevices() {
         const device = regularDevices[key];
         const uptime = calculateDeviceUptime(device, false);
         const uptimeText = formatUptime(uptime);
+        const energy = calculateEnergyConsumption(device, uptime);
+        const formattedEnergy = formatEnergy(energy);
         
         const deviceElement = document.createElement('div');
         deviceElement.className = 'device';
@@ -721,6 +759,9 @@ function renderDevices() {
                 <div class="device-state">Dispositivo não controlável</div>
                 <div class="uptime-info" style="font-size: 0.75rem; color: var(--accent-green); margin-top: 4px;">
                     ⏱️ Tempo ligado: ${uptimeText}
+                </div>
+                <div class="energy-info" style="font-size: 0.75rem; color: var(--accent-yellow); margin-top: 2px;">
+                    ⚡ Consumo: ${formattedEnergy.kWh} kWh (R$ ${formattedEnergy.cost})
                 </div>
                 ${createdInfo}
             </div>
@@ -744,6 +785,8 @@ function renderDevices() {
         const device = smartDevices[key];
         const uptime = calculateDeviceUptime(device, true);
         const uptimeText = formatUptime(uptime);
+        const energy = calculateEnergyConsumption(device, uptime);
+        const formattedEnergy = formatEnergy(energy);
         
         const deviceElement = document.createElement('div');
         deviceElement.className = 'device has-button';
@@ -768,6 +811,9 @@ function renderDevices() {
                 <div class="device-state">Estado: ${device.state ? 'Ligado' : 'Desligado'}</div>
                 <div class="uptime-info" style="font-size: 0.75rem; color: var(--accent-green); margin-top: 4px;">
                     ⏱️ Tempo total ligado: ${uptimeText}
+                </div>
+                <div class="energy-info" style="font-size: 0.75rem; color: var(--accent-yellow); margin-top: 2px;">
+                    ⚡ Consumo: ${formattedEnergy.kWh} kWh (R$ ${formattedEnergy.cost})
                 </div>
                 ${lastChangeInfo}
                 ${createdInfo}
@@ -905,6 +951,7 @@ confirmBtn.addEventListener('click', () => {
                     });
                     
                     closeDeviceModal();
+                    renderDynamicDeviceCards(); // Atualizar cards com novo consumo
                     
                     if (connectionStatus) {
                         connectionStatus.textContent = `Dispositivo "${name}" atualizado com sucesso!`;
@@ -969,6 +1016,7 @@ confirmBtn.addEventListener('click', () => {
             }
             
             closeDeviceModal();
+            renderDynamicDeviceCards(); // Atualizar cards com novo dispositivo
             
             if (connectionStatus) {
                 connectionStatus.textContent = `Dispositivo "${name}" adicionado com sucesso!`;
@@ -1217,6 +1265,7 @@ function startUptimeCounter() {
     setInterval(() => {
         if (Object.keys(regularDevices).length > 0 || Object.keys(smartDevices).length > 0) {
             renderDevices();
+            renderDynamicDeviceCards(); // Atualizar cards também
         }
     }, 60000); // Atualiza a cada 1 minuto
 }
