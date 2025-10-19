@@ -1169,8 +1169,8 @@ async function sendChatMessage() {
         }
         const token = await user.getIdToken();
 
-        // Chamar SUA Cloud Function (não a API do Gemini diretamente)
-        const response = await fetch('https://us-central1-SEU-PROJECT-ID.cloudfunctions.net/chatWithGemini', {
+        // Chamar a Cloud Function (URL ATUALIZADA)
+        const response = await fetch('https://chatwithgemini-o3fcup3lbq-uc.a.run.app/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
