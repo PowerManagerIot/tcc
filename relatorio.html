@@ -114,7 +114,7 @@
             </div>
 
 
-            <!-- AI Analysis Section - NOVA SEÇÃO -->
+            <!-- AI Analysis Section -->
             <div class="mb-8 border rounded-xl p-4 md:p-6" style="background: linear-gradient(135deg, rgba(0, 255, 42, 0.05) 0%, rgba(238, 234, 16, 0.05) 100%); border-color: var(--border-dark);">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
@@ -232,7 +232,7 @@
             </div>
 
             <!-- Detailed Table -->
-            <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+            <div class="border rounded-xl p-4 md:p-6 mb-8" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
                     <h3 class="text-base md:text-lg font-semibold">Histórico Detalhado</h3>
                     <button id="exportBtn" class="border px-4 py-2 rounded-lg transition-all text-sm font-semibold whitespace-nowrap" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
@@ -256,6 +256,85 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Device Analysis Section -->
+            <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg" style="background-color: var(--accent-yellow); color: #000;">
+                            <i class="ph-fill ph-plug text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold">Análise por Dispositivo</h3>
+                            <p class="text-sm" style="color: var(--text-secondary);">Histórico de consumo individual</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <!-- Seletor de Dispositivo -->
+                    <div class="flex-1 border rounded-lg px-4 py-2" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
+                        <label class="text-xs md:text-sm mr-2" style="color: var(--text-secondary);">Dispositivo:</label>
+                        <select id="deviceSelect" class="border-none rounded px-2 py-1 focus:outline-none focus:ring-2 text-sm md:text-base w-full md:w-auto" style="background-color: var(--bg-secondary); color: var(--text-primary); border-color: var(--border-dark);">
+                            <option value="">Selecione um dispositivo</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro de Período -->
+                    <div class="flex gap-2 border rounded-lg p-2" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
+                        <button id="deviceViewHour" class="px-3 md:px-4 py-2 rounded-lg transition-all text-sm font-semibold" style="background-color: var(--accent-yellow); color: #000;">
+                            Hora
+                        </button>
+                        <button id="deviceViewDay" class="px-3 md:px-4 py-2 rounded-lg transition-all text-sm font-semibold" style="color: var(--text-secondary);">
+                            Dia
+                        </button>
+                        <button id="deviceViewMonth" class="px-3 md:px-4 py-2 rounded-lg transition-all text-sm font-semibold" style="color: var(--text-secondary);">
+                            Mês
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Estatísticas do Dispositivo -->
+                <div id="deviceStatsContainer" class="hidden mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="border rounded-lg p-4 text-center" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
+                            <div class="text-xs mb-1" style="color: var(--text-secondary);">Consumo Total</div>
+                            <div class="text-xl font-bold" id="deviceTotalConsumption" style="color: var(--accent-green);">-- kWh</div>
+                        </div>
+                        <div class="border rounded-lg p-4 text-center" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
+                            <div class="text-xs mb-1" style="color: var(--text-secondary);">Custo Total</div>
+                            <div class="text-xl font-bold" id="deviceTotalCost" style="color: var(--accent-green);">R$ --</div>
+                        </div>
+                        <div class="border rounded-lg p-4 text-center" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
+                            <div class="text-xs mb-1" style="color: var(--text-secondary);">Tempo Ligado</div>
+                            <div class="text-xl font-bold" id="deviceTotalTime" style="color: var(--accent-yellow);">--</div>
+                        </div>
+                        <div class="border rounded-lg p-4 text-center" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
+                            <div class="text-xs mb-1" style="color: var(--text-secondary);">Potência</div>
+                            <div class="text-xl font-bold" id="devicePower" style="color: var(--accent-yellow);">-- W</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico do Dispositivo -->
+                <div id="deviceChartContainer" class="hidden">
+                    <div class="relative h-64 md:h-80">
+                        <canvas id="deviceChart"></canvas>
+                    </div>
+                    <div class="mt-4 p-3 rounded-lg" style="background-color: var(--bg-secondary);">
+                        <p class="text-xs" style="color: var(--text-secondary);">
+                            <i class="ph ph-info"></i> 
+                            <span id="deviceChartInfo">Selecione um dispositivo para ver o histórico de consumo</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Placeholder quando nenhum dispositivo selecionado -->
+                <div id="devicePlaceholder" class="text-center py-12">
+                    <i class="ph ph-device-mobile text-6xl mb-4" style="color: var(--text-tertiary);"></i>
+                    <p style="color: var(--text-secondary);">Selecione um dispositivo para visualizar o histórico de consumo</p>
                 </div>
             </div>
         </div>

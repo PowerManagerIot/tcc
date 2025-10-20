@@ -1,16 +1,12 @@
 import {auth, database} from "./auth.js"
 
 // ========== CONFIGURAÇÃO GEMINI AI ==========
-// IMPORTANTE: Substitua pela sua API Key do Google Gemini
-const GEMINI_API_KEY = 'AIzaSyDfhomKTh_2WhvVveb7KSfsY_9Ri1IrUyg'; // Obtenha em: https://makersuite.google.com/app/apikey
+const GEMINI_API_KEY = 'AIzaSyDfhomKTh_2WhvVveb7KSfsY_9Ri1IrUyg';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-
-
-
 
 // ========== VARIÁVEIS GLOBAIS ==========
 let USER_ID = null;
-let energyPrice = 0.80; // Preço padrão do kWh
+let energyPrice = 0.80;
 let allStatistics = {
     mensal: {},
     diario: {},
@@ -38,273 +34,31 @@ const aiAnalysisContainer = document.getElementById('aiAnalysisContainer');
 const aiAnalysisContent = document.getElementById('aiAnalysisContent');
 const aiLoadingContainer = document.getElementById('aiLoadingContainer');
 
+// Elementos de análise por dispositivo
+const deviceSelect = document.getElementById('deviceSelect');
+const deviceViewHour = document.getElementById('deviceViewHour');
+const deviceViewDay = document.getElementById('deviceViewDay');
+const deviceViewMonth = document.getElementById('deviceViewMonth');
+const deviceStatsContainer = document.getElementById('deviceStatsContainer');
+const deviceChartContainer = document.getElementById('deviceChartContainer');
+const devicePlaceholder = document.getElementById('devicePlaceholder');
+const deviceTotalConsumption = document.getElementById('deviceTotalConsumption');
+const deviceTotalCost = document.getElementById('deviceTotalCost');
+const deviceTotalTime = document.getElementById('deviceTotalTime');
+const devicePower = document.getElementById('devicePower');
+const deviceChartInfo = document.getElementById('deviceChartInfo');
+
 // Charts
 let monthlyChart = null;
 let dailyChart = null;
 let hourlyChart = null;
 let trendChart = null;
+let deviceChart = null;
 
-// ========== FUNÇÕES DE IA - GEMINI ==========
-
-async function generateAIAnalysis() {
-    console.log('🔍 1. Iniciando...');
-    
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SUA_API_KEY_AQUI') {
-        showAIError('Configure sua API Key');
-        return;
-    }
-
-    aiAnalysisContainer.classList.add('hidden');
-    aiLoadingContainer.classList.remove('hidden');
-    generateAIReportBtn.disabled = true;
-
-    try {
-        const analysisData = prepareDataForAI();
-        console.log('📊 Dados:', analysisData);
-        
-        const prompt = createAIPrompt(analysisData);
-        console.log('📝 Prompt:', prompt.length, 'chars');
-        
-        console.log('🌐 Chamando API...');
-        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 8192,
-                }
-            })
-        });
-
-        console.log('📡 Status:', response.status);
-
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('📦 Resposta completa:', JSON.stringify(data, null, 2));
-        
-        if (!data.candidates?.[0]) {
-            throw new Error('Sem candidates');
-        }
-        
-        const candidate = data.candidates[0];
-        console.log('🔍 Candidate:', JSON.stringify(candidate, null, 2));
-        
-        // Tentar extrair o texto de TODAS as formas possíveis
-        let aiResponse = null;
-        
-        // Forma 1: content.parts[0].text
-        if (candidate.content?.parts?.[0]?.text) {
-            aiResponse = candidate.content.parts[0].text;
-            console.log('✅ Método 1: content.parts[0].text');
-        }
-        // Forma 2: content.text
-        else if (candidate.content?.text) {
-            aiResponse = candidate.content.text;
-            console.log('✅ Método 2: content.text');
-        }
-        // Forma 3: text direto
-        else if (candidate.text) {
-            aiResponse = candidate.text;
-            console.log('✅ Método 3: text');
-        }
-        // Forma 4: output
-        else if (candidate.output) {
-            aiResponse = candidate.output;
-            console.log('✅ Método 4: output');
-        }
-        // Forma 5: message
-        else if (candidate.message) {
-            aiResponse = candidate.message;
-            console.log('✅ Método 5: message');
-        }
-        // Forma 6: response
-        else if (candidate.response) {
-            aiResponse = candidate.response;
-            console.log('✅ Método 6: response');
-        }
-        else {
-            console.error('❌ TODAS as tentativas falharam!');
-            console.error('Keys do candidate:', Object.keys(candidate));
-            console.error('Keys do content:', Object.keys(candidate.content || {}));
-            
-            // Tentar pegar QUALQUER texto que encontrar
-            const allText = JSON.stringify(candidate);
-            console.error('Candidate completo como string:', allText);
-            
-            throw new Error('Não encontrei o texto em nenhum lugar. Veja o console.');
-        }
-        
-        if (!aiResponse || aiResponse.trim() === '') {
-            throw new Error('Texto vazio');
-        }
-        
-        console.log('✅ Sucesso! Tamanho:', aiResponse.length);
-        displayAIAnalysis(aiResponse);
-        
-    } catch (error) {
-        console.error('❌ ERRO:', error);
-        showAIError(error.message);
-    } finally {
-        aiLoadingContainer.classList.add('hidden');
-        generateAIReportBtn.disabled = false;
-    }
-}
-
-
-
-
-function prepareDataForAI() {
-    const selectedPeriod = periodFilter.value;
-    const days = selectedPeriod === 'all' ? 'all' : parseInt(selectedPeriod);
-    const filteredDaily = getFilteredData(allStatistics.diario, days);
-    const stats = calculateStatistics(filteredDaily);
-    
-    // Análise por hora
-    const hourlyData = allStatistics.horario || {};
-    const hourlyValues = Object.values(hourlyData);
-    const peakHour = Object.entries(hourlyData).reduce((max, [hour, value]) => 
-        value > (max.value || 0) ? { hour: parseInt(hour), value } : max, 
-        { hour: 0, value: 0 }
-    );
-    
-    // Análise mensal
-    const monthlyData = allStatistics.mensal || {};
-    const monthlyValues = Object.values(monthlyData);
-    const monthlyAvg = monthlyValues.length > 0 
-        ? monthlyValues.reduce((a, b) => a + b, 0) / monthlyValues.length 
-        : 0;
-    
-    // Tendência (últimos 7 dias vs 7 anteriores)
-    const sortedDays = Object.keys(filteredDaily).sort();
-    let trend = 'estável';
-    if (sortedDays.length >= 14) {
-        const recent7 = sortedDays.slice(-7).reduce((sum, day) => sum + filteredDaily[day], 0) / 7;
-        const previous7 = sortedDays.slice(-14, -7).reduce((sum, day) => sum + filteredDaily[day], 0) / 7;
-        const change = ((recent7 - previous7) / previous7) * 100;
-        
-        if (change > 10) trend = 'crescente';
-        else if (change < -10) trend = 'decrescente';
-    }
-    
-    return {
-        periodo: selectedPeriod === '7' ? '7 dias' : 
-                 selectedPeriod === '30' ? '30 dias' : 
-                 selectedPeriod === '90' ? '90 dias' : 
-                 selectedPeriod === '365' ? '1 ano' : 'todos os registros',
-        consumoTotal: stats.total.toFixed(2),
-        custoTotal: (stats.total * energyPrice).toFixed(2),
-        mediaDiaria: stats.average.toFixed(2),
-        picoConsumo: stats.peak.value.toFixed(2),
-        picoData: stats.peak.date,
-        horaico: peakHour.hour,
-        consumoHoraPico: peakHour.value.toFixed(2),
-        mediaHoraria: hourlyValues.length > 0 
-            ? (hourlyValues.reduce((a, b) => a + b, 0) / hourlyValues.length).toFixed(2) 
-            : '0',
-        mediaMensal: monthlyAvg.toFixed(2),
-        tendencia: trend,
-        precokWh: energyPrice
-    };
-}
-
-function createAIPrompt(data) {
-    return `Você é um especialista em eficiência energética. Analise os dados e forneça um relatório CONCISO e DIRETO em português do Brasil.
-
-DADOS:
-- Período: ${data.periodo}
-- Consumo: ${data.consumoTotal} kWh (R$ ${data.custoTotal})
-- Média diária: ${data.mediaDiaria} kWh
-- Pico: ${data.picoConsumo} kWh (${data.picoData})
-- Hora crítica: ${data.horaico}:00 (${data.consumoHoraPico} kWh)
-- Tendência: ${data.tendencia}
-
-Forneça um relatório com NO MÁXIMO 800 palavras contendo:
-
-1. **DIAGNÓSTICO** (2-3 parágrafos)
-   - Avalie se o consumo está adequado
-   - Identifique o principal problema
-
-2. **TOP 3 AÇÕES DE ECONOMIA** (liste apenas 3 sugestões práticas)
-   - Para cada uma: ação específica + economia estimada em %
-
-3. **META REALISTA**
-   - Uma meta de redução objetiva
-   - Economia mensal em R$
-
-REGRAS IMPORTANTES:
-- Seja OBJETIVO e DIRETO
-- Use negrito APENAS para números importantes (kWh, R$, %)
-- Evite listas longas e repetições
-- Foque no que realmente importa para economizar
-- Máximo de 800 palavras
-
-Formate com markdown simples (##, -, **apenas para números**).`;
-}
-
-function displayAIAnalysis(aiResponse) {
-    // Converter markdown com formatação mais sutil
-    let formattedHTML = aiResponse
-        // Negrito apenas para números e valores monetários (mais discreto)
-        .replace(/\*\*(\d+[.,]?\d*\s*(?:kWh|R\$|%)?)\*\*/g, '<strong style="color: var(--accent-green); font-weight: 600;">$1</strong>')
-        // Remover outros negritos excessivos, mantendo o texto normal
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        // Headers secundários menores
-        .replace(/###\s(.*?)$/gm, '<h3 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem;">$1</h3>')
-        // Headers principais mais discretos
-        .replace(/##\s(.*?)$/gm, '<h2 style="color: var(--accent-green); font-size: 1.35rem; font-weight: 600; margin-top: 1.75rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-dark);">$1</h2>')
-        // Listas
-        .replace(/^-\s(.*?)$/gm, '<li style="margin-left: 1.5rem; margin-bottom: 0.4rem; color: var(--text-primary); line-height: 1.5;">$1</li>')
-        .replace(/^\d+\.\s(.*?)$/gm, '<li style="margin-left: 1.5rem; margin-bottom: 0.4rem; list-style-type: decimal; color: var(--text-primary); line-height: 1.5;">$1</li>')
-        // Parágrafos
-        .replace(/\n\n/g, '</p><p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-secondary);">');
-    
-    // Tag inicial
-    if (!formattedHTML.startsWith('<h2>') && !formattedHTML.startsWith('<h3>')) {
-        formattedHTML = '<p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-secondary);">' + formattedHTML + '</p>';
-    }
-    
-    aiAnalysisContent.innerHTML = `
-        <div class="space-y-3" style="color: var(--text-primary);">
-            ${formattedHTML}
-        </div>
-        <div class="mt-6 p-3 rounded-lg" style="background-color: rgba(0, 255, 42, 0.08); border-left: 3px solid var(--accent-green);">
-            <p style="color: var(--text-secondary); font-size: 0.875rem;">
-                <i class="ph ph-info"></i> 
-                Análise gerada por IA. Para alterações significativas, consulte um profissional qualificado.
-            </p>
-        </div>
-    `;
-    
-    aiLoadingContainer.classList.add('hidden');
-    aiAnalysisContainer.classList.remove('hidden');
-    
-    // Scroll suave
-    aiAnalysisContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function showAIError(message) {
-    aiLoadingContainer.classList.add('hidden');
-    aiAnalysisContainer.classList.remove('hidden');
-    aiAnalysisContent.innerHTML = `
-        <div class="p-4 rounded-lg" style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--accent-red);">
-            <p style="color: var(--accent-red); font-weight: 600;">
-                <i class="ph ph-warning"></i> Erro ao gerar análise
-            </p>
-            <p style="color: var(--text-secondary); margin-top: 0.5rem;">
-                ${message}
-            </p>
-        </div>
-    `;
-}
+// Variáveis para dispositivos
+let allDevices = {};
+let selectedDevice = null;
+let deviceViewMode = 'hour';
 
 // ========== FUNÇÕES DE AUTENTICAÇÃO ==========
 
@@ -399,6 +153,9 @@ async function loadStatistics() {
         const hourlySnapshot = await hourlyRef.once('value');
         allStatistics.horario = hourlySnapshot.val() || {};
 
+        // Carregar dispositivos
+        await loadDevices();
+
         updateConnectionStatus('Dados carregados com sucesso!', true);
         
         // Processar e exibir dados
@@ -408,6 +165,664 @@ async function loadStatistics() {
         console.error('Erro ao carregar estatísticas:', error);
         updateConnectionStatus('Erro ao carregar dados: ' + error.message, false);
     }
+}
+
+// ========== FUNÇÕES DE DISPOSITIVOS ==========
+
+async function loadDevices() {
+    try {
+        const devicesRef = database.ref(`users/${USER_ID}/devices`);
+        const snapshot = await devicesRef.once('value');
+        allDevices = snapshot.val() || {};
+        
+        populateDeviceSelect();
+        console.log('✅ Dispositivos carregados:', Object.keys(allDevices).length);
+    } catch (error) {
+        console.error('❌ Erro ao carregar dispositivos:', error);
+    }
+}
+
+function populateDeviceSelect() {
+    if (!deviceSelect) return;
+    
+    deviceSelect.innerHTML = '<option value="">Selecione um dispositivo</option>';
+    
+    Object.entries(allDevices).forEach(([key, device]) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = `${device.name} (${device.number}W) - ${device.hasButton === 'yes' ? 'Inteligente' : 'Regular'}`;
+        deviceSelect.appendChild(option);
+    });
+}
+
+function formatUptime(ms) {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) {
+        return `${days}d ${hours % 24}h`;
+    } else if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    } else {
+        return `${minutes}m`;
+    }
+}
+
+function calculateDeviceConsumptionByPeriod(device, isSmart) {
+    const now = new Date();
+    const data = {
+        hour: {},
+        day: {},
+        month: {}
+    };
+    
+    if (!isSmart) {
+        // Dispositivo regular - sempre ligado
+        const createdAt = new Date(device.createdAt || device.createdDate);
+        const watts = device.number || 0;
+        
+        // Por hora (últimas 24h)
+        for (let i = 23; i >= 0; i--) {
+            const hourDate = new Date(now);
+            hourDate.setHours(now.getHours() - i, 0, 0, 0);
+            const hourKey = hourDate.getHours();
+            
+            if (hourDate >= createdAt) {
+                const consumption = (watts * 1) / 1000;
+                data.hour[hourKey] = consumption;
+            } else {
+                data.hour[hourKey] = 0;
+            }
+        }
+        
+        // Por dia (últimos 30 dias)
+        for (let i = 29; i >= 0; i--) {
+            const dayDate = new Date(now);
+            dayDate.setDate(now.getDate() - i);
+            dayDate.setHours(0, 0, 0, 0);
+            const dayKey = dayDate.toISOString().split('T')[0];
+            
+            if (dayDate >= createdAt) {
+                const consumption = (watts * 24) / 1000;
+                data.day[dayKey] = consumption;
+            } else {
+                data.day[dayKey] = 0;
+            }
+        }
+        
+        // Por mês (últimos 12 meses)
+        for (let i = 11; i >= 0; i--) {
+            const monthDate = new Date(now);
+            monthDate.setMonth(now.getMonth() - i, 1);
+            monthDate.setHours(0, 0, 0, 0);
+            const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (monthDate >= createdAt) {
+                const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+                const consumption = (watts * 24 * daysInMonth) / 1000;
+                data.month[monthKey] = consumption;
+            } else {
+                data.month[monthKey] = 0;
+            }
+        }
+        
+    } else {
+        // Dispositivo inteligente - usar stateHistory
+        const watts = device.number || 0;
+        const stateHistory = device.stateHistory || {};
+        const historyArray = Object.values(stateHistory).sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        
+        // Por hora (últimas 24h)
+        for (let i = 23; i >= 0; i--) {
+            const hourStart = new Date(now);
+            hourStart.setHours(now.getHours() - i, 0, 0, 0);
+            const hourEnd = new Date(hourStart);
+            hourEnd.setHours(hourStart.getHours() + 1);
+            
+            let totalMs = 0;
+            let isOn = false;
+            let lastTime = hourStart;
+            
+            // Verificar estado no início do período
+            for (let j = 0; j < historyArray.length; j++) {
+                const entry = historyArray[j];
+                const entryTime = new Date(entry.timestamp);
+                
+                if (entryTime <= hourStart) {
+                    isOn = entry.state;
+                } else {
+                    break;
+                }
+            }
+            
+            // Calcular tempo ligado no período
+            historyArray.forEach(entry => {
+                const entryTime = new Date(entry.timestamp);
+                
+                if (entryTime >= hourStart && entryTime < hourEnd) {
+                    if (isOn) {
+                        totalMs += entryTime - lastTime;
+                    }
+                    isOn = entry.state;
+                    lastTime = entryTime;
+                }
+            });
+            
+            // Se estava ligado no final do período
+            if (isOn && lastTime < hourEnd) {
+                const endTime = hourEnd > now ? now : hourEnd;
+                totalMs += endTime - lastTime;
+            }
+            
+            const hours = totalMs / (1000 * 60 * 60);
+            const consumption = (watts * hours) / 1000;
+            data.hour[hourStart.getHours()] = consumption;
+        }
+        
+        // Por dia (últimos 30 dias)
+        for (let i = 29; i >= 0; i--) {
+            const dayStart = new Date(now);
+            dayStart.setDate(now.getDate() - i);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(dayStart);
+            dayEnd.setDate(dayStart.getDate() + 1);
+            
+            let totalMs = 0;
+            let isOn = false;
+            let lastTime = dayStart;
+            
+            for (let j = 0; j < historyArray.length; j++) {
+                const entry = historyArray[j];
+                const entryTime = new Date(entry.timestamp);
+                
+                if (entryTime <= dayStart) {
+                    isOn = entry.state;
+                } else {
+                    break;
+                }
+            }
+            
+            historyArray.forEach(entry => {
+                const entryTime = new Date(entry.timestamp);
+                
+                if (entryTime >= dayStart && entryTime < dayEnd) {
+                    if (isOn) {
+                        totalMs += entryTime - lastTime;
+                    }
+                    isOn = entry.state;
+                    lastTime = entryTime;
+                }
+            });
+            
+            if (isOn && lastTime < dayEnd) {
+                const endTime = dayEnd > now ? now : dayEnd;
+                totalMs += endTime - lastTime;
+            }
+            
+            const hours = totalMs / (1000 * 60 * 60);
+            const consumption = (watts * hours) / 1000;
+            data.day[dayStart.toISOString().split('T')[0]] = consumption;
+        }
+        
+        // Por mês (últimos 12 meses)
+        for (let i = 11; i >= 0; i--) {
+            const monthStart = new Date(now);
+            monthStart.setMonth(now.getMonth() - i, 1);
+            monthStart.setHours(0, 0, 0, 0);
+            const monthEnd = new Date(monthStart);
+            monthEnd.setMonth(monthStart.getMonth() + 1);
+            
+            let totalMs = 0;
+            let isOn = false;
+            let lastTime = monthStart;
+            
+            for (let j = 0; j < historyArray.length; j++) {
+                const entry = historyArray[j];
+                const entryTime = new Date(entry.timestamp);
+                
+                if (entryTime <= monthStart) {
+                    isOn = entry.state;
+                } else {
+                    break;
+                }
+            }
+            
+            historyArray.forEach(entry => {
+                const entryTime = new Date(entry.timestamp);
+                
+                if (entryTime >= monthStart && entryTime < monthEnd) {
+                    if (isOn) {
+                        totalMs += entryTime - lastTime;
+                    }
+                    isOn = entry.state;
+                    lastTime = entryTime;
+                }
+            });
+            
+            if (isOn && lastTime < monthEnd) {
+                const endTime = monthEnd > now ? now : monthEnd;
+                totalMs += endTime - lastTime;
+            }
+            
+            const hours = totalMs / (1000 * 60 * 60);
+            const consumption = (watts * hours) / 1000;
+            const monthKey = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
+            data.month[monthKey] = consumption;
+        }
+    }
+    
+    return data;
+}
+
+function updateDeviceChart() {
+    if (!selectedDevice || !allDevices[selectedDevice]) return;
+    
+    const device = allDevices[selectedDevice];
+    const isSmart = device.hasButton === 'yes';
+    const consumptionData = calculateDeviceConsumptionByPeriod(device, isSmart);
+    
+    let labels = [];
+    let data = [];
+    let chartTitle = '';
+    let infoText = '';
+    
+    if (deviceViewMode === 'hour') {
+        const hourData = consumptionData.hour;
+        labels = Object.keys(hourData).sort((a, b) => a - b).map(h => `${h}:00`);
+        data = labels.map(label => {
+            const hour = parseInt(label.split(':')[0]);
+            return hourData[hour] || 0;
+        });
+        chartTitle = 'Consumo por Hora (Últimas 24h)';
+        infoText = isSmart 
+            ? 'Gráfico mostra consumo real. Quando o dispositivo está desligado, o consumo é zero.'
+            : 'Dispositivo regular (sempre ligado). Consumo constante de ' + device.number + 'W por hora.';
+    } else if (deviceViewMode === 'day') {
+        const dayData = consumptionData.day;
+        const sortedDays = Object.keys(dayData).sort();
+        labels = sortedDays.map(day => {
+            const date = new Date(day);
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        });
+        data = sortedDays.map(day => dayData[day] || 0);
+        chartTitle = 'Consumo Diário (Últimos 30 dias)';
+        infoText = isSmart
+            ? 'Consumo acumulado por dia. Dias sem uso aparecem zerados.'
+            : 'Dispositivo regular (sempre ligado). Consumo diário: ' + ((device.number * 24) / 1000).toFixed(2) + ' kWh.';
+    } else {
+        const monthData = consumptionData.month;
+        const sortedMonths = Object.keys(monthData).sort();
+        labels = sortedMonths.map(month => {
+            const [year, monthNum] = month.split('-');
+            return new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+        });
+        data = sortedMonths.map(month => monthData[month] || 0);
+        chartTitle = 'Consumo Mensal (Últimos 12 meses)';
+        infoText = isSmart
+            ? 'Consumo mensal acumulado. Variação indica padrão de uso.'
+            : 'Dispositivo regular (sempre ligado). Variação mensal conforme dias do mês.';
+    }
+    
+    // Atualizar info
+    if (deviceChartInfo) {
+        deviceChartInfo.textContent = infoText;
+    }
+    
+    // Destruir gráfico anterior
+    if (deviceChart) {
+        deviceChart.destroy();
+    }
+    
+    // Criar novo gráfico
+    const ctx = document.getElementById('deviceChart');
+    if (!ctx) return;
+    
+    // Determinar cor baseado se é smart ou regular
+    const lineColor = isSmart ? '#eeea10' : '#00ff2a';
+    const fillColor = isSmart ? 'rgba(238, 234, 16, 0.1)' : 'rgba(0, 255, 42, 0.1)';
+    
+    deviceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: chartTitle,
+                data: data,
+                backgroundColor: fillColor,
+                borderColor: lineColor,
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: lineColor,
+                pointBorderColor: '#1a1a1a',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#1e1e1e',
+                    titleColor: lineColor,
+                    bodyColor: '#ffffff',
+                    borderColor: '#333333',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y;
+                            const cost = value * energyPrice;
+                            return [
+                                `Consumo: ${value.toFixed(3)} kWh`,
+                                `Custo: R$ ${cost.toFixed(2)}`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#333333'
+                    },
+                    ticks: {
+                        color: '#9ca3af',
+                        callback: function(value) {
+                            return value.toFixed(2) + ' kWh';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#9ca3af',
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateDeviceStats() {
+    if (!selectedDevice || !allDevices[selectedDevice]) return;
+    
+    const device = allDevices[selectedDevice];
+    const consumption = device.consumption || {};
+    
+    // Atualizar estatísticas
+    if (deviceTotalConsumption) {
+        deviceTotalConsumption.textContent = `${(consumption.totalKwh || 0).toFixed(2)} kWh`;
+    }
+    if (deviceTotalCost) {
+        deviceTotalCost.textContent = `R$ ${(consumption.totalCost || 0).toFixed(2)}`;
+    }
+    if (deviceTotalTime) {
+        deviceTotalTime.textContent = formatUptime(consumption.totalUptimeMs || 0);
+    }
+    if (devicePower) {
+        devicePower.textContent = `${device.number || 0} W`;
+    }
+}
+
+function handleDeviceSelection() {
+    selectedDevice = deviceSelect.value;
+    
+    if (!selectedDevice) {
+        // Nenhum dispositivo selecionado
+        deviceStatsContainer.classList.add('hidden');
+        deviceChartContainer.classList.add('hidden');
+        devicePlaceholder.classList.remove('hidden');
+        return;
+    }
+    
+    // Mostrar seção
+    devicePlaceholder.classList.add('hidden');
+    deviceStatsContainer.classList.remove('hidden');
+    deviceChartContainer.classList.remove('hidden');
+    
+    // Atualizar dados
+    updateDeviceStats();
+    updateDeviceChart();
+}
+
+function setDeviceViewMode(mode) {
+    deviceViewMode = mode;
+    
+    // Atualizar botões
+    [deviceViewHour, deviceViewDay, deviceViewMonth].forEach(btn => {
+        if (btn) {
+            btn.style.backgroundColor = 'transparent';
+            btn.style.color = 'var(--text-secondary)';
+        }
+    });
+    
+    const activeBtn = mode === 'hour' ? deviceViewHour : 
+                      mode === 'day' ? deviceViewDay : 
+                      deviceViewMonth;
+    
+    if (activeBtn) {
+        activeBtn.style.backgroundColor = 'var(--accent-yellow)';
+        activeBtn.style.color = '#000';
+    }
+    
+    // Atualizar gráfico
+    if (selectedDevice) {
+        updateDeviceChart();
+    }
+}
+
+// ========== FUNÇÕES DE IA - GEMINI ==========
+
+async function generateAIAnalysis() {
+    console.log('🔍 Iniciando análise com IA...');
+    
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SUA_API_KEY_AQUI') {
+        showAIError('Configure sua API Key do Gemini');
+        return;
+    }
+
+    aiAnalysisContainer.classList.add('hidden');
+    aiLoadingContainer.classList.remove('hidden');
+    generateAIReportBtn.disabled = true;
+
+    try {
+        const analysisData = prepareDataForAI();
+        const prompt = createAIPrompt(analysisData);
+        
+        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 8192,
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.candidates?.[0]) {
+            throw new Error('Resposta inválida da IA');
+        }
+        
+        const candidate = data.candidates[0];
+        let aiResponse = null;
+        
+        if (candidate.content?.parts?.[0]?.text) {
+            aiResponse = candidate.content.parts[0].text;
+        } else if (candidate.content?.text) {
+            aiResponse = candidate.content.text;
+        } else {
+            throw new Error('Não foi possível extrair o texto da resposta');
+        }
+        
+        if (!aiResponse || aiResponse.trim() === '') {
+            throw new Error('Resposta vazia da IA');
+        }
+        
+        displayAIAnalysis(aiResponse);
+        
+    } catch (error) {
+        console.error('❌ Erro na análise com IA:', error);
+        showAIError(error.message);
+    } finally {
+        aiLoadingContainer.classList.add('hidden');
+        generateAIReportBtn.disabled = false;
+    }
+}
+
+function prepareDataForAI() {
+    const selectedPeriod = periodFilter.value;
+    const days = selectedPeriod === 'all' ? 'all' : parseInt(selectedPeriod);
+    const filteredDaily = getFilteredData(allStatistics.diario, days);
+    const stats = calculateStatistics(filteredDaily);
+    
+    const hourlyData = allStatistics.horario || {};
+    const hourlyValues = Object.values(hourlyData);
+    const peakHour = Object.entries(hourlyData).reduce((max, [hour, value]) => 
+        value > (max.value || 0) ? { hour: parseInt(hour), value } : max, 
+        { hour: 0, value: 0 }
+    );
+    
+    const monthlyData = allStatistics.mensal || {};
+    const monthlyValues = Object.values(monthlyData);
+    const monthlyAvg = monthlyValues.length > 0 
+        ? monthlyValues.reduce((a, b) => a + b, 0) / monthlyValues.length 
+        : 0;
+    
+    const sortedDays = Object.keys(filteredDaily).sort();
+    let trend = 'estável';
+    if (sortedDays.length >= 14) {
+        const recent7 = sortedDays.slice(-7).reduce((sum, day) => sum + filteredDaily[day], 0) / 7;
+        const previous7 = sortedDays.slice(-14, -7).reduce((sum, day) => sum + filteredDaily[day], 0) / 7;
+        const change = ((recent7 - previous7) / previous7) * 100;
+        
+        if (change > 10) trend = 'crescente';
+        else if (change < -10) trend = 'decrescente';
+    }
+    
+    return {
+        periodo: selectedPeriod === '7' ? '7 dias' : 
+                 selectedPeriod === '30' ? '30 dias' : 
+                 selectedPeriod === '90' ? '90 dias' : 
+                 selectedPeriod === '365' ? '1 ano' : 'todos os registros',
+        consumoTotal: stats.total.toFixed(2),
+        custoTotal: (stats.total * energyPrice).toFixed(2),
+        mediaDiaria: stats.average.toFixed(2),
+        picoConsumo: stats.peak.value.toFixed(2),
+        picoData: stats.peak.date,
+        horaico: peakHour.hour,
+        consumoHoraPico: peakHour.value.toFixed(2),
+        mediaHoraria: hourlyValues.length > 0 
+            ? (hourlyValues.reduce((a, b) => a + b, 0) / hourlyValues.length).toFixed(2) 
+            : '0',
+        mediaMensal: monthlyAvg.toFixed(2),
+        tendencia: trend,
+        precokWh: energyPrice
+    };
+}
+
+function createAIPrompt(data) {
+    return `Você é um especialista em eficiência energética. Analise os dados e forneça um relatório CONCISO e DIRETO em português do Brasil.
+
+DADOS:
+- Período: ${data.periodo}
+- Consumo: ${data.consumoTotal} kWh (R$ ${data.custoTotal})
+- Média diária: ${data.mediaDiaria} kWh
+- Pico: ${data.picoConsumo} kWh (${data.picoData})
+- Hora crítica: ${data.horaico}:00 (${data.consumoHoraPico} kWh)
+- Tendência: ${data.tendencia}
+
+Forneça um relatório com NO MÁXIMO 800 palavras contendo:
+
+1. **DIAGNÓSTICO** (2-3 parágrafos)
+   - Avalie se o consumo está adequado
+   - Identifique o principal problema
+
+2. **TOP 3 AÇÕES DE ECONOMIA** (liste apenas 3 sugestões práticas)
+   - Para cada uma: ação específica + economia estimada em %
+
+3. **META REALISTA**
+   - Uma meta de redução objetiva
+   - Economia mensal em R$
+
+REGRAS IMPORTANTES:
+- Seja OBJETIVO e DIRETO
+- Use negrito APENAS para números importantes (kWh, R$, %)
+- Evite listas longas e repetições
+- Foque no que realmente importa para economizar
+- Máximo de 800 palavras
+
+Formate com markdown simples (##, -, **apenas para números**).`;
+}
+
+function displayAIAnalysis(aiResponse) {
+    let formattedHTML = aiResponse
+        .replace(/\*\*(\d+[.,]?\d*\s*(?:kWh|R\$|%)?)\*\*/g, '<strong style="color: var(--accent-green); font-weight: 600;">$1</strong>')
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/###\s(.*?)$/gm, '<h3 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem;">$1</h3>')
+        .replace(/##\s(.*?)$/gm, '<h2 style="color: var(--accent-green); font-size: 1.35rem; font-weight: 600; margin-top: 1.75rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-dark);">$1</h2>')
+        .replace(/^-\s(.*?)$/gm, '<li style="margin-left: 1.5rem; margin-bottom: 0.4rem; color: var(--text-primary); line-height: 1.5;">$1</li>')
+        .replace(/^\d+\.\s(.*?)$/gm, '<li style="margin-left: 1.5rem; margin-bottom: 0.4rem; list-style-type: decimal; color: var(--text-primary); line-height: 1.5;">$1</li>')
+        .replace(/\n\n/g, '</p><p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-secondary);">');
+    
+    if (!formattedHTML.startsWith('<h2>') && !formattedHTML.startsWith('<h3>')) {
+        formattedHTML = '<p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-secondary);">' + formattedHTML + '</p>';
+    }
+    
+    aiAnalysisContent.innerHTML = `
+        <div class="space-y-3" style="color: var(--text-primary);">
+            ${formattedHTML}
+        </div>
+        <div class="mt-6 p-3 rounded-lg" style="background-color: rgba(0, 255, 42, 0.08); border-left: 3px solid var(--accent-green);">
+            <p style="color: var(--text-secondary); font-size: 0.875rem;">
+                <i class="ph ph-info"></i> 
+                Análise gerada por IA. Para alterações significativas, consulte um profissional qualificado.
+            </p>
+        </div>
+    `;
+    
+    aiLoadingContainer.classList.add('hidden');
+    aiAnalysisContainer.classList.remove('hidden');
+    aiAnalysisContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showAIError(message) {
+    aiLoadingContainer.classList.add('hidden');
+    aiAnalysisContainer.classList.remove('hidden');
+    aiAnalysisContent.innerHTML = `
+        <div class="p-4 rounded-lg" style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--accent-red);">
+            <p style="color: var(--accent-red); font-weight: 600;">
+                <i class="ph ph-warning"></i> Erro ao gerar análise
+            </p>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+                ${message}
+            </p>
+        </div>
+    `;
 }
 
 // ========== FUNÇÕES DE PROCESSAMENTO DE DADOS ==========
@@ -484,13 +899,9 @@ function processAndDisplayData() {
     const selectedPeriod = periodFilter.value;
     const days = selectedPeriod === 'all' ? 'all' : parseInt(selectedPeriod);
     
-    // Filtrar dados diários
     const filteredDaily = getFilteredData(allStatistics.diario, days);
-    
-    // Calcular estatísticas
     const stats = calculateStatistics(filteredDaily);
     
-    // Atualizar cards de estatísticas
     if (totalConsumption) {
         totalConsumption.textContent = `${stats.total.toFixed(2)} kWh`;
     }
@@ -507,13 +918,10 @@ function processAndDisplayData() {
         peakDate.textContent = stats.peak.date;
     }
     
-    // Atualizar gráficos
     updateMonthlyChart();
     updateDailyChart(filteredDaily);
     updateHourlyChart();
     updateTrendChart(filteredDaily);
-    
-    // Atualizar tabela
     updateTable(filteredDaily);
 }
 
@@ -523,7 +931,6 @@ function updateMonthlyChart() {
     const ctx = document.getElementById('monthlyChart');
     if (!ctx) return;
 
-    // Preparar dados mensais
     const monthlyData = allStatistics.mensal;
     const sortedMonths = Object.keys(monthlyData).sort();
     
@@ -558,9 +965,7 @@ function updateMonthlyChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: '#1e1e1e',
                     titleColor: '#00ff2a',
@@ -577,20 +982,12 @@ function updateMonthlyChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: {
-                        color: '#333333'
-                    },
-                    ticks: {
-                        color: '#9ca3af'
-                    }
+                    grid: { color: '#333333' },
+                    ticks: { color: '#9ca3af' }
                 },
                 x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#9ca3af'
-                    }
+                    grid: { display: false },
+                    ticks: { color: '#9ca3af' }
                 }
             }
         }
@@ -635,9 +1032,7 @@ function updateDailyChart(dailyData) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: '#1e1e1e',
                     titleColor: '#eeea10',
@@ -649,17 +1044,11 @@ function updateDailyChart(dailyData) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: {
-                        color: '#333333'
-                    },
-                    ticks: {
-                        color: '#9ca3af'
-                    }
+                    grid: { color: '#333333' },
+                    ticks: { color: '#9ca3af' }
                 },
                 x: {
-                    grid: {
-                        display: false
-                    },
+                    grid: { display: false },
                     ticks: {
                         color: '#9ca3af',
                         maxRotation: 45,
@@ -691,13 +1080,13 @@ function updateHourlyChart() {
             datasets: [{
                 label: 'Consumo Médio (kWh)',
                 data: data,
-                backgroundColor: data.map((value, index) => {
+                backgroundColor: data.map((value) => {
                     const max = Math.max(...data);
                     if (value === max && value > 0) return 'rgba(239, 68, 68, 0.6)';
                     if (value > max * 0.7) return 'rgba(238, 234, 16, 0.6)';
                     return 'rgba(0, 255, 42, 0.4)';
                 }),
-                borderColor: data.map((value, index) => {
+                borderColor: data.map((value) => {
                     const max = Math.max(...data);
                     if (value === max && value > 0) return '#ef4444';
                     if (value > max * 0.7) return '#eeea10';
@@ -711,9 +1100,7 @@ function updateHourlyChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: '#1e1e1e',
                     titleColor: '#00ff2a',
@@ -725,17 +1112,11 @@ function updateHourlyChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: {
-                        color: '#333333'
-                    },
-                    ticks: {
-                        color: '#9ca3af'
-                    }
+                    grid: { color: '#333333' },
+                    ticks: { color: '#9ca3af' }
                 },
                 x: {
-                    grid: {
-                        display: false
-                    },
+                    grid: { display: false },
                     ticks: {
                         color: '#9ca3af',
                         maxRotation: 90,
@@ -754,7 +1135,6 @@ function updateTrendChart(dailyData) {
     const sortedDays = Object.keys(dailyData).sort();
     const data = sortedDays.map(day => dailyData[day]);
     
-    // Calcular média móvel de 7 dias
     const movingAverage = [];
     for (let i = 0; i < data.length; i++) {
         const start = Math.max(0, i - 6);
@@ -822,17 +1202,11 @@ function updateTrendChart(dailyData) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: {
-                        color: '#333333'
-                    },
-                    ticks: {
-                        color: '#9ca3af'
-                    }
+                    grid: { color: '#333333' },
+                    ticks: { color: '#9ca3af' }
                 },
                 x: {
-                    grid: {
-                        display: false
-                    },
+                    grid: { display: false },
                     ticks: {
                         color: '#9ca3af',
                         maxRotation: 45,
@@ -849,7 +1223,7 @@ function updateTrendChart(dailyData) {
 function updateTable(dailyData) {
     if (!tableBody) return;
 
-    const sortedDays = Object.keys(dailyData).sort().reverse(); // Mais recente primeiro
+    const sortedDays = Object.keys(dailyData).sort().reverse();
     
     if (sortedDays.length === 0) {
         tableBody.innerHTML = `
@@ -868,7 +1242,6 @@ function updateTable(dailyData) {
         const date = new Date(day);
         const formattedDate = formatDate(date);
         
-        // Determinar status baseado no consumo
         let status = '';
         let statusClass = '';
         if (consumption < 10) {
@@ -910,10 +1283,8 @@ function exportToCSV() {
         return;
     }
     
-    // Criar cabeçalho CSV
     let csv = 'Data,Consumo (kWh),Custo (R$),Média/Hora (kWh)\n';
     
-    // Adicionar dados
     const sortedDays = Object.keys(filteredDaily).sort().reverse();
     sortedDays.forEach(day => {
         const consumption = filteredDaily[day];
@@ -925,7 +1296,6 @@ function exportToCSV() {
         csv += `${formattedDate},${consumption.toFixed(2)},${cost.toFixed(2)},${avgPerHour.toFixed(3)}\n`;
     });
     
-    // Criar e fazer download do arquivo
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -969,9 +1339,25 @@ if (logoutBtn) {
     });
 }
 
-// Event listener para botão de análise com IA
 if (generateAIReportBtn) {
     generateAIReportBtn.addEventListener('click', generateAIAnalysis);
+}
+
+// Event listeners para análise por dispositivo
+if (deviceSelect) {
+    deviceSelect.addEventListener('change', handleDeviceSelection);
+}
+
+if (deviceViewHour) {
+    deviceViewHour.addEventListener('click', () => setDeviceViewMode('hour'));
+}
+
+if (deviceViewDay) {
+    deviceViewDay.addEventListener('click', () => setDeviceViewMode('day'));
+}
+
+if (deviceViewMonth) {
+    deviceViewMonth.addEventListener('click', () => setDeviceViewMode('month'));
 }
 
 // ========== INICIALIZAÇÃO ==========
@@ -979,18 +1365,15 @@ if (generateAIReportBtn) {
 async function inicializarRelatorios() {
     try {
         await verificarAutenticacao();
-        console.log('Relatórios inicializados para usuário:', USER_ID);
+        console.log('✅ Relatórios inicializados para usuário:', USER_ID);
         
-        // Carregar preço da energia
         loadEnergyPrice();
-        
-        // Carregar estatísticas
         await loadStatistics();
         
         updateConnectionStatus('Conectado ao Firebase', true);
         
     } catch (error) {
-        console.error('Erro ao inicializar relatórios:', error);
+        console.error('❌ Erro ao inicializar relatórios:', error);
         redirecionarParaLogin();
     }
 }
