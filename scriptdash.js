@@ -183,6 +183,17 @@ function monitorEnergyPriceChanges() {
                 renderDevices();
                 renderDynamicDeviceCards();
                 updateCurrentPriceDisplay();
+                
+                // Atualizar os cards grandes também
+                const statsRef = database.ref(`users/${USER_ID}/esp32/estatisticas`);
+                statsRef.once('value', (snapshot) => {
+                    const statsData = snapshot.val();
+                    if (statsData) {
+                        updateMonthlyCard(statsData);
+                        updateWeeklyCard(statsData);
+                        updateDailyCard(statsData);
+                    }
+                });
             });
         }
     });
@@ -1132,13 +1143,45 @@ async function loadStatisticsData() {
             setDefaultStatistics();
         });
         
+        // Monitoramento adicional para atualização em tempo real dos cards grandes
+        monitorBigCardsRealtime();
+        
     } catch (error) {
         console.error('Erro no carregamento de estatísticas:', error);
         setDefaultStatistics();
     }
 }
 
+function monitorBigCardsRealtime() {
+    if (!USER_ID) return;
+    
+    // Monitorar mudanças nas estatísticas mensais
+    const monthlyRef = database.ref(`users/${USER_ID}/esp32/estatisticas/mensal`);
+    monthlyRef.on('value', (snapshot) => {
+        const monthlyData = snapshot.val();
+        if (monthlyData) {
+            updateMonthlyCard({ mensal: monthlyData });
+        }
+    });
+    
+    // Monitorar mudanças nas estatísticas diárias
+    const dailyRef = database.ref(`users/${USER_ID}/esp32/estatisticas/diario`);
+    dailyRef.on('value', (snapshot) => {
+        const dailyData = snapshot.val();
+        if (dailyData) {
+            updateWeeklyCard({ diario: dailyData });
+            updateDailyCard({ diario: dailyData });
+        }
+    });
+}
+
 function updateStatisticsCards(statsData) {
+    // Cards grandes do Dashboard Grid
+    updateMonthlyCard(statsData);
+    updateWeeklyCard(statsData);
+    updateDailyCard(statsData);
+    
+    // Cards pequenos do Stats Grid
     // 1. Média de custo mensal
     updateMonthlyCostAverage(statsData);
     
@@ -1150,6 +1193,208 @@ function updateStatisticsCards(statsData) {
     
     // 4. Dispositivos ativos
     updateActiveDevicesCount();
+}
+
+// ========== FUNÇÕES PARA ATUALIZAR OS CARDS GRANDES ==========
+
+function updateMonthlyCard(statsData) {
+    const monthlyCardElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6 .text-center');
+    
+    if (monthlyCardElements.length >= 1) {
+        const cardElement = monthlyCardElements[0].closest('.border.rounded-xl');
+        
+        try {
+            if (statsData.mensal) {
+                const now = new Date();
+                const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                
+                const monthlyConsumption = statsData.mensal[monthKey] || 0;
+                const monthlyCost = monthlyConsumption * energyPrice;
+                
+                // Calcular porcentagem (assumindo 700 kWh como limite)
+                const monthlyLimitKwh = monthlyLimit || 700;
+                const percentage = monthlyLimitKwh > 0 ? (monthlyConsumption / monthlyLimitKwh) * 100 : 0;
+                
+                // Determinar cor baseada na porcentagem
+                let color = 'var(--accent-green)';
+                if (percentage >= 80) {
+                    color = 'var(--accent-red)';
+                } else if (percentage >= 60) {
+                    color = 'var(--accent-yellow)';
+                }
+                
+                // Atualizar o SVG do círculo
+                const circles = cardElement.querySelectorAll('circle');
+                if (circles.length >= 2) {
+                    const circumference = 2 * Math.PI * 48; // mobile
+                    const circumferenceMd = 2 * Math.PI * 56; // desktop
+                    const offset = circumference - (Math.min(percentage, 100) / 100 * circumference);
+                    const offsetMd = circumferenceMd - (Math.min(percentage, 100) / 100 * circumferenceMd);
+                    
+                    circles[1].style.stroke = color;
+                    circles[1].setAttribute('stroke-dashoffset', offset);
+                    
+                    if (circles[3]) {
+                        circles[3].style.stroke = color;
+                        circles[3].setAttribute('stroke-dashoffset', offsetMd);
+                    }
+                }
+                
+                // Atualizar valores de texto
+                const costElement = cardElement.querySelector('.text-xl.md\\:text-2xl.font-bold');
+                const consumptionElement = cardElement.querySelector('.text-xs.md\\:text-sm');
+                
+                if (costElement) {
+                    costElement.textContent = `R$ ${monthlyCost.toFixed(2)}`;
+                    costElement.style.color = color;
+                }
+                
+                if (consumptionElement) {
+                    consumptionElement.textContent = `${monthlyConsumption.toFixed(0)} kWh`;
+                }
+                
+                console.log('✅ Card mensal atualizado:', { monthlyConsumption, monthlyCost, percentage });
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar card mensal:', error);
+        }
+    }
+}
+
+function updateWeeklyCard(statsData) {
+    const weeklyCardElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6 .text-center');
+    
+    if (weeklyCardElements.length >= 2) {
+        const cardElement = weeklyCardElements[1].closest('.border.rounded-xl');
+        
+        try {
+            if (statsData.diario) {
+                const now = new Date();
+                let weeklyConsumption = 0;
+                
+                // Somar consumo dos últimos 7 dias
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(now);
+                    date.setDate(date.getDate() - i);
+                    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                    
+                    weeklyConsumption += statsData.diario[dateKey] || 0;
+                }
+                
+                const weeklyCost = weeklyConsumption * energyPrice;
+                
+                // Calcular porcentagem (assumindo 100 kWh como limite semanal)
+                const weeklyLimitKwh = 100;
+                const percentage = weeklyLimitKwh > 0 ? (weeklyConsumption / weeklyLimitKwh) * 100 : 0;
+                
+                // Determinar cor
+                let color = 'var(--accent-green)';
+                if (percentage >= 80) {
+                    color = 'var(--accent-red)';
+                } else if (percentage >= 60) {
+                    color = 'var(--accent-yellow)';
+                }
+                
+                // Atualizar o SVG
+                const circles = cardElement.querySelectorAll('circle');
+                if (circles.length >= 2) {
+                    const circumference = 2 * Math.PI * 48;
+                    const circumferenceMd = 2 * Math.PI * 56;
+                    const offset = circumference - (Math.min(percentage, 100) / 100 * circumference);
+                    const offsetMd = circumferenceMd - (Math.min(percentage, 100) / 100 * circumferenceMd);
+                    
+                    circles[1].style.stroke = color;
+                    circles[1].setAttribute('stroke-dashoffset', offset);
+                    
+                    if (circles[3]) {
+                        circles[3].style.stroke = color;
+                        circles[3].setAttribute('stroke-dashoffset', offsetMd);
+                    }
+                }
+                
+                // Atualizar texto
+                const costElement = cardElement.querySelector('.text-xl.md\\:text-2xl.font-bold');
+                const consumptionElement = cardElement.querySelector('.text-xs.md\\:text-sm');
+                
+                if (costElement) {
+                    costElement.textContent = `R$ ${weeklyCost.toFixed(2)}`;
+                    costElement.style.color = color;
+                }
+                
+                if (consumptionElement) {
+                    consumptionElement.textContent = `${weeklyConsumption.toFixed(1)} kWh`;
+                }
+                
+                console.log('✅ Card semanal atualizado:', { weeklyConsumption, weeklyCost, percentage });
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar card semanal:', error);
+        }
+    }
+}
+
+function updateDailyCard(statsData) {
+    const dailyCardElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6 .text-center');
+    
+    if (dailyCardElements.length >= 3) {
+        const cardElement = dailyCardElements[2].closest('.border.rounded-xl');
+        
+        try {
+            if (statsData.diario) {
+                const now = new Date();
+                const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                
+                const dailyConsumption = statsData.diario[dateKey] || 0;
+                const dailyCost = dailyConsumption * energyPrice;
+                
+                // Calcular porcentagem (assumindo 20 kWh como limite diário)
+                const dailyLimitKwh = 20;
+                const percentage = dailyLimitKwh > 0 ? (dailyConsumption / dailyLimitKwh) * 100 : 0;
+                
+                // Determinar cor
+                let color = 'var(--accent-green)';
+                if (percentage >= 80) {
+                    color = 'var(--accent-red)';
+                } else if (percentage >= 60) {
+                    color = 'var(--accent-yellow)';
+                }
+                
+                // Atualizar o SVG
+                const circles = cardElement.querySelectorAll('circle');
+                if (circles.length >= 2) {
+                    const circumference = 2 * Math.PI * 48;
+                    const circumferenceMd = 2 * Math.PI * 56;
+                    const offset = circumference - (Math.min(percentage, 100) / 100 * circumference);
+                    const offsetMd = circumferenceMd - (Math.min(percentage, 100) / 100 * circumferenceMd);
+                    
+                    circles[1].style.stroke = color;
+                    circles[1].setAttribute('stroke-dashoffset', offset);
+                    
+                    if (circles[3]) {
+                        circles[3].style.stroke = color;
+                        circles[3].setAttribute('stroke-dashoffset', offsetMd);
+                    }
+                }
+                
+                // Atualizar texto
+                const costElement = cardElement.querySelector('.text-xl.md\\:text-2xl.font-bold');
+                const consumptionElement = cardElement.querySelector('.text-xs.md\\:text-sm');
+                
+                if (costElement) {
+                    costElement.textContent = `R$ ${dailyCost.toFixed(2)}`;
+                    costElement.style.color = color;
+                }
+                
+                if (consumptionElement) {
+                    consumptionElement.textContent = `${dailyConsumption.toFixed(1)} kWh`;
+                }
+                
+                console.log('✅ Card diário atualizado:', { dailyConsumption, dailyCost, percentage });
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar card diário:', error);
+        }
+    }
 }
 
 function updateMonthlyCostAverage(statsData) {
@@ -1292,6 +1537,33 @@ function updateActiveDevicesCount() {
 }
 
 function setDefaultStatistics() {
+    // Cards grandes do Dashboard Grid
+    const bigCardElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6 .text-center');
+    
+    if (bigCardElements.length >= 3) {
+        // Card Mensal
+        const monthlyCard = bigCardElements[0];
+        const monthlyCost = monthlyCard.querySelector('.text-xl.md\\:text-2xl.font-bold');
+        const monthlyConsumption = monthlyCard.querySelector('.text-xs.md\\:text-sm');
+        if (monthlyCost) monthlyCost.textContent = 'R$ 463,50';
+        if (monthlyConsumption) monthlyConsumption.textContent = '342 kWh';
+        
+        // Card Semanal
+        const weeklyCard = bigCardElements[1];
+        const weeklyCost = weeklyCard.querySelector('.text-xl.md\\:text-2xl.font-bold');
+        const weeklyConsumption = weeklyCard.querySelector('.text-xs.md\\:text-sm');
+        if (weeklyCost) weeklyCost.textContent = 'R$ 15,45';
+        if (weeklyConsumption) weeklyConsumption.textContent = '11.4 kWh';
+        
+        // Card Diário
+        const dailyCard = bigCardElements[2];
+        const dailyCost = dailyCard.querySelector('.text-xl.md\\:text-2xl.font-bold');
+        const dailyConsumption = dailyCard.querySelector('.text-xs.md\\:text-sm');
+        if (dailyCost) dailyCost.textContent = 'R$ 15,45';
+        if (dailyConsumption) dailyConsumption.textContent = '11.4 kWh';
+    }
+    
+    // Cards pequenos do Stats Grid
     const statElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
     
     if (statElements.length >= 4) {
@@ -1310,6 +1582,19 @@ function startStatisticsMonitor() {
     setInterval(() => {
         updateCurrentPower();
         updateActiveDevicesCount();
+        
+        // Recarregar dados das estatísticas para atualizar os cards grandes
+        if (USER_ID) {
+            const statsRef = database.ref(`users/${USER_ID}/esp32/estatisticas`);
+            statsRef.once('value', (snapshot) => {
+                const statsData = snapshot.val();
+                if (statsData) {
+                    updateMonthlyCard(statsData);
+                    updateWeeklyCard(statsData);
+                    updateDailyCard(statsData);
+                }
+            });
+        }
     }, 30000);
 }
 
