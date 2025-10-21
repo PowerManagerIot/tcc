@@ -604,3 +604,66 @@
     scrollbar-width: thin;
     scrollbar-color: var(--border-dark) var(--bg-primary);
 }
+
+/* Ajustar velocidade da sidebar e sincronizar animações - FORÇAR COM !important */
+#sidebar {
+    transition: all 0.3s ease-in-out !important;
+}
+
+/* Sincronizar TODOS os elementos internos da sidebar */
+#sidebar * {
+    transition: opacity 0.3s ease-in-out important, width 0.6s ease-in-out !important;
+}
+
+/* Garantir que os textos animem sincronizados */
+#sidebar .opacity-100,
+#sidebar .lg\:opacity-0,
+#sidebar .lg\:group-hover\:opacity-100,
+#sidebar nav a span,
+#sidebar h3 {
+    transition: opacity 0.6s ease-in-out !important;
+}
+
+/* Logout Button na Sidebar */
+.sidebar-logout {
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
+    padding: 0 1rem;
+}
+
+.sidebar-logout button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sidebar-logout button:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.sidebar-logout button:active {
+    transform: translateY(0);
+}
+
+.sidebar-logout svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}
+
+/* Ajustar padding bottom da sidebar para comportar o botão */
+#sidebar {
+    padding-bottom: 5rem;
+}

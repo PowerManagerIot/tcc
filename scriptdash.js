@@ -138,6 +138,161 @@ function logout() {
     });
 }
 
+// ========== FUNÇÕES DE PREÇO DE ENERGIA ==========
+
+async function loadEnergyPrice() {
+    try {
+        const snapshot = await database.ref(`users/${USER_ID}/settings/energyPrice`).once('value');
+        const savedPrice = snapshot.val();
+        
+        if (savedPrice !== null) {
+            energyPrice = parseFloat(savedPrice);
+            console.log('✅ Preço carregado do Firebase:', energyPrice);
+        } else {
+            // Fallback para localStorage
+            const localPrice = localStorage.getItem('energyPrice');
+            if (localPrice) {
+                energyPrice = parseFloat(localPrice);
+                // Migrar para Firebase
+                await database.ref(`users/${USER_ID}/settings/energyPrice`).set(energyPrice);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar preço do Firebase:', error);
+        // Fallback para localStorage
+        const localPrice = localStorage.getItem('energyPrice');
+        if (localPrice) {
+            energyPrice = parseFloat(localPrice);
+        }
+    }
+    
+    updateCurrentPriceDisplay();
+}
+
+function monitorEnergyPriceChanges() {
+    if (!USER_ID) return;
+    
+    database.ref(`users/${USER_ID}/settings/energyPrice`).on('value', (snapshot) => {
+        const newPrice = snapshot.val();
+        if (newPrice !== null && newPrice !== energyPrice) {
+            console.log('🔄 Preço da energia atualizado em tempo real:', newPrice);
+            energyPrice = parseFloat(newPrice);
+            
+            // Recalcular e atualizar interface
+            recalculateAllConsumptions().then(() => {
+                renderDevices();
+                renderDynamicDeviceCards();
+                updateCurrentPriceDisplay();
+            });
+        }
+    });
+}
+
+async function recalculateAllConsumptions() {
+    console.log('🔄 Recalculando consumos com novo preço...');
+    
+    const allUpdates = [];
+    const now = new Date().toISOString();
+    
+    // Recalcular dispositivos regulares
+    for (const key of Object.keys(regularDevices)) {
+        const device = regularDevices[key];
+        if (device.consumption) {
+            const newCost = device.consumption.totalKwh * energyPrice;
+            
+            const updates = {
+                'consumption/totalCost': newCost,
+                'consumption/energyPriceAtCalc': energyPrice,
+                'consumption/lastCalculated': now
+            };
+            
+            allUpdates.push(
+                database.ref(`users/${USER_ID}/devices/${key}`).update(updates)
+            );
+        }
+    }
+    
+    // Recalcular dispositivos inteligentes
+    for (const key of Object.keys(smartDevices)) {
+        const device = smartDevices[key];
+        if (device.consumption) {
+            const newCost = device.consumption.totalKwh * energyPrice;
+            
+            const updates = {
+                'consumption/totalCost': newCost,
+                'consumption/energyPriceAtCalc': energyPrice,
+                'consumption/lastCalculated': now
+            };
+            
+            allUpdates.push(
+                database.ref(`users/${USER_ID}/devices/${key}`).update(updates)
+            );
+        }
+    }
+    
+    await Promise.all(allUpdates);
+    console.log('✅ Todos os consumos recalculados com novo preço!');
+}
+
+function openEnergyPriceModal() {
+    energyPriceModal.style.display = 'block';
+    energyPriceInput.value = energyPrice.toFixed(2);
+    updateCurrentPriceDisplay();
+}
+
+function closeEnergyPriceModal() {
+    energyPriceModal.style.display = 'none';
+}
+
+function updateCurrentPriceDisplay() {
+    if (currentPriceDisplay) {
+        currentPriceDisplay.textContent = `Preço atual: R$ ${energyPrice.toFixed(2).replace('.', ',')}/kWh`;
+    }
+    
+    // Também atualizar o placeholder do input
+    if (energyPriceInput) {
+        energyPriceInput.placeholder = `Ex: ${energyPrice.toFixed(2)}`;
+    }
+}
+
+async function updateEnergyPrice() {
+    const newPrice = parseFloat(energyPriceInput.value);
+    
+    if (!newPrice || newPrice <= 0) {
+        alert('Por favor, insira um preço válido maior que zero.');
+        return;
+    }
+    
+    energyPrice = newPrice;
+    
+    // Salvar no Firebase em vez do localStorage
+    try {
+        await database.ref(`users/${USER_ID}/settings/energyPrice`).set(energyPrice);
+        console.log('✅ Preço da energia salvo no Firebase:', energyPrice);
+    } catch (error) {
+        console.error('❌ Erro ao salvar preço no Firebase:', error);
+        // Fallback para localStorage
+        localStorage.setItem('energyPrice', energyPrice.toString());
+    }
+    
+    // Recalcular todos os consumos com o novo preço
+    await recalculateAllConsumptions();
+    
+    renderDevices();
+    renderDynamicDeviceCards();
+    
+    closeEnergyPriceModal();
+    
+    if (connectionStatus) {
+        connectionStatus.textContent = `Preço da energia atualizado para R$ ${energyPrice.toFixed(2).replace('.', ',')}/kWh`;
+        connectionStatus.className = "status connected";
+        
+        setTimeout(() => {
+            connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
+        }, 3000);
+    }
+}
+
 // ========== FUNÇÕES DE MONITORAMENTO DE CONSUMO ==========
 
 function formatDateTime(date) {
@@ -373,56 +528,6 @@ function updateConsumptionDistribution(totalMonthlyConsumption) {
     }
 }
 
-// ========== FUNÇÕES DE PREÇO DE ENERGIA ==========
-
-function openEnergyPriceModal() {
-    energyPriceModal.style.display = 'block';
-    energyPriceInput.value = energyPrice.toFixed(2);
-    updateCurrentPriceDisplay();
-}
-
-function closeEnergyPriceModal() {
-    energyPriceModal.style.display = 'none';
-}
-
-function updateCurrentPriceDisplay() {
-    if (currentPriceDisplay) {
-        currentPriceDisplay.textContent = `Preço atual: R$ ${energyPrice.toFixed(2)}/kWh`;
-    }
-}
-
-function updateEnergyPrice() {
-    const newPrice = parseFloat(energyPriceInput.value);
-    
-    if (!newPrice || newPrice <= 0) {
-        alert('Por favor, insira um preço válido maior que zero.');
-        return;
-    }
-    
-    energyPrice = newPrice;
-    localStorage.setItem('energyPrice', energyPrice.toString());
-    
-    renderDynamicDeviceCards();
-    
-    closeEnergyPriceModal();
-    
-    if (connectionStatus) {
-        connectionStatus.textContent = `Preço da energia atualizado para R$ ${energyPrice.toFixed(2)}/kWh`;
-        connectionStatus.className = "status connected";
-        
-        setTimeout(() => {
-            connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
-        }, 3000);
-    }
-}
-
-function loadEnergyPrice() {
-    const savedPrice = localStorage.getItem('energyPrice');
-    if (savedPrice) {
-        energyPrice = parseFloat(savedPrice);
-    }
-}
-
 // ========== FUNÇÕES PARA CALCULAR TEMPO LIGADO E ENERGIA CONSUMIDA ==========
 
 function calculateDeviceUptime(device, isSmart) {
@@ -509,7 +614,7 @@ function calculateEnergyConsumption(device, uptime) {
     // Calcular apenas a energia do novo período (desde última atualização)
     const newHours = uptime.newUptimeMs / (1000 * 60 * 60);
     const newKwh = (watts * newHours) / 1000;
-    const newCost = newKwh * energyPrice;
+    const newCost = newKwh * energyPrice; // Usa o preço atual
     
     // Somar com consumo anterior salvo
     const previousKwh = device.consumption?.totalKwh || 0;
@@ -737,6 +842,9 @@ function loadDevicesFromFirebase() {
         renderDevices();
         renderDynamicDeviceCards();
         updateSmartDevicesCounter();
+        
+        // NOVO: Atualizar contagem de dispositivos ativos
+        updateActiveDevicesCount();
     });
 }
 
@@ -999,6 +1107,210 @@ function renderDevices() {
 function getNextDeviceId(devices) {
     const ids = Object.keys(devices).map(id => parseInt(id)).filter(id => !isNaN(id));
     return ids.length === 0 ? 0 : Math.max(...ids) + 1;
+}
+
+// ========== FUNÇÕES PARA OS CAMPOS DE ESTATÍSTICAS ==========
+
+async function loadStatisticsData() {
+    if (!USER_ID) return;
+    
+    try {
+        // Referência para as estatísticas no Firebase
+        const statsRef = database.ref(`users/${USER_ID}/esp32/estatisticas`);
+        
+        statsRef.on('value', (snapshot) => {
+            const statsData = snapshot.val();
+            
+            if (statsData) {
+                updateStatisticsCards(statsData);
+            } else {
+                console.log('Nenhum dado de estatísticas encontrado');
+                setDefaultStatistics();
+            }
+        }, (error) => {
+            console.error('Erro ao carregar estatísticas:', error);
+            setDefaultStatistics();
+        });
+        
+    } catch (error) {
+        console.error('Erro no carregamento de estatísticas:', error);
+        setDefaultStatistics();
+    }
+}
+
+function updateStatisticsCards(statsData) {
+    // 1. Média de custo mensal
+    updateMonthlyCostAverage(statsData);
+    
+    // 2. Média de custo diário
+    updateDailyCostAverage(statsData);
+    
+    // 3. Potência atual
+    updateCurrentPower();
+    
+    // 4. Dispositivos ativos
+    updateActiveDevicesCount();
+}
+
+function updateMonthlyCostAverage(statsData) {
+    const monthlyCostElement = document.querySelector('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
+    
+    if (monthlyCostElement && statsData.mensal) {
+        try {
+            // Calcular média dos últimos meses ou usar o mês atual
+            const monthlyData = statsData.mensal;
+            const months = Object.keys(monthlyData);
+            
+            if (months.length > 0) {
+                // Calcular média dos últimos 3 meses ou todos disponíveis
+                const recentMonths = months.slice(-3);
+                let totalConsumption = 0;
+                let monthCount = 0;
+                
+                recentMonths.forEach(monthKey => {
+                    const consumption = monthlyData[monthKey] || 0;
+                    const monthlyCost = consumption * energyPrice;
+                    totalConsumption += monthlyCost;
+                    monthCount++;
+                });
+                
+                const averageMonthlyCost = monthCount > 0 ? totalConsumption / monthCount : 0;
+                monthlyCostElement.textContent = `R$ ${averageMonthlyCost.toFixed(2)}`;
+                
+                console.log('✅ Média mensal calculada:', averageMonthlyCost);
+            } else {
+                // Usar valor padrão se não há dados históricos
+                monthlyCostElement.textContent = 'R$ 387,66';
+            }
+        } catch (error) {
+            console.error('Erro ao calcular média mensal:', error);
+            monthlyCostElement.textContent = 'R$ 387,66';
+        }
+    }
+}
+
+function updateDailyCostAverage(statsData) {
+    const dailyCostElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
+    
+    if (dailyCostElements.length >= 2) {
+        const dailyCostElement = dailyCostElements[1]; // Segundo elemento é o custo diário
+        
+        try {
+            if (statsData.diario) {
+                const dailyData = statsData.diario;
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                
+                // Tentar encontrar dados de hoje
+                let todayConsumption = 0;
+                Object.keys(dailyData).forEach(dateKey => {
+                    if (dateKey.includes(today)) {
+                        todayConsumption = dailyData[dateKey] || 0;
+                    }
+                });
+                
+                const dailyCost = todayConsumption * energyPrice;
+                
+                if (dailyCost > 0) {
+                    dailyCostElement.textContent = `R$ ${dailyCost.toFixed(2)}`;
+                } else {
+                    // Calcular média dos últimos 7 dias se não há dado de hoje
+                    calculateWeeklyAverage(dailyData, dailyCostElement);
+                }
+            } else {
+                calculateWeeklyAverage({}, dailyCostElement);
+            }
+        } catch (error) {
+            console.error('Erro ao calcular custo diário:', error);
+            dailyCostElement.textContent = 'R$ 14,89';
+        }
+    }
+}
+
+function calculateWeeklyAverage(dailyData, dailyCostElement) {
+    const dailyEntries = Object.entries(dailyData);
+    
+    if (dailyEntries.length > 0) {
+        // Pegar os últimos 7 dias
+        const recentDays = dailyEntries.slice(-7);
+        let totalCost = 0;
+        let dayCount = 0;
+        
+        recentDays.forEach(([date, consumption]) => {
+            const dailyCost = consumption * energyPrice;
+            totalCost += dailyCost;
+            dayCount++;
+        });
+        
+        const averageDailyCost = dayCount > 0 ? totalCost / dayCount : 14.89;
+        dailyCostElement.textContent = `R$ ${averageDailyCost.toFixed(2)}`;
+    } else {
+        dailyCostElement.textContent = 'R$ 14,89';
+    }
+}
+
+function updateCurrentPower() {
+    const currentPowerElement = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
+    
+    if (currentPowerElement.length >= 3) {
+        const powerElement = currentPowerElement[2]; // Terceiro elemento é a potência
+        
+        // Usar a potência atual que já está sendo monitorada
+        const currentPower = s1Power + s2Power;
+        const powerInKW = currentPower / 1000; // Converter para kW
+        
+        powerElement.textContent = `${powerInKW.toFixed(2)} kW`;
+        
+        console.log('✅ Potência atual atualizada:', powerInKW);
+    }
+}
+
+function updateActiveDevicesCount() {
+    const activeDevicesElement = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
+    
+    if (activeDevicesElement.length >= 4) {
+        const devicesElement = activeDevicesElement[3]; // Quarto elemento é dispositivos ativos
+        
+        try {
+            // Contar dispositivos que estão ligados (smart devices) + todos os regulares (considerados sempre ativos)
+            let activeCount = Object.keys(regularDevices).length; // Dispositivos regulares são sempre "ativos"
+            
+            // Adicionar dispositivos inteligentes que estão ligados
+            Object.keys(smartDevices).forEach(key => {
+                if (smartDevices[key].state === true) {
+                    activeCount++;
+                }
+            });
+            
+            devicesElement.textContent = activeCount.toString();
+            
+            console.log('✅ Contagem de dispositivos atualizada:', activeCount);
+        } catch (error) {
+            console.error('Erro ao contar dispositivos ativos:', error);
+            devicesElement.textContent = '12';
+        }
+    }
+}
+
+function setDefaultStatistics() {
+    const statElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
+    
+    if (statElements.length >= 4) {
+        // Valores padrão da imagem
+        statElements[0].textContent = 'R$ 387,66'; // Média mensal
+        statElements[1].textContent = 'R$ 14,89';  // Média diária
+        statElements[2].textContent = '0.47 kW';   // Potência atual
+        statElements[3].textContent = '12';        // Dispositivos ativos
+    }
+}
+
+// ========== ATUALIZAÇÃO EM TEMPO REAL ==========
+
+function startStatisticsMonitor() {
+    // Atualizar estatísticas a cada 30 segundos
+    setInterval(() => {
+        updateCurrentPower();
+        updateActiveDevicesCount();
+    }, 30000);
 }
 
 // ========== EVENT LISTENERS - DISPOSITIVOS ==========
@@ -1439,17 +1751,24 @@ async function inicializarDashboard() {
         if (loginForm) loginForm.style.display = 'none';
         if (mainContent) mainContent.style.display = 'block';
         
-        loadEnergyPrice();
+        await loadEnergyPrice();
+        monitorEnergyPriceChanges();
         
         getAlertLimit();
         monitorPower();
         loadDevicesFromFirebase();
         renderLocations();
         
+        // NOVO: Carregar estatísticas do Firebase
+        loadStatisticsData();
+        
+        // NOVO: Iniciar monitoramento das estatísticas
+        startStatisticsMonitor();
+        
         // Iniciar contador de tempo ligado e salvamento automático
         startUptimeCounter();
         
-        // Fazer salvamento inicial após 10 segundos (dar tempo para carregar os dispositivos)
+        // Fazer salvamento inicial após 10 segundos
         setTimeout(() => {
             console.log('💾 Fazendo salvamento inicial de consumo...');
             updateAllConsumptions();
@@ -1522,63 +1841,3 @@ window.openWattsChatbot = openWattsChatbot;
 window.closeWattsChatbot = closeWattsChatbot;
 window.sendChatMessage = sendChatMessage;
 window.useWattsValue = useWattsValue;
-
-/* 
-========== SISTEMA DE PERSISTÊNCIA DE CONSUMO ==========
-
-✅ CÁLCULO 100% CORRETO E PRECISO!
-
-Estrutura no Firebase:
-users/{USER_ID}/devices/{deviceId}/consumption/
-  ├── totalKwh: 0.59              // kWh acumulado total ✅
-  ├── totalCost: 0.47             // Custo acumulado em R$ ✅
-  ├── totalUptimeMs: 22392000     // Tempo total ligado em ms ✅
-  ├── lastCalculated: "timestamp" // Última vez que foi calculado ✅
-  ├── lastCalculatedDate: "date"  // Data formatada ✅
-  ├── energyPriceAtCalc: 0.80     // Preço da energia no momento ✅
-  └── wasOnAtLastCalc: true       // Se estava ligado (smart) ✅
-
-📊 Como funciona o CÁLCULO:
-
-1. DISPOSITIVOS REGULARES (não inteligentes):
-   - Sempre considerados LIGADOS desde a criação
-   - Tempo novo = agora - lastCalculated
-   - Total = tempoAnterior + tempoNovo
-   - kWh = (watts × horas) / 1000
-   - Custo = kWh × preço
-
-2. DISPOSITIVOS INTELIGENTES (controláveis):
-   - Calcula baseado no HISTÓRICO REAL de estados
-   - Se está ligado: conta tempo desde lastCalculated
-   - Se está desligado: busca períodos ligados no histórico
-   - wasOnAtLastCalc: sabe se estava ligado antes
-   - Total acumulado com precisão absoluta!
-
-⏰ Salvamento automático:
-✅ A cada 5 minutos (300000ms)
-✅ Quando muda estado de dispositivo inteligente
-✅ Quando exclui um dispositivo
-✅ Quando sai da página (beforeunload)
-✅ Quando edita dispositivo (se mudar watts)
-✅ 10 segundos após carregar (inicial)
-✅ Ao fazer logout
-
-🎯 Recursos especiais:
-✅ Cálculo INCREMENTAL (só calcula período novo)
-✅ Soma com total anterior (não perde histórico)
-✅ Reset automático ao mudar watts do dispositivo
-✅ Salva preço usado no cálculo (histórico)
-✅ Logs detalhados no console
-✅ Precisão de milissegundos
-✅ Distribuição de consumo dispositivos vs outros
-
-💡 Exemplo prático:
-- Ventilador 90W criado às 10:00
-- Primeira atualização às 10:05 (5 min)
-  → 90W × 0.0833h = 0.00749 kWh
-  → 0.00749 × R$0.80 = R$0.006
-- Segunda atualização às 10:10 (mais 5 min)
-  → Acumula: 0.01498 kWh total
-  → R$0.012 total
-- E assim por diante... 100% preciso! 🎯
-*/

@@ -4,6 +4,12 @@ import {auth, database} from "./auth.js"
 const GEMINI_API_KEY = 'AIzaSyDfhomKTh_2WhvVveb7KSfsY_9Ri1IrUyg';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
+// No início do arquivo, após importar auth e database
+const PROJECT_ID = auth.app.options.projectId;
+
+// E na função, use assim:
+const functionUrl = `https://us-central1-${PROJECT_ID}.cloudfunctions.net/generateAIReport`;
+
 // ========== VARIÁVEIS GLOBAIS ==========
 let USER_ID = null;
 let energyPrice = 0.80;
@@ -628,11 +634,6 @@ function setDeviceViewMode(mode) {
 
 async function generateAIAnalysis() {
     console.log('🔍 Iniciando análise com IA...');
-    
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SUA_API_KEY_AQUI') {
-        showAIError('Configure sua API Key do Gemini');
-        return;
-    }
 
     aiAnalysisContainer.classList.add('hidden');
     aiLoadingContainer.classList.remove('hidden');
@@ -642,52 +643,38 @@ async function generateAIAnalysis() {
         const analysisData = prepareDataForAI();
         const prompt = createAIPrompt(analysisData);
         
-        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+        // Usar a variável PROJECT_ID que você definiu no início do arquivo
+        const functionUrl = `https://us-central1-${PROJECT_ID}.cloudfunctions.net/generateAIReport`;
+        
+        console.log('📡 Chamando função:', functionUrl);
+        
+        const response = await fetch(functionUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 8192,
-                }
-            })
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt: prompt })
         });
 
+        console.log('📥 Status da resposta:', response.status);
+
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+            throw new Error(errorData.error || `HTTP Error: ${response.status}`);
         }
 
         const data = await response.json();
         
-        if (!data.candidates?.[0]) {
+        if (!data.text) {
             throw new Error('Resposta inválida da IA');
         }
         
-        const candidate = data.candidates[0];
-        let aiResponse = null;
-        
-        if (candidate.content?.parts?.[0]?.text) {
-            aiResponse = candidate.content.parts[0].text;
-        } else if (candidate.content?.text) {
-            aiResponse = candidate.content.text;
-        } else {
-            throw new Error('Não foi possível extrair o texto da resposta');
-        }
-        
-        if (!aiResponse || aiResponse.trim() === '') {
-            throw new Error('Resposta vazia da IA');
-        }
-        
-        displayAIAnalysis(aiResponse);
+        console.log('✅ Análise gerada com sucesso!');
+        displayAIAnalysis(data.text);
         
     } catch (error) {
         console.error('❌ Erro na análise com IA:', error);
-        showAIError(error.message);
+        showAIError(error.message || 'Erro ao conectar com o servidor');
     } finally {
         aiLoadingContainer.classList.add('hidden');
         generateAIReportBtn.disabled = false;
@@ -724,7 +711,59 @@ function prepareDataForAI() {
         else if (change < -10) trend = 'decrescente';
     }
     
+    // ========== NOVO: ANÁLISE DETALHADA POR DISPOSITIVO ==========
+    const devicesAnalysis = [];
+    let totalDevicesCost = 0;
+    let smartDevicesCount = 0;
+    let regularDevicesCount = 0;
+    
+    Object.entries(allDevices).forEach(([deviceId, device]) => {
+        const isSmart = device.hasButton === 'yes';
+        const consumption = device.consumption || {};
+        const power = device.number || 0;
+        const totalKwh = consumption.totalKwh || 0;
+        const totalCost = consumption.totalCost || 0;
+        const uptime = consumption.totalUptimeMs || 0;
+        
+        // Calcular consumo mensal estimado
+        const hoursPerDay = isSmart 
+            ? (uptime / (1000 * 60 * 60)) / 30 // Média de horas por dia
+            : 24; // Dispositivo regular sempre ligado
+        
+        const monthlyKwh = (power * hoursPerDay * 30) / 1000;
+        const monthlyCost = monthlyKwh * energyPrice;
+        
+        // Calcular percentual do consumo total
+        const percentOfTotal = stats.total > 0 ? (totalKwh / stats.total) * 100 : 0;
+        
+        devicesAnalysis.push({
+            nome: device.name,
+            marca: device.brand || 'Não especificada',
+            tipo: isSmart ? 'Inteligente' : 'Regular (24/7)',
+            potencia: power,
+            consumoTotal: totalKwh.toFixed(2),
+            custoTotal: totalCost.toFixed(2),
+            tempoUso: formatUptime(uptime),
+            consumoMensalEstimado: monthlyKwh.toFixed(2),
+            custoMensalEstimado: monthlyCost.toFixed(2),
+            percentualDoTotal: percentOfTotal.toFixed(1),
+            mediaHorasDia: hoursPerDay.toFixed(1)
+        });
+        
+        totalDevicesCost += totalCost;
+        
+        if (isSmart) smartDevicesCount++;
+        else regularDevicesCount++;
+    });
+    
+    // Ordenar dispositivos por consumo (maior para menor)
+    devicesAnalysis.sort((a, b) => parseFloat(b.consumoTotal) - parseFloat(a.consumoTotal));
+    
+    // Top 5 maiores consumidores
+    const topConsumers = devicesAnalysis.slice(0, 5);
+    
     return {
+        // Dados gerais (já existiam)
         periodo: selectedPeriod === '7' ? '7 dias' : 
                  selectedPeriod === '30' ? '30 dias' : 
                  selectedPeriod === '90' ? '90 dias' : 
@@ -734,47 +773,93 @@ function prepareDataForAI() {
         mediaDiaria: stats.average.toFixed(2),
         picoConsumo: stats.peak.value.toFixed(2),
         picoData: stats.peak.date,
-        horaico: peakHour.hour,
+        horaPico: peakHour.hour,
         consumoHoraPico: peakHour.value.toFixed(2),
         mediaHoraria: hourlyValues.length > 0 
             ? (hourlyValues.reduce((a, b) => a + b, 0) / hourlyValues.length).toFixed(2) 
             : '0',
         mediaMensal: monthlyAvg.toFixed(2),
         tendencia: trend,
-        precokWh: energyPrice
+        precokWh: energyPrice,
+        
+        // NOVOS dados de dispositivos
+        totalDispositivos: devicesAnalysis.length,
+        dispositivosInteligentes: smartDevicesCount,
+        dispositivosRegulares: regularDevicesCount,
+        topConsumidores: topConsumers,
+        todosDispositivos: devicesAnalysis
     };
 }
 
 function createAIPrompt(data) {
-    return `Você é um especialista em eficiência energética. Analise os dados e forneça um relatório CONCISO e DIRETO em português do Brasil.
+    // Criar lista formatada dos top consumidores
+    let topDevicesList = '';
+    data.topConsumidores.forEach((device, index) => {
+        topDevicesList += `
+${index + 1}. ${device.nome} (${device.marca})
+   - Tipo: ${device.tipo}
+   - Potência: ${device.potencia}W
+   - Consumo: ${device.consumoTotal} kWh (${device.percentualDoTotal}% do total)
+   - Custo: R$ ${device.custoTotal}
+   - Uso: ${device.mediaHorasDia}h/dia em média
+   - Estimativa mensal: ${device.consumoMensalEstimado} kWh (R$ ${device.custoMensalEstimado})`;
+    });
+    
+    return `Você é um especialista em eficiência energética residencial. Analise os dados detalhados e forneça um relatório PRÁTICO e ACIONÁVEL em português do Brasil.
 
-DADOS:
-- Período: ${data.periodo}
-- Consumo: ${data.consumoTotal} kWh (R$ ${data.custoTotal})
+=== DADOS GERAIS DO PERÍODO ===
+- Período analisado: ${data.periodo}
+- Consumo total: ${data.consumoTotal} kWh (R$ ${data.custoTotal})
 - Média diária: ${data.mediaDiaria} kWh
-- Pico: ${data.picoConsumo} kWh (${data.picoData})
-- Hora crítica: ${data.horaico}:00 (${data.consumoHoraPico} kWh)
+- Pico de consumo: ${data.picoConsumo} kWh (${data.picoData})
+- Hora crítica: ${data.horaPico}:00 (${data.consumoHoraPico} kWh)
 - Tendência: ${data.tendencia}
+- Tarifa: R$ ${data.precokWh}/kWh
 
-Forneça um relatório com NO MÁXIMO 800 palavras contendo:
+=== DISPOSITIVOS CADASTRADOS ===
+- Total: ${data.totalDispositivos} dispositivos
+- Inteligentes: ${data.dispositivosInteligentes}
+- Regulares (24/7): ${data.dispositivosRegulares}
 
-1. **DIAGNÓSTICO** (2-3 parágrafos)
-   - Avalie se o consumo está adequado
-   - Identifique o principal problema
+=== TOP 5 MAIORES CONSUMIDORES ===
+${topDevicesList}
 
-2. **TOP 3 AÇÕES DE ECONOMIA** (liste apenas 3 sugestões práticas)
-   - Para cada uma: ação específica + economia estimada em %
+=== INSTRUÇÕES PARA O RELATÓRIO ===
 
-3. **META REALISTA**
-   - Uma meta de redução objetiva
-   - Economia mensal em R$
+Forneça um relatório com NO MÁXIMO 1000 palavras contendo:
+
+1. **DIAGNÓSTICO GERAL** (2-3 parágrafos)
+   - Avalie o consumo total comparado com padrões residenciais brasileiros típicos
+   - Identifique o principal problema (se houver)
+   - Comente sobre a distribuição do consumo entre os dispositivos
+
+2. **ANÁLISE DOS DISPOSITIVOS** (3-5 itens)
+   - Analise os TOP consumidores individualmente
+   - Identifique dispositivos com consumo suspeito ou excessivo
+   - Verifique dispositivos regulares (24/7) que poderiam ser inteligentes
+   - Compare consumo real vs esperado baseado na potência
+   - Identifique oportunidades de troca por modelos mais eficientes
+
+3. **AÇÕES PRIORITÁRIAS DE ECONOMIA** (liste 5 ações específicas)
+   Para cada ação, forneça:
+   - Dispositivo ou hábito específico
+   - Ação recomendada (seja MUITO específico)
+   - Economia estimada em kWh/mês e R$/mês
+   - Dificuldade de implementação (baixa/média/alta)
+
+4. **META E ECONOMIA ESPERADA**
+   - Meta de redução percentual realista
+   - Economia mensal em R$ se seguir as recomendações
+   - Prazo para atingir a meta
 
 REGRAS IMPORTANTES:
-- Seja OBJETIVO e DIRETO
+- Seja ESPECÍFICO: mencione dispositivos pelo nome
+- Use dados REAIS dos dispositivos cadastrados
+- Não invente dispositivos que não estão na lista
+- Foque em ações PRÁTICAS e VIÁVEIS
 - Use negrito APENAS para números importantes (kWh, R$, %)
-- Evite listas longas e repetições
-- Foque no que realmente importa para economizar
-- Máximo de 800 palavras
+- Máximo de 1000 palavras
+- Se identificar dispositivo regular com alto consumo, sugira torná-lo inteligente
 
 Formate com markdown simples (##, -, **apenas para números**).`;
 }

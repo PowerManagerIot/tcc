@@ -74,6 +74,13 @@
                     </li>
                 </ul>
             </nav>
+            <div class="sidebar-logout">
+                <button id="logoutBtn" onclick="logout()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -472,12 +479,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Logout Button -->
-    <button id="logoutBtn" class="fixed top-4 right-4 md:right-10 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 px-4 md:px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 z-30 text-sm md:text-base">
-        <span class="hidden sm:inline">Sair</span>
-        <i class="ph ph-sign-out sm:hidden text-lg"></i>
-    </button>
 
     <script type="module" src="scriptdash.js"></script>
     <script>
