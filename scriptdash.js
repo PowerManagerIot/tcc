@@ -186,6 +186,9 @@ function updateMonthlyBar(current, limit) {
             monthlyBar.classList.add('warning');
         }
     }
+    
+    // Atualizar distribuição de consumo
+    updateConsumptionDistribution(current);
 }
 
 function getAlertLimit() {
@@ -315,6 +318,59 @@ function monitorMonthlyConsumption() {
     }, (error) => {
         console.error("Erro ao monitorar consumo mensal:", error);
     });
+}
+
+function updateConsumptionDistribution(totalMonthlyConsumption) {
+    // Calcular soma do consumo de todos os dispositivos cadastrados
+    let devicesConsumption = 0;
+    
+    Object.keys(regularDevices).forEach(key => {
+        const device = regularDevices[key];
+        const uptime = calculateDeviceUptime(device, false);
+        const energy = calculateEnergyConsumption(device, uptime);
+        devicesConsumption += energy.kWh;
+    });
+    
+    Object.keys(smartDevices).forEach(key => {
+        const device = smartDevices[key];
+        const uptime = calculateDeviceUptime(device, true);
+        const energy = calculateEnergyConsumption(device, uptime);
+        devicesConsumption += energy.kWh;
+    });
+    
+    // Calcular "outros" (consumo não contabilizado pelos dispositivos)
+    const othersConsumption = Math.max(0, totalMonthlyConsumption - devicesConsumption);
+    
+    // Calcular porcentagens
+    const devicesPercent = totalMonthlyConsumption > 0 
+        ? (devicesConsumption / totalMonthlyConsumption) * 100 
+        : 0;
+    const othersPercent = totalMonthlyConsumption > 0 
+        ? (othersConsumption / totalMonthlyConsumption) * 100 
+        : 0;
+    
+    // Atualizar a interface
+    const distributionContainer = document.getElementById('consumptionDistribution');
+    if (distributionContainer) {
+        distributionContainer.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-dark); font-size: 0.875rem;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 12px; height: 12px; border-radius: 3px; background-color: var(--accent-green);"></div>
+                    <span style="color: var(--text-secondary);">
+                        Dispositivos: <strong style="color: var(--text-primary);">${devicesConsumption.toFixed(2)} kWh</strong>
+                        <span style="color: var(--accent-green); font-weight: 600;">(${devicesPercent.toFixed(1)}%)</span>
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 12px; height: 12px; border-radius: 3px; background-color: var(--accent-yellow);"></div>
+                    <span style="color: var(--text-secondary);">
+                        Outros: <strong style="color: var(--text-primary);">${othersConsumption.toFixed(2)} kWh</strong>
+                        <span style="color: var(--accent-yellow); font-weight: 600;">(${othersPercent.toFixed(1)}%)</span>
+                    </span>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // ========== FUNÇÕES DE PREÇO DE ENERGIA ==========
@@ -547,8 +603,8 @@ function formatEnergy(energy) {
 // ========== FUNÇÕES DE DISPOSITIVOS - CARDS DINÂMICOS ==========
 
 function getColorByPercentage(percentage) {
-    if (percentage >= 75) return 'var(--accent-red)';
-    if (percentage >= 40) return 'var(--accent-yellow)';
+    if (percentage >= 15) return 'var(--accent-red)';
+    if (percentage >= 8) return 'var(--accent-yellow)';
     return 'var(--accent-green)';
 }
 
@@ -585,20 +641,13 @@ function renderDynamicDeviceCards() {
         return;
     }
     
-    // Calcular consumo total para porcentagem
-    const totalConsumption = allDevices.reduce((sum, device) => {
-        const uptime = calculateDeviceUptime(device, device.isSmart);
-        const energy = calculateEnergyConsumption(device, uptime);
-        return sum + energy.cost;
-    }, 0);
-    
     allDevices.forEach((device, index) => {
         const uptime = calculateDeviceUptime(device, device.isSmart);
         const energy = calculateEnergyConsumption(device, uptime);
         const formattedEnergy = formatEnergy(energy);
         
-        // Calcular porcentagem baseada no custo total
-        const percentage = totalConsumption > 0 ? (energy.cost / totalConsumption) * 100 : 0;
+        // Calcular porcentagem baseada no CONSUMO MENSAL TOTAL (kWh)
+        const percentage = currentMonthlyValue > 0 ? (energy.kWh / currentMonthlyValue) * 100 : 0;
         const color = getColorByPercentage(percentage);
         
         const circumference = 2 * Math.PI * 48;
@@ -625,6 +674,9 @@ function renderDynamicDeviceCards() {
                             <circle cx="64" cy="64" r="56" stroke-width="8" fill="none" 
                                     stroke-dasharray="${circumferenceMd}" stroke-dashoffset="${offsetMd}" stroke-linecap="round" style="stroke: ${color};" class="hidden md:block"/>
                         </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-lg md:text-xl font-bold" style="color: ${color};">${percentage.toFixed(1)}%</span>
+                        </div>
                     </div>
                     <div class="text-xl md:text-2xl font-bold mb-2" style="color: ${color};">R$ ${formattedEnergy.cost}</div>
                     <div class="text-xs md:text-sm mb-1" style="color: var(--text-secondary);">${formattedEnergy.kWh} kWh consumidos</div>
@@ -637,6 +689,9 @@ function renderDynamicDeviceCards() {
         
         dashboardGrid.appendChild(deviceCard);
     });
+    
+    // Atualizar distribuição de consumo após renderizar os cards
+    updateConsumptionDistribution(currentMonthlyValue);
 }
 
 function updateSmartDevicesCounter() {
@@ -936,6 +991,9 @@ function renderDevices() {
     if (Object.keys(regularDevices).length === 0 && Object.keys(smartDevices).length === 0) {
         devicesContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Nenhum dispositivo cadastrado. Clique em "Adicionar Dispositivo" para começar.</p>';
     }
+    
+    // Atualizar distribuição de consumo após renderizar dispositivos
+    updateConsumptionDistribution(currentMonthlyValue);
 }
 
 function getNextDeviceId(devices) {
@@ -1512,6 +1570,7 @@ users/{USER_ID}/devices/{deviceId}/consumption/
 ✅ Salva preço usado no cálculo (histórico)
 ✅ Logs detalhados no console
 ✅ Precisão de milissegundos
+✅ Distribuição de consumo dispositivos vs outros
 
 💡 Exemplo prático:
 - Ventilador 90W criado às 10:00
