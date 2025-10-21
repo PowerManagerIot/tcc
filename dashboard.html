@@ -34,24 +34,19 @@
     <script src="theme.js"></script>
 </head>
 <body style="background-color: var(--bg-primary); color: var(--text-primary);" class="font-sans">
-    <!-- Mobile Menu Overlay -->
     <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden lg:hidden"></div>
 
-    <!-- Sidebar -->
     <div id="sidebar" class="fixed left-0 top-0 w-64 h-full border-r z-50 transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:w-20 lg:hover:w-64 group" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
         <div class="p-4">
-            <!-- Close button (mobile only) -->
             <button id="closeSidebarBtn" class="lg:hidden absolute top-4 right-4" style="color: var(--text-secondary);">
                 <i class="ph ph-x text-2xl"></i>
             </button>
 
-            <!-- Logo -->
             <div class="flex items-center gap-3 mb-8">
                 <a href="index.html" class="w-10 h-10 object-contain flex-shrink-0"><img src="img/iconsemfundo.png" alt="Power Manager Logo"></a>
                 <a href="index.html" class="font-bold text-lg opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap"><h3>Power Manager</h3></a>
             </div>
             
-            <!-- Navigation -->
             <nav>
                 <ul class="space-y-4">
                     <li>
@@ -84,20 +79,16 @@
         </div>
     </div>
 
-    <!-- Mobile Menu Button -->
     <button id="mobileMenuBtn" class="lg:hidden fixed top-4 left-4 z-30 border rounded-lg p-3 transition-colors" style="background-color: var(--bg-secondary); border-color: var(--border-dark);">
         <i class="ph ph-list text-2xl" style="color: var(--accent-green);"></i>
     </button>
 
-    <!-- Main Content -->
     <div class="lg:ml-20 h-screen overflow-y-auto transition-all duration-300 ease-in-out">
         <div class="p-4 md:p-8 pt-20 lg:pt-8">
-            <!-- Header -->
             <div class="mb-8">
                 <div class="text-sm mb-2" style="color: var(--text-secondary);">Energia</div>
                 <h1 class="text-2xl md:text-3xl font-semibold mb-4" style="color: var(--accent-green);">Consumo de energia</h1>
                 
-                <!-- Connection Status -->
                 <div class="fixed top-4 right-4 md:right-8 border rounded-lg px-3 md:px-4 py-2 md:py-3 flex items-center gap-2 z-20" id="connectionStatus" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="w-2 h-2 rounded-full animate-pulse" id="statusDot" style="background-color: var(--accent-green);"></div>
                     <span class="text-xs md:text-sm hidden sm:inline">Conectando ao Firebase...</span>
@@ -105,7 +96,6 @@
                 </div>
             </div>
 
-            <!-- Location Tabs -->
             <div class="flex gap-3 md:gap-4 mb-8 overflow-x-auto pb-2">
                 <div class="border-2 rounded-xl p-4 md:p-6 min-w-[180px] md:min-w-52 cursor-pointer relative flex-shrink-0" style="background-color: var(--bg-card); border-color: var(--accent-yellow);">
                     <div class="absolute top-4 right-4 w-2 h-2 rounded-full" style="background-color: var(--accent-green);"></div>
@@ -138,7 +128,6 @@
                 </div>
             </div>
 
-            <!-- Modal para Adicionar Local -->
             <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-70 modal-backdrop hidden z-50 flex items-center justify-center p-4">
                 <div class="border rounded-xl p-6 w-full max-w-md transform transition-all" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <h2 class="text-xl font-semibold mb-6" style="color: var(--accent-green);">Adicionar Novo Local</h2>
@@ -176,11 +165,8 @@
                 </div>
             </div>
 
-            <!-- Dashboard Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
-                <!-- Left Column - Cards Fixos -->
                 <div class="lg:col-span-1 space-y-6 md:space-y-8">
-                    <!-- Monthly Cost Chart -->
                     <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                         <div class="flex items-center justify-between mb-4 md:mb-6">
                             <h3 class="text-base md:text-lg font-semibold">Custo do Mês</h3>
@@ -203,7 +189,6 @@
                     </div>               
                 </div>
 
-                <!-- Daily Cost Chart -->
                 <div class="border rounded-xl p-4 md:p-6" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="flex items-center justify-between mb-4 md:mb-6">
                         <h3 class="text-base md:text-lg font-semibold">Custo da Semana</h3>
@@ -245,10 +230,8 @@
                         <div class="text-xs md:text-sm" style="color: var(--text-secondary);">11.4 kWh</div>
                     </div>
                 </div>
-                <!-- Colunas 2 e 3 serão preenchidas dinamicamente com dispositivos do Firebase -->
             </div>
 
-            <!-- Stats Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <div class="border rounded-xl p-4 md:p-6 text-center" style="background-color: var(--bg-card); border-color: var(--border-dark);">
                     <div class="text-2xl md:text-3xl font-bold mb-2" style="color: var(--accent-green);">R$ 387,66</div>
@@ -271,12 +254,10 @@
                 </div>
             </div>
 
-            <!-- IoT Section -->
             <div class="mt-8 md:mt-12">
                 <h2 class="text-xl md:text-2xl font-semibold mb-3 md:mb-4" style="color: var(--accent-green);">Power Manager IoT</h2>
                 <p class="text-sm md:text-base mb-6 md:mb-8" style="color: var(--text-secondary);">Monitoramento em tempo real da rede</p>
 
-                <!-- Sensor Value Card -->
                 <div id="mainContent" style="display: none;">
                     <div class="value-container">
                         <h2>Consumo em tempo real</h2>
@@ -285,7 +266,6 @@
 
                         <br><br>
 
-                        <!-- barra alerta 1 -->
                         <div class="bar-container">
                             <div class="bar-info">
                                 <span class="bar-label">Potência Instantânea</span>
@@ -300,7 +280,6 @@
                             </div>
                         </div>
 
-                        <!-- barra alerta 2 -->
                         <div class="bar-container">
                             <div class="bar-info">
                                 <span class="bar-label">Consumo Mensal Acumulado</span>
@@ -313,7 +292,6 @@
                                     <span id="monthlyPercentage">0%</span>
                                 </div>
                             </div>
-                            <!-- Distribuição de consumo -->
                             <div id="consumptionDistribution"></div>
                         </div>
                     </div>
@@ -329,12 +307,11 @@
                 </div>
                 
                 <div class="devices-container" id="devicesContainer">
-                    <!-- Dispositivos serão adicionados aqui -->
                 </div>
             </div>
         </div>
     </div>
-  <!-- Modal para adicionar/editar dispositivo -->
+    
     <div id="deviceModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle">Adicionar Novo Dispositivo</h2>
@@ -344,8 +321,8 @@
             <div class="watts-input-container">
                 <input type="number" id="deviceNumber" placeholder="Consumo em Watts" style="flex: 1;">
                 <div class="help-icon" onclick="openWattsChatbot()">
-                    <i class="ph-fill ph-lightbulb"></i>
-                    <span class="tooltip">Não sei quantos watts tem meu dispositivo</span>
+                    <i class="ph-fill ph-question"></i>
+                    <span class="tooltip">Precisa de ajuda para descobrir?</span>
                 </div>
             </div>
             <select id="hasButton">
@@ -353,112 +330,144 @@
                 <option value="yes">Inteligente (controlável)</option>
             </select>
             <div id="limitWarning" class="limit-warning hidden">
-                ⚠️ Limite máximo de 8 dispositivos inteligentes atingido!
+                Limite máximo de 8 dispositivos inteligentes atingido!
             </div>
             <div class="modal-buttons">
-                <button class="cancel-btn" id="cancelBtn">Cancelar</button>
-                <button class="confirm-btn" id="confirmBtn">Confirmar</button>
+                <button class="cancel-btn" id="cancelBtn" style="background-color: var(--bg-secondary); border: 1px solid var(--border-dark); color: var(--text-primary); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Cancelar</button>
+                <button class="confirm-btn" id="confirmBtn" style="background-color: var(--accent-green); color: #000; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;">Confirmar</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de confirmação de exclusão -->
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <h2>Confirmar Exclusão</h2>
             <p>Tem certeza que deseja excluir o dispositivo "<span id="deviceToDeleteName"></span>"?</p>
             <p style="color: var(--accent-red); font-size: 0.9rem;">Esta ação não pode ser desfeita.</p>
             <div class="modal-buttons">
-                <button class="cancel-btn" id="cancelDeleteBtn">Cancelar</button>
-                <button class="confirm-btn" id="confirmDeleteBtn" style="background-color: var(--accent-red);">Excluir</button>
+                <button class="cancel-btn" id="cancelDeleteBtn" style="background-color: var(--bg-secondary); border: 1px solid var(--border-dark); color: var(--text-primary); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Cancelar</button>
+                <button class="confirm-btn" id="confirmDeleteBtn" style="background-color: var(--accent-red); color: #fff; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;">Excluir</button>
             </div>
         </div>
     </div>
 
-
-    <!-- Modal do Chatbot de Watts -->
-<div id="wattsChatbotModal" class="modal">
-    <div class="modal-content" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 style="margin: 0;">Assistente de Consumo</h2>
-            <button onclick="closeWattsChatbot()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1;">×</button>
+    <div id="wattsChatbotModal" class="modal">
+        <div class="modal-content" style="max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; border: 1px solid var(--border-dark); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-dark);">
+                <h2 style="margin: 0; color: var(--accent-green); font-size: 1.5rem;">Assistente de Consumo</h2>
+                <button onclick="closeWattsChatbot()" style="background: var(--bg-secondary); border: 1px solid var(--border-dark); color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.75rem; line-height: 1; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.backgroundColor='var(--border-dark)'" onmouseout="this.style.backgroundColor='var(--bg-secondary)'">×</button>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5;">
+                Descubra o consumo em watts do seu dispositivo de forma fácil e rápida.
+            </p>
+            
+            <div id="chatMessages" style="flex: 1; overflow-y: auto; background: var(--bg-secondary); border: 1px solid var(--border-dark); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; max-height: 400px;">
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="chatInput" placeholder="Ex: é uma geladeira duplex..." style="flex: 1; padding: 0.875rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-dark); border-radius: 8px; color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent-green)'" onblur="this.style.borderColor='var(--border-dark)'">
+                <button onclick="sendChatMessage()" style="padding: 0.875rem 1.75rem; background: var(--accent-green); color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.95rem;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0, 255, 42, 0.3)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                    Enviar
+                </button>
+            </div>
+            
+            <div id="chatLoading" style="display: none; text-align: center; margin-top: 0.75rem; color: var(--text-secondary); font-size: 0.875rem;">
+                <i class="ph ph-circle-notch" style="animation: spin 1s linear infinite;"></i> Analisando...
+            </div>
+            
+            <style>
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                
+                #chatMessages::-webkit-scrollbar {
+                    width: 8px;
+                }
+                
+                #chatMessages::-webkit-scrollbar-track {
+                    background: var(--bg-primary);
+                    border-radius: 4px;
+                }
+                
+                #chatMessages::-webkit-scrollbar-thumb {
+                    background: var(--border-dark);
+                    border-radius: 4px;
+                }
+                
+                #chatMessages::-webkit-scrollbar-thumb:hover {
+                    background: var(--accent-green);
+                }
+                
+                .chat-message {
+                    margin-bottom: 1rem;
+                    padding: 0.875rem 1rem;
+                    border-radius: 12px;
+                    max-width: 85%;
+                    animation: slideIn 0.3s ease-out;
+                }
+                
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                .chat-message.user {
+                    background: var(--accent-green);
+                    color: #000;
+                    margin-left: auto;
+                    text-align: right;
+                    font-weight: 500;
+                }
+                
+                .chat-message.assistant {
+                    background: var(--bg-card);
+                    border: 1px solid var(--border-dark);
+                    color: var(--text-primary);
+                    line-height: 1.6;
+                }
+                
+                .chat-message.watts-result {
+                    background: rgba(0, 255, 42, 0.15);
+                    border: 2px solid var(--accent-green);
+                    color: var(--text-primary);
+                    font-weight: 600;
+                    text-align: center;
+                    max-width: 100%;
+                    padding: 1.25rem;
+                }
+                
+                .use-watts-btn {
+                    margin-top: 0.75rem;
+                    padding: 0.75rem 1.5rem;
+                    background: var(--accent-green);
+                    color: #000;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    width: 100%;
+                    transition: all 0.2s;
+                    font-size: 0.95rem;
+                }
+                
+                .use-watts-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0, 255, 42, 0.3);
+                }
+            </style>
         </div>
-        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
-            Olá! Vou te ajudar a descobrir quantos watts seu dispositivo consome. Me conte sobre ele!
-        </p>
-        
-        <div id="chatMessages" style="flex: 1; overflow-y: auto; background: var(--bg-secondary); border: 1px solid var(--border-dark); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; max-height: 400px;">
-            <!-- Mensagens do chat aparecerão aqui -->
-        </div>
-        
-        <div style="display: flex; gap: 0.5rem;">
-            <input type="text" id="chatInput" placeholder="Ex: é uma geladeira duplex..." style="flex: 1; padding: 0.75rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-dark); border-radius: 6px; color: var(--text-primary);">
-            <button onclick="sendChatMessage()" style="padding: 0.75rem 1.5rem; background: var(--accent-green); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
-                Enviar
-            </button>
-        </div>
-        
-        <div id="chatLoading" style="display: none; text-align: center; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
-            <i class="ph ph-circle-notch" style="animation: spin 1s linear infinite;"></i> Pensando...
-        </div>
-        
-        <style>
-            @keyframes spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-            
-            .chat-message {
-                margin-bottom: 1rem;
-                padding: 0.75rem;
-                border-radius: 8px;
-                max-width: 85%;
-            }
-            
-            .chat-message.user {
-                background: var(--accent-green);
-                color: #000;
-                margin-left: auto;
-                text-align: right;
-            }
-            
-            .chat-message.assistant {
-                background: var(--bg-card);
-                border: 1px solid var(--border-dark);
-                color: var(--text-primary);
-            }
-            
-            .chat-message.watts-result {
-                background: rgba(0, 255, 42, 0.1);
-                border: 2px solid var(--accent-green);
-                color: var(--text-primary);
-                font-weight: bold;
-                text-align: center;
-                max-width: 100%;
-            }
-            
-            .use-watts-btn {
-                margin-top: 0.5rem;
-                padding: 0.5rem 1rem;
-                background: var(--accent-green);
-                color: #000;
-                border: none;
-                border-radius: 6px;
-                font-weight: bold;
-                cursor: pointer;
-                width: 100%;
-            }
-        </style>
     </div>
-</div>
 
-
-
-
-    <!-- Modal para configurar preço da energia -->
     <div id="energyPriceModal" class="modal">
         <div class="modal-content">
-            <h2>⚡ Configurar Preço da Energia</h2>
+            <h2>Configurar Preço da Energia</h2>
             <p style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 15px;">
                 Insira o preço do kWh cobrado pela sua distribuidora.
             </p>
@@ -471,18 +480,17 @@
             <input type="number" id="energyPriceInput" placeholder="Ex: 0.85" step="0.01" min="0.01" 
                    style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid; font-size: 1rem; background-color: var(--bg-secondary); border-color: var(--border-dark); color: var(--text-primary);">
             <p style="font-size: 0.85rem; margin-top: 10px; color: var(--text-tertiary);">
-                💡 Os valores serão atualizados automaticamente.
+                Os valores serão atualizados automaticamente.
             </p>
             <div class="modal-buttons">
-                <button class="cancel-btn" id="cancelPriceBtn" onclick="closeEnergyPriceModal()">Cancelar</button>
-                <button class="confirm-btn" id="confirmPriceBtn" onclick="updateEnergyPrice()">Atualizar</button>
+                <button class="cancel-btn" id="cancelPriceBtn" onclick="closeEnergyPriceModal()" style="background-color: var(--bg-secondary); border: 1px solid var(--border-dark); color: var(--text-primary); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Cancelar</button>
+                <button class="confirm-btn" id="confirmPriceBtn" onclick="updateEnergyPrice()" style="background-color: var(--accent-green); color: #000; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;">Atualizar</button>
             </div>
         </div>
     </div>
 
     <script type="module" src="scriptdash.js"></script>
     <script>
-        // Mobile menu toggle
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const closeSidebarBtn = document.getElementById('closeSidebarBtn');
         const sidebar = document.getElementById('sidebar');

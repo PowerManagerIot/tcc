@@ -1,15 +1,12 @@
 import {auth, database} from "./auth.js"
 
-// ========== VARIÁVEIS GLOBAIS ==========
 let USER_ID = null;
 
-// Elementos da página principal
 const mainContent = document.getElementById('mainContent');
 const currentValue = document.getElementById('currentValue');
 const lastUpdate = document.getElementById('lastUpdate');
 const connectionStatus = document.getElementById('connectionStatus');
 
-// Elementos do modal de dispositivos
 const addDeviceBtn = document.getElementById('addDeviceBtn');
 const deviceModal = document.getElementById('deviceModal');
 const deviceName = document.getElementById('deviceName');
@@ -21,13 +18,11 @@ const devicesContainer = document.getElementById('devicesContainer');
 const smartDevicesLimit = document.getElementById('smartDevicesLimit');
 const limitWarning = document.getElementById('limitWarning');
 
-// Elementos do modal de exclusão
 const deleteModal = document.getElementById('deleteModal');
 const deviceToDeleteName = document.getElementById('deviceToDeleteName');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 
-// Elementos do modal de preço de energia
 const energyPriceBtn = document.getElementById('energyPriceBtn');
 const energyPriceModal = document.getElementById('energyPriceModal');
 const energyPriceInput = document.getElementById('energyPriceInput');
@@ -35,7 +30,6 @@ const currentPriceDisplay = document.getElementById('currentPriceDisplay');
 const confirmPriceBtn = document.getElementById('confirmPriceBtn');
 const cancelPriceBtn = document.getElementById('cancelPriceBtn');
 
-// Elementos das barras de monitoramento
 const powerBar = document.getElementById('powerBar');
 const percentage = document.getElementById('percentage');
 const currentPower = document.getElementById('currentPower');
@@ -46,14 +40,12 @@ const monthlyPercentage = document.getElementById('monthlyPercentage');
 const currentMonthly = document.getElementById('currentMonthly');
 const limitMonthly = document.getElementById('limitMonthly');
 
-// Variáveis de controle
 let regularDevices = {};
 let smartDevices = {};
 const MAX_SMART_DEVICES = 8;
 let deviceToDelete = null;
 let editingDevice = null;
 
-// Variáveis de monitoramento
 let alertLimit = 100;
 let monthlyLimit = 700;
 let currentPowerValue = 0;
@@ -61,19 +53,14 @@ let currentMonthlyValue = 0;
 let s1Power = 0;
 let s2Power = 0;
 
-// Preço da energia (padrão R$ 0,80/kWh)
 let energyPrice = 0.80;
-
 let chatHistory = [];
 
-// Locais
 let locations = [
     { name: 'São Paulo', cost: 20408, consumption: 25500, emission: 200, active: true },
     { name: 'Rio Claro', cost: 15450, consumption: 18000, emission: 230, active: false },
     { name: 'Campinas', cost: 18350, consumption: 22100, emission: 380, active: false }
 ];
-
-// ========== FUNÇÕES DE AUTENTICAÇÃO ==========
 
 function verificarAutenticacao() {
     return new Promise((resolve, reject) => {
@@ -119,7 +106,6 @@ function redirecionarParaLogin() {
 function logout() {
     console.log('Iniciando logout...');
     
-    // Salvar consumo antes de sair
     updateAllConsumptions().then(() => {
         auth.signOut().then(() => {
             console.log('Firebase signOut bem-sucedido');
@@ -138,8 +124,6 @@ function logout() {
     });
 }
 
-// ========== FUNÇÕES DE PREÇO DE ENERGIA ==========
-
 async function loadEnergyPrice() {
     try {
         const snapshot = await database.ref(`users/${USER_ID}/settings/energyPrice`).once('value');
@@ -147,19 +131,16 @@ async function loadEnergyPrice() {
         
         if (savedPrice !== null) {
             energyPrice = parseFloat(savedPrice);
-            console.log('✅ Preço carregado do Firebase:', energyPrice);
+            console.log('Preço carregado do Firebase:', energyPrice);
         } else {
-            // Fallback para localStorage
             const localPrice = localStorage.getItem('energyPrice');
             if (localPrice) {
                 energyPrice = parseFloat(localPrice);
-                // Migrar para Firebase
                 await database.ref(`users/${USER_ID}/settings/energyPrice`).set(energyPrice);
             }
         }
     } catch (error) {
-        console.error('❌ Erro ao carregar preço do Firebase:', error);
-        // Fallback para localStorage
+        console.error('Erro ao carregar preço do Firebase:', error);
         const localPrice = localStorage.getItem('energyPrice');
         if (localPrice) {
             energyPrice = parseFloat(localPrice);
@@ -175,16 +156,14 @@ function monitorEnergyPriceChanges() {
     database.ref(`users/${USER_ID}/settings/energyPrice`).on('value', (snapshot) => {
         const newPrice = snapshot.val();
         if (newPrice !== null && newPrice !== energyPrice) {
-            console.log('🔄 Preço da energia atualizado em tempo real:', newPrice);
+            console.log('Preço da energia atualizado em tempo real:', newPrice);
             energyPrice = parseFloat(newPrice);
             
-            // Recalcular e atualizar interface
             recalculateAllConsumptions().then(() => {
                 renderDevices();
                 renderDynamicDeviceCards();
                 updateCurrentPriceDisplay();
                 
-                // Atualizar os cards grandes também
                 const statsRef = database.ref(`users/${USER_ID}/esp32/estatisticas`);
                 statsRef.once('value', (snapshot) => {
                     const statsData = snapshot.val();
@@ -200,12 +179,11 @@ function monitorEnergyPriceChanges() {
 }
 
 async function recalculateAllConsumptions() {
-    console.log('🔄 Recalculando consumos com novo preço...');
+    console.log('Recalculando consumos com novo preço...');
     
     const allUpdates = [];
     const now = new Date().toISOString();
     
-    // Recalcular dispositivos regulares
     for (const key of Object.keys(regularDevices)) {
         const device = regularDevices[key];
         if (device.consumption) {
@@ -223,7 +201,6 @@ async function recalculateAllConsumptions() {
         }
     }
     
-    // Recalcular dispositivos inteligentes
     for (const key of Object.keys(smartDevices)) {
         const device = smartDevices[key];
         if (device.consumption) {
@@ -242,7 +219,7 @@ async function recalculateAllConsumptions() {
     }
     
     await Promise.all(allUpdates);
-    console.log('✅ Todos os consumos recalculados com novo preço!');
+    console.log('Todos os consumos recalculados com novo preço!');
 }
 
 function openEnergyPriceModal() {
@@ -260,7 +237,6 @@ function updateCurrentPriceDisplay() {
         currentPriceDisplay.textContent = `Preço atual: R$ ${energyPrice.toFixed(2).replace('.', ',')}/kWh`;
     }
     
-    // Também atualizar o placeholder do input
     if (energyPriceInput) {
         energyPriceInput.placeholder = `Ex: ${energyPrice.toFixed(2)}`;
     }
@@ -276,17 +252,14 @@ async function updateEnergyPrice() {
     
     energyPrice = newPrice;
     
-    // Salvar no Firebase em vez do localStorage
     try {
         await database.ref(`users/${USER_ID}/settings/energyPrice`).set(energyPrice);
-        console.log('✅ Preço da energia salvo no Firebase:', energyPrice);
+        console.log('Preço da energia salvo no Firebase:', energyPrice);
     } catch (error) {
-        console.error('❌ Erro ao salvar preço no Firebase:', error);
-        // Fallback para localStorage
+        console.error('Erro ao salvar preço no Firebase:', error);
         localStorage.setItem('energyPrice', energyPrice.toString());
     }
     
-    // Recalcular todos os consumos com o novo preço
     await recalculateAllConsumptions();
     
     renderDevices();
@@ -303,8 +276,6 @@ async function updateEnergyPrice() {
         }, 3000);
     }
 }
-
-// ========== FUNÇÕES DE MONITORAMENTO DE CONSUMO ==========
 
 function formatDateTime(date) {
     return date.toLocaleTimeString() + ' - ' + date.toLocaleDateString();
@@ -353,7 +324,6 @@ function updateMonthlyBar(current, limit) {
         }
     }
     
-    // Atualizar distribuição de consumo
     updateConsumptionDistribution(current);
 }
 
@@ -487,7 +457,6 @@ function monitorMonthlyConsumption() {
 }
 
 function updateConsumptionDistribution(totalMonthlyConsumption) {
-    // Calcular soma do consumo de todos os dispositivos cadastrados
     let devicesConsumption = 0;
     
     Object.keys(regularDevices).forEach(key => {
@@ -504,10 +473,8 @@ function updateConsumptionDistribution(totalMonthlyConsumption) {
         devicesConsumption += energy.kWh;
     });
     
-    // Calcular "outros" (consumo não contabilizado pelos dispositivos)
     const othersConsumption = Math.max(0, totalMonthlyConsumption - devicesConsumption);
     
-    // Calcular porcentagens
     const devicesPercent = totalMonthlyConsumption > 0 
         ? (devicesConsumption / totalMonthlyConsumption) * 100 
         : 0;
@@ -515,7 +482,6 @@ function updateConsumptionDistribution(totalMonthlyConsumption) {
         ? (othersConsumption / totalMonthlyConsumption) * 100 
         : 0;
     
-    // Atualizar a interface
     const distributionContainer = document.getElementById('consumptionDistribution');
     if (distributionContainer) {
         distributionContainer.innerHTML = `
@@ -539,24 +505,19 @@ function updateConsumptionDistribution(totalMonthlyConsumption) {
     }
 }
 
-// ========== FUNÇÕES PARA CALCULAR TEMPO LIGADO E ENERGIA CONSUMIDA ==========
-
 function calculateDeviceUptime(device, isSmart) {
     const now = new Date();
     let newUptimeMs = 0;
     
     if (!isSmart) {
-        // Dispositivo não controlável - calcular tempo desde última atualização
         const lastCalc = device.consumption?.lastCalculated 
             ? new Date(device.consumption.lastCalculated) 
             : new Date(device.createdAt || device.createdDate);
         newUptimeMs = now - lastCalc;
     } else {
-        // Dispositivo inteligente - calcular apenas o tempo desde última atualização
         newUptimeMs = calculateSmartDeviceUptimeSinceLastUpdate(device);
     }
     
-    // Somar com o tempo total já acumulado
     const previousTotalMs = device.consumption?.totalUptimeMs || 0;
     const totalMs = previousTotalMs + newUptimeMs;
     
@@ -565,7 +526,7 @@ function calculateDeviceUptime(device, isSmart) {
         hours: Math.floor(totalMs / (1000 * 60 * 60)),
         minutes: Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60)),
         days: Math.floor(totalMs / (1000 * 60 * 60 * 24)),
-        newUptimeMs: newUptimeMs // tempo desde última atualização
+        newUptimeMs: newUptimeMs
     };
 }
 
@@ -575,20 +536,16 @@ function calculateSmartDeviceUptimeSinceLastUpdate(device) {
         ? new Date(device.consumption.lastCalculated) 
         : new Date(device.createdAt || device.createdDate);
     
-    // Se está ligado atualmente, calcular tempo desde última atualização
     if (device.state === true) {
         const lastStateChange = new Date(device.lastStateChange);
         
-        // Se foi ligado depois da última atualização
         if (lastStateChange > lastCalc) {
             return now - lastStateChange;
         } else {
-            // Estava ligado antes, calcular desde última atualização
             return now - lastCalc;
         }
     }
     
-    // Se está desligado, verificar se houve algum período ligado desde última atualização
     if (device.stateHistory) {
         let uptimeInPeriod = 0;
         const historyEntries = Object.values(device.stateHistory)
@@ -597,7 +554,6 @@ function calculateSmartDeviceUptimeSinceLastUpdate(device) {
         
         let lastOnTime = null;
         
-        // Se estava ligado na última atualização, começar de lá
         if (device.consumption?.wasOnAtLastCalc) {
             lastOnTime = lastCalc;
         }
@@ -622,12 +578,10 @@ function calculateSmartDeviceUptimeSinceLastUpdate(device) {
 function calculateEnergyConsumption(device, uptime) {
     const watts = device.number || 0;
     
-    // Calcular apenas a energia do novo período (desde última atualização)
     const newHours = uptime.newUptimeMs / (1000 * 60 * 60);
     const newKwh = (watts * newHours) / 1000;
-    const newCost = newKwh * energyPrice; // Usa o preço atual
+    const newCost = newKwh * energyPrice;
     
-    // Somar com consumo anterior salvo
     const previousKwh = device.consumption?.totalKwh || 0;
     const previousCost = device.consumption?.totalCost || 0;
     
@@ -645,8 +599,6 @@ function calculateEnergyConsumption(device, uptime) {
         newCost: newCost
     };
 }
-
-// ========== FUNÇÃO PARA SALVAR CONSUMO NO FIREBASE ==========
 
 async function saveConsumptionToFirebase(deviceKey, device, isSmart) {
     if (!USER_ID) return;
@@ -670,31 +622,27 @@ async function saveConsumptionToFirebase(deviceKey, device, isSmart) {
     
     try {
         await database.ref(`users/${USER_ID}/devices/${deviceKey}/consumption`).set(consumptionData);
-        console.log(`✅ Consumo salvo para ${device.name}:`, consumptionData);
+        console.log(`Consumo salvo para ${device.name}:`, consumptionData);
     } catch (error) {
-        console.error(`❌ Erro ao salvar consumo do dispositivo ${device.name}:`, error);
+        console.error(`Erro ao salvar consumo do dispositivo ${device.name}:`, error);
     }
 }
 
-// ========== FUNÇÃO PARA ATUALIZAR TODOS OS CONSUMOS ==========
-
 async function updateAllConsumptions() {
-    console.log('🔄 Atualizando consumos de todos os dispositivos...');
+    console.log('Atualizando consumos de todos os dispositivos...');
     
     const allUpdates = [];
     
-    // Atualizar dispositivos regulares
     for (const key of Object.keys(regularDevices)) {
         allUpdates.push(saveConsumptionToFirebase(key, regularDevices[key], false));
     }
     
-    // Atualizar dispositivos inteligentes
     for (const key of Object.keys(smartDevices)) {
         allUpdates.push(saveConsumptionToFirebase(key, smartDevices[key], true));
     }
     
     await Promise.all(allUpdates);
-    console.log('✅ Todos os consumos atualizados!');
+    console.log('Todos os consumos atualizados!');
 }
 
 function formatUptime(uptime) {
@@ -715,8 +663,6 @@ function formatEnergy(energy) {
         hours: energy.hours.toFixed(1)
     };
 }
-
-// ========== FUNÇÕES DE DISPOSITIVOS - CARDS DINÂMICOS ==========
 
 function getColorByPercentage(percentage) {
     if (percentage >= 15) return 'var(--accent-red)';
@@ -762,7 +708,6 @@ function renderDynamicDeviceCards() {
         const energy = calculateEnergyConsumption(device, uptime);
         const formattedEnergy = formatEnergy(energy);
         
-        // Calcular porcentagem baseada no CONSUMO MENSAL TOTAL (kWh)
         const percentage = currentMonthlyValue > 0 ? (energy.kWh / currentMonthlyValue) * 100 : 0;
         const color = getColorByPercentage(percentage);
         
@@ -806,7 +751,6 @@ function renderDynamicDeviceCards() {
         dashboardGrid.appendChild(deviceCard);
     });
     
-    // Atualizar distribuição de consumo após renderizar os cards
     updateConsumptionDistribution(currentMonthlyValue);
 }
 
@@ -837,7 +781,6 @@ function loadDevicesFromFirebase() {
     devicesRef.on('value', (snapshot) => {
         const allDevices = snapshot.val() || {};
         
-        // Separar dispositivos baseado no hasButton
         regularDevices = {};
         smartDevices = {};
         
@@ -853,8 +796,6 @@ function loadDevicesFromFirebase() {
         renderDevices();
         renderDynamicDeviceCards();
         updateSmartDevicesCounter();
-        
-        // NOVO: Atualizar contagem de dispositivos ativos
         updateActiveDevicesCount();
     });
 }
@@ -862,7 +803,6 @@ function loadDevicesFromFirebase() {
 function toggleDeviceState(deviceKey) {
     if (!USER_ID) return;
     
-    // Salvar consumo ANTES de mudar o estado
     saveConsumptionToFirebase(deviceKey, smartDevices[deviceKey], true);
     
     const newState = !smartDevices[deviceKey].state;
@@ -918,7 +858,6 @@ function deleteDevice() {
         ? smartDevices[deviceKey]
         : regularDevices[deviceKey];
     
-    // Salvar consumo final antes de excluir
     saveConsumptionToFirebase(deviceKey, device, deviceToDelete.isSmart).then(() => {
         const path = `users/${USER_ID}/devices/${deviceKey}`;
 
@@ -1027,16 +966,16 @@ function renderDevices() {
                 <div class="device-value">${device.number} W</div>
                 <div class="device-state">Dispositivo não controlável</div>
                 <div class="uptime-info" style="font-size: 0.75rem; color: var(--accent-green); margin-top: 4px;">
-                    ⏱️ Tempo ligado: ${uptimeText}
+                    Tempo ligado: ${uptimeText}
                 </div>
                 <div class="energy-info" style="font-size: 0.75rem; color: var(--accent-yellow); margin-top: 2px;">
-                    ⚡ Consumo: ${formattedEnergy.kWh} kWh (R$ ${formattedEnergy.cost})
+                    Consumo: ${formattedEnergy.kWh} kWh (R$ ${formattedEnergy.cost})
                 </div>
                 ${createdInfo}
             </div>
             <div class="device-controls">
-                <button class="edit-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 8px; color: white;">✏️ Editar</button>
-                <button class="delete-btn">🗑️ Excluir</button>
+                <button class="edit-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 8px; color: white;">Editar</button>
+                <button class="delete-btn">Excluir</button>
             </div>
         `;
         
@@ -1079,10 +1018,10 @@ function renderDevices() {
                 <div class="device-value">${device.number} W</div>
                 <div class="device-state">Estado: ${device.state ? 'Ligado' : 'Desligado'}</div>
                 <div class="uptime-info" style="font-size: 0.75rem; color: var(--accent-green); margin-top: 4px;">
-                    ⏱️ Tempo total ligado: ${uptimeText}
+                    Tempo total ligado: ${uptimeText}
                 </div>
                 <div class="energy-info" style="font-size: 0.75rem; color: var(--accent-yellow); margin-top: 2px;">
-                    ⚡ Consumo: ${formattedEnergy.kWh} kWh (R$ ${formattedEnergy.cost})
+                    Consumo: ${formattedEnergy.kWh} kWh (R$ ${formattedEnergy.cost})
                 </div>
                 ${lastChangeInfo}
                 ${createdInfo}
@@ -1091,8 +1030,8 @@ function renderDevices() {
                 <button class="device-btn" data-state="${device.state ? 'on' : 'off'}">
                     ${device.state ? 'Ligado' : 'Desligado'}
                 </button>
-                <button class="edit-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 8px; color: white;">✏️ Editar</button>
-                <button class="delete-btn">🗑️ Excluir</button>
+                <button class="edit-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 8px; color: white;">Editar</button>
+                <button class="delete-btn">Excluir</button>
             </div>
         `;
         
@@ -1111,7 +1050,6 @@ function renderDevices() {
         devicesContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Nenhum dispositivo cadastrado. Clique em "Adicionar Dispositivo" para começar.</p>';
     }
     
-    // Atualizar distribuição de consumo após renderizar dispositivos
     updateConsumptionDistribution(currentMonthlyValue);
 }
 
@@ -1120,13 +1058,10 @@ function getNextDeviceId(devices) {
     return ids.length === 0 ? 0 : Math.max(...ids) + 1;
 }
 
-// ========== FUNÇÕES PARA OS CAMPOS DE ESTATÍSTICAS ==========
-
 async function loadStatisticsData() {
     if (!USER_ID) return;
     
     try {
-        // Referência para as estatísticas no Firebase
         const statsRef = database.ref(`users/${USER_ID}/esp32/estatisticas`);
         
         statsRef.on('value', (snapshot) => {
@@ -1143,7 +1078,6 @@ async function loadStatisticsData() {
             setDefaultStatistics();
         });
         
-        // Monitoramento adicional para atualização em tempo real dos cards grandes
         monitorBigCardsRealtime();
         
     } catch (error) {
@@ -1155,7 +1089,6 @@ async function loadStatisticsData() {
 function monitorBigCardsRealtime() {
     if (!USER_ID) return;
     
-    // Monitorar mudanças nas estatísticas mensais
     const monthlyRef = database.ref(`users/${USER_ID}/esp32/estatisticas/mensal`);
     monthlyRef.on('value', (snapshot) => {
         const monthlyData = snapshot.val();
@@ -1164,7 +1097,6 @@ function monitorBigCardsRealtime() {
         }
     });
     
-    // Monitorar mudanças nas estatísticas diárias
     const dailyRef = database.ref(`users/${USER_ID}/esp32/estatisticas/diario`);
     dailyRef.on('value', (snapshot) => {
         const dailyData = snapshot.val();
@@ -1176,26 +1108,14 @@ function monitorBigCardsRealtime() {
 }
 
 function updateStatisticsCards(statsData) {
-    // Cards grandes do Dashboard Grid
     updateMonthlyCard(statsData);
     updateWeeklyCard(statsData);
     updateDailyCard(statsData);
-    
-    // Cards pequenos do Stats Grid
-    // 1. Média de custo mensal
     updateMonthlyCostAverage(statsData);
-    
-    // 2. Média de custo diário
     updateDailyCostAverage(statsData);
-    
-    // 3. Potência atual
     updateCurrentPower();
-    
-    // 4. Dispositivos ativos
     updateActiveDevicesCount();
 }
-
-// ========== FUNÇÕES PARA ATUALIZAR OS CARDS GRANDES ==========
 
 function updateMonthlyCard(statsData) {
     const monthlyCardElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6 .text-center');
@@ -1211,11 +1131,9 @@ function updateMonthlyCard(statsData) {
                 const monthlyConsumption = statsData.mensal[monthKey] || 0;
                 const monthlyCost = monthlyConsumption * energyPrice;
                 
-                // Calcular porcentagem (assumindo 700 kWh como limite)
                 const monthlyLimitKwh = monthlyLimit || 700;
                 const percentage = monthlyLimitKwh > 0 ? (monthlyConsumption / monthlyLimitKwh) * 100 : 0;
                 
-                // Determinar cor baseada na porcentagem
                 let color = 'var(--accent-green)';
                 if (percentage >= 80) {
                     color = 'var(--accent-red)';
@@ -1223,11 +1141,10 @@ function updateMonthlyCard(statsData) {
                     color = 'var(--accent-yellow)';
                 }
                 
-                // Atualizar o SVG do círculo
                 const circles = cardElement.querySelectorAll('circle');
                 if (circles.length >= 2) {
-                    const circumference = 2 * Math.PI * 48; // mobile
-                    const circumferenceMd = 2 * Math.PI * 56; // desktop
+                    const circumference = 2 * Math.PI * 48;
+                    const circumferenceMd = 2 * Math.PI * 56;
                     const offset = circumference - (Math.min(percentage, 100) / 100 * circumference);
                     const offsetMd = circumferenceMd - (Math.min(percentage, 100) / 100 * circumferenceMd);
                     
@@ -1240,7 +1157,6 @@ function updateMonthlyCard(statsData) {
                     }
                 }
                 
-                // Atualizar valores de texto
                 const costElement = cardElement.querySelector('.text-xl.md\\:text-2xl.font-bold');
                 const consumptionElement = cardElement.querySelector('.text-xs.md\\:text-sm');
                 
@@ -1253,7 +1169,7 @@ function updateMonthlyCard(statsData) {
                     consumptionElement.textContent = `${monthlyConsumption.toFixed(0)} kWh`;
                 }
                 
-                console.log('✅ Card mensal atualizado:', { monthlyConsumption, monthlyCost, percentage });
+                console.log('Card mensal atualizado:', { monthlyConsumption, monthlyCost, percentage });
             }
         } catch (error) {
             console.error('Erro ao atualizar card mensal:', error);
@@ -1272,7 +1188,6 @@ function updateWeeklyCard(statsData) {
                 const now = new Date();
                 let weeklyConsumption = 0;
                 
-                // Somar consumo dos últimos 7 dias
                 for (let i = 0; i < 7; i++) {
                     const date = new Date(now);
                     date.setDate(date.getDate() - i);
@@ -1283,11 +1198,9 @@ function updateWeeklyCard(statsData) {
                 
                 const weeklyCost = weeklyConsumption * energyPrice;
                 
-                // Calcular porcentagem (assumindo 100 kWh como limite semanal)
                 const weeklyLimitKwh = 100;
                 const percentage = weeklyLimitKwh > 0 ? (weeklyConsumption / weeklyLimitKwh) * 100 : 0;
                 
-                // Determinar cor
                 let color = 'var(--accent-green)';
                 if (percentage >= 80) {
                     color = 'var(--accent-red)';
@@ -1295,7 +1208,6 @@ function updateWeeklyCard(statsData) {
                     color = 'var(--accent-yellow)';
                 }
                 
-                // Atualizar o SVG
                 const circles = cardElement.querySelectorAll('circle');
                 if (circles.length >= 2) {
                     const circumference = 2 * Math.PI * 48;
@@ -1312,7 +1224,6 @@ function updateWeeklyCard(statsData) {
                     }
                 }
                 
-                // Atualizar texto
                 const costElement = cardElement.querySelector('.text-xl.md\\:text-2xl.font-bold');
                 const consumptionElement = cardElement.querySelector('.text-xs.md\\:text-sm');
                 
@@ -1325,7 +1236,7 @@ function updateWeeklyCard(statsData) {
                     consumptionElement.textContent = `${weeklyConsumption.toFixed(1)} kWh`;
                 }
                 
-                console.log('✅ Card semanal atualizado:', { weeklyConsumption, weeklyCost, percentage });
+                console.log('Card semanal atualizado:', { weeklyConsumption, weeklyCost, percentage });
             }
         } catch (error) {
             console.error('Erro ao atualizar card semanal:', error);
@@ -1347,11 +1258,9 @@ function updateDailyCard(statsData) {
                 const dailyConsumption = statsData.diario[dateKey] || 0;
                 const dailyCost = dailyConsumption * energyPrice;
                 
-                // Calcular porcentagem (assumindo 20 kWh como limite diário)
                 const dailyLimitKwh = 20;
                 const percentage = dailyLimitKwh > 0 ? (dailyConsumption / dailyLimitKwh) * 100 : 0;
                 
-                // Determinar cor
                 let color = 'var(--accent-green)';
                 if (percentage >= 80) {
                     color = 'var(--accent-red)';
@@ -1359,7 +1268,6 @@ function updateDailyCard(statsData) {
                     color = 'var(--accent-yellow)';
                 }
                 
-                // Atualizar o SVG
                 const circles = cardElement.querySelectorAll('circle');
                 if (circles.length >= 2) {
                     const circumference = 2 * Math.PI * 48;
@@ -1376,7 +1284,6 @@ function updateDailyCard(statsData) {
                     }
                 }
                 
-                // Atualizar texto
                 const costElement = cardElement.querySelector('.text-xl.md\\:text-2xl.font-bold');
                 const consumptionElement = cardElement.querySelector('.text-xs.md\\:text-sm');
                 
@@ -1389,7 +1296,7 @@ function updateDailyCard(statsData) {
                     consumptionElement.textContent = `${dailyConsumption.toFixed(1)} kWh`;
                 }
                 
-                console.log('✅ Card diário atualizado:', { dailyConsumption, dailyCost, percentage });
+                console.log('Card diário atualizado:', { dailyConsumption, dailyCost, percentage });
             }
         } catch (error) {
             console.error('Erro ao atualizar card diário:', error);
@@ -1402,12 +1309,10 @@ function updateMonthlyCostAverage(statsData) {
     
     if (monthlyCostElement && statsData.mensal) {
         try {
-            // Calcular média dos últimos meses ou usar o mês atual
             const monthlyData = statsData.mensal;
             const months = Object.keys(monthlyData);
             
             if (months.length > 0) {
-                // Calcular média dos últimos 3 meses ou todos disponíveis
                 const recentMonths = months.slice(-3);
                 let totalConsumption = 0;
                 let monthCount = 0;
@@ -1422,9 +1327,8 @@ function updateMonthlyCostAverage(statsData) {
                 const averageMonthlyCost = monthCount > 0 ? totalConsumption / monthCount : 0;
                 monthlyCostElement.textContent = `R$ ${averageMonthlyCost.toFixed(2)}`;
                 
-                console.log('✅ Média mensal calculada:', averageMonthlyCost);
+                console.log('Média mensal calculada:', averageMonthlyCost);
             } else {
-                // Usar valor padrão se não há dados históricos
                 monthlyCostElement.textContent = 'R$ 387,66';
             }
         } catch (error) {
@@ -1438,14 +1342,13 @@ function updateDailyCostAverage(statsData) {
     const dailyCostElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
     
     if (dailyCostElements.length >= 2) {
-        const dailyCostElement = dailyCostElements[1]; // Segundo elemento é o custo diário
+        const dailyCostElement = dailyCostElements[1];
         
         try {
             if (statsData.diario) {
                 const dailyData = statsData.diario;
-                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                const today = new Date().toISOString().split('T')[0];
                 
-                // Tentar encontrar dados de hoje
                 let todayConsumption = 0;
                 Object.keys(dailyData).forEach(dateKey => {
                     if (dateKey.includes(today)) {
@@ -1458,7 +1361,6 @@ function updateDailyCostAverage(statsData) {
                 if (dailyCost > 0) {
                     dailyCostElement.textContent = `R$ ${dailyCost.toFixed(2)}`;
                 } else {
-                    // Calcular média dos últimos 7 dias se não há dado de hoje
                     calculateWeeklyAverage(dailyData, dailyCostElement);
                 }
             } else {
@@ -1475,7 +1377,6 @@ function calculateWeeklyAverage(dailyData, dailyCostElement) {
     const dailyEntries = Object.entries(dailyData);
     
     if (dailyEntries.length > 0) {
-        // Pegar os últimos 7 dias
         const recentDays = dailyEntries.slice(-7);
         let totalCost = 0;
         let dayCount = 0;
@@ -1497,15 +1398,14 @@ function updateCurrentPower() {
     const currentPowerElement = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
     
     if (currentPowerElement.length >= 3) {
-        const powerElement = currentPowerElement[2]; // Terceiro elemento é a potência
+        const powerElement = currentPowerElement[2];
         
-        // Usar a potência atual que já está sendo monitorada
         const currentPower = s1Power + s2Power;
-        const powerInKW = currentPower / 1000; // Converter para kW
+        const powerInKW = currentPower / 1000;
         
         powerElement.textContent = `${powerInKW.toFixed(2)} kW`;
         
-        console.log('✅ Potência atual atualizada:', powerInKW);
+        console.log('Potência atual atualizada:', powerInKW);
     }
 }
 
@@ -1513,13 +1413,11 @@ function updateActiveDevicesCount() {
     const activeDevicesElement = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
     
     if (activeDevicesElement.length >= 4) {
-        const devicesElement = activeDevicesElement[3]; // Quarto elemento é dispositivos ativos
+        const devicesElement = activeDevicesElement[3];
         
         try {
-            // Contar dispositivos que estão ligados (smart devices) + todos os regulares (considerados sempre ativos)
-            let activeCount = Object.keys(regularDevices).length; // Dispositivos regulares são sempre "ativos"
+            let activeCount = Object.keys(regularDevices).length;
             
-            // Adicionar dispositivos inteligentes que estão ligados
             Object.keys(smartDevices).forEach(key => {
                 if (smartDevices[key].state === true) {
                     activeCount++;
@@ -1528,7 +1426,7 @@ function updateActiveDevicesCount() {
             
             devicesElement.textContent = activeCount.toString();
             
-            console.log('✅ Contagem de dispositivos atualizada:', activeCount);
+            console.log('Contagem de dispositivos atualizada:', activeCount);
         } catch (error) {
             console.error('Erro ao contar dispositivos ativos:', error);
             devicesElement.textContent = '12';
@@ -1537,25 +1435,21 @@ function updateActiveDevicesCount() {
 }
 
 function setDefaultStatistics() {
-    // Cards grandes do Dashboard Grid
     const bigCardElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6 .text-center');
     
     if (bigCardElements.length >= 3) {
-        // Card Mensal
         const monthlyCard = bigCardElements[0];
         const monthlyCost = monthlyCard.querySelector('.text-xl.md\\:text-2xl.font-bold');
         const monthlyConsumption = monthlyCard.querySelector('.text-xs.md\\:text-sm');
         if (monthlyCost) monthlyCost.textContent = 'R$ 463,50';
         if (monthlyConsumption) monthlyConsumption.textContent = '342 kWh';
         
-        // Card Semanal
         const weeklyCard = bigCardElements[1];
         const weeklyCost = weeklyCard.querySelector('.text-xl.md\\:text-2xl.font-bold');
         const weeklyConsumption = weeklyCard.querySelector('.text-xs.md\\:text-sm');
         if (weeklyCost) weeklyCost.textContent = 'R$ 15,45';
         if (weeklyConsumption) weeklyConsumption.textContent = '11.4 kWh';
         
-        // Card Diário
         const dailyCard = bigCardElements[2];
         const dailyCost = dailyCard.querySelector('.text-xl.md\\:text-2xl.font-bold');
         const dailyConsumption = dailyCard.querySelector('.text-xs.md\\:text-sm');
@@ -1563,27 +1457,21 @@ function setDefaultStatistics() {
         if (dailyConsumption) dailyConsumption.textContent = '11.4 kWh';
     }
     
-    // Cards pequenos do Stats Grid
     const statElements = document.querySelectorAll('.border.rounded-xl.p-4.md\\:p-6.text-center .text-2xl.md\\:text-3xl.font-bold.mb-2');
     
     if (statElements.length >= 4) {
-        // Valores padrão da imagem
-        statElements[0].textContent = 'R$ 387,66'; // Média mensal
-        statElements[1].textContent = 'R$ 14,89';  // Média diária
-        statElements[2].textContent = '0.47 kW';   // Potência atual
-        statElements[3].textContent = '12';        // Dispositivos ativos
+        statElements[0].textContent = 'R$ 387,66';
+        statElements[1].textContent = 'R$ 14,89';
+        statElements[2].textContent = '0.47 kW';
+        statElements[3].textContent = '12';
     }
 }
 
-// ========== ATUALIZAÇÃO EM TEMPO REAL ==========
-
 function startStatisticsMonitor() {
-    // Atualizar estatísticas a cada 30 segundos
     setInterval(() => {
         updateCurrentPower();
         updateActiveDevicesCount();
         
-        // Recarregar dados das estatísticas para atualizar os cards grandes
         if (USER_ID) {
             const statsRef = database.ref(`users/${USER_ID}/esp32/estatisticas`);
             statsRef.once('value', (snapshot) => {
@@ -1598,12 +1486,28 @@ function startStatisticsMonitor() {
     }, 30000);
 }
 
-// ========== EVENT LISTENERS - DISPOSITIVOS ==========
-
 confirmDeleteBtn.addEventListener('click', deleteDevice);
 cancelDeleteBtn.addEventListener('click', () => {
     deleteModal.style.display = 'none';
     deviceToDelete = null;
+});
+
+confirmDeleteBtn.addEventListener('mouseenter', () => {
+    confirmDeleteBtn.style.transform = 'translateY(-2px)';
+    confirmDeleteBtn.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+});
+
+confirmDeleteBtn.addEventListener('mouseleave', () => {
+    confirmDeleteBtn.style.transform = '';
+    confirmDeleteBtn.style.boxShadow = '';
+});
+
+cancelDeleteBtn.addEventListener('mouseenter', () => {
+    cancelDeleteBtn.style.backgroundColor = 'var(--border-dark)';
+});
+
+cancelDeleteBtn.addEventListener('mouseleave', () => {
+    cancelDeleteBtn.style.backgroundColor = 'var(--bg-secondary)';
 });
 
 addDeviceBtn.addEventListener('click', () => {
@@ -1618,6 +1522,24 @@ cancelBtn.addEventListener('click', () => {
     closeDeviceModal();
 });
 
+confirmBtn.addEventListener('mouseenter', () => {
+    confirmBtn.style.transform = 'translateY(-2px)';
+    confirmBtn.style.boxShadow = '0 4px 12px rgba(0, 255, 42, 0.3)';
+});
+
+confirmBtn.addEventListener('mouseleave', () => {
+    confirmBtn.style.transform = '';
+    confirmBtn.style.boxShadow = '';
+});
+
+cancelBtn.addEventListener('mouseenter', () => {
+    cancelBtn.style.backgroundColor = 'var(--border-dark)';
+});
+
+cancelBtn.addEventListener('mouseleave', () => {
+    cancelBtn.style.backgroundColor = 'var(--bg-secondary)';
+});
+
 hasButton.addEventListener('change', () => {
     const smartDeviceCount = Object.keys(smartDevices).length;
     
@@ -1625,7 +1547,7 @@ hasButton.addEventListener('change', () => {
         limitWarning.style.display = 'block';
         setTimeout(() => {
             hasButton.value = 'no';
-            limitWarning.innerHTML = `⚠️ <strong>LIMITE ATINGIDO!</strong><br>Você já possui ${smartDeviceCount}/${MAX_SMART_DEVICES} dispositivos inteligentes.<br>Selecione "Não Inteligente" para continuar.`;
+            limitWarning.innerHTML = `<strong>LIMITE ATINGIDO!</strong><br>Você já possui ${smartDeviceCount}/${MAX_SMART_DEVICES} dispositivos inteligentes.<br>Selecione "Não Inteligente" para continuar.`;
         }, 100);
     } else {
         limitWarning.style.display = 'none';
@@ -1663,7 +1585,6 @@ confirmBtn.addEventListener('click', () => {
         timeStyle: 'medium'
     });
     
-    // Se está editando
     if (editingDevice) {
         console.log('Modo edição ativado');
         const deviceRef = database.ref(`users/${USER_ID}/devices/${editingDevice.key}`);
@@ -1671,7 +1592,6 @@ confirmBtn.addEventListener('click', () => {
         deviceRef.once('value', (snapshot) => {
             const currentData = snapshot.val();
             
-            // Salvar consumo antes de editar (especialmente se mudou os watts)
             if (currentData.number !== number) {
                 saveConsumptionToFirebase(editingDevice.key, currentData, editingDevice.isSmart);
             }
@@ -1686,7 +1606,6 @@ confirmBtn.addEventListener('click', () => {
                 lastModifiedDate: formattedDate
             };
             
-            // Se mudou os watts, resetar o consumo para começar do zero com novo valor
             if (currentData.number !== number) {
                 updatedDevice.consumption = {
                     totalKwh: 0,
@@ -1738,7 +1657,6 @@ confirmBtn.addEventListener('click', () => {
         return;
     }
     
-    // Se está adicionando novo dispositivo
     console.log('Modo adição ativado');
     const smartDeviceCount = Object.keys(smartDevices).length;
     
@@ -1808,8 +1726,6 @@ confirmBtn.addEventListener('click', () => {
         });
 });
 
-// ========== FUNÇÕES DE LOCAIS ==========
-
 function renderLocations() {
     const container = document.getElementById('locationsContainer');
     if (!container) return;
@@ -1854,8 +1770,6 @@ function closeLocationModal() {
     document.getElementById('locationEmission').value = '';
 }
 
-// ========== FUNÇÕES DO CHATBOT DE WATTS ==========
-
 function openWattsChatbot() {
     const modal = document.getElementById('wattsChatbotModal');
     const chatMessages = document.getElementById('chatMessages');
@@ -1864,7 +1778,7 @@ function openWattsChatbot() {
         chatHistory = [];
         chatMessages.innerHTML = '';
         
-        addChatMessage('assistant', 'Olá! Vou te ajudar a descobrir quantos watts seu dispositivo consome.\n\nPor favor, me conte:\n• Que tipo de dispositivo é? (ex: geladeira, TV, micro-ondas)\n• Qual a marca e modelo, se souber\n• Alguma característica especial? (ex: tamanho, capacidade)');
+        addChatMessage('assistant', 'Vou te ajudar a descobrir quantos watts seu dispositivo consome.\n\nPor favor, me conte:\n• Que tipo de dispositivo é? (ex: geladeira, TV, micro-ondas)\n• Qual a marca e modelo, se souber\n• Alguma característica especial? (ex: tamanho, capacidade)');
         
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
@@ -1905,7 +1819,7 @@ function addWattsResultMessage(watts, explanation) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'chat-message watts-result';
     messageDiv.innerHTML = `
-        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⚡ ${watts} Watts</div>
+        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${watts} Watts</div>
         <div style="font-size: 0.9rem; font-weight: normal;">${explanation}</div>
         <button class="use-watts-btn" onclick="useWattsValue(${watts})">
             Usar este valor
@@ -1978,7 +1892,7 @@ async function sendChatMessage() {
         
     } catch (error) {
         console.error('Erro no chatbot:', error);
-        addChatMessage('assistant', '❌ Desculpe, ocorreu um erro ao processar sua mensagem.');
+        addChatMessage('assistant', 'Desculpe, ocorreu um erro ao processar sua mensagem.');
     } finally {
         if (chatLoading) chatLoading.style.display = 'none';
     }
@@ -1999,33 +1913,26 @@ function addLocation() {
     }
 }
 
-// ========== ATUALIZAÇÃO AUTOMÁTICA DOS TEMPOS ==========
-
 function startUptimeCounter() {
-    // Atualizar a interface a cada minuto
     setInterval(() => {
         if (Object.keys(regularDevices).length > 0 || Object.keys(smartDevices).length > 0) {
             renderDevices();
             renderDynamicDeviceCards();
         }
-    }, 60000); // Atualiza a cada 1 minuto
+    }, 60000);
     
-    // Salvar consumo no Firebase a cada 5 minutos
     setInterval(() => {
         if (Object.keys(regularDevices).length > 0 || Object.keys(smartDevices).length > 0) {
-            console.log('⏰ Salvamento automático de consumo...');
+            console.log('Salvamento automático de consumo...');
             updateAllConsumptions();
         }
-    }, 300000); // Atualiza a cada 5 minutos
+    }, 300000);
     
-    // Salvar consumo quando o usuário sair da página
     window.addEventListener('beforeunload', () => {
-        console.log('👋 Salvando consumo antes de sair...');
+        console.log('Salvando consumo antes de sair...');
         updateAllConsumptions();
     });
 }
-
-// ========== INICIALIZAÇÃO ==========
 
 async function inicializarDashboard() {
     try {
@@ -2044,18 +1951,12 @@ async function inicializarDashboard() {
         loadDevicesFromFirebase();
         renderLocations();
         
-        // NOVO: Carregar estatísticas do Firebase
         loadStatisticsData();
-        
-        // NOVO: Iniciar monitoramento das estatísticas
         startStatisticsMonitor();
-        
-        // Iniciar contador de tempo ligado e salvamento automático
         startUptimeCounter();
         
-        // Fazer salvamento inicial após 10 segundos
         setTimeout(() => {
-            console.log('💾 Fazendo salvamento inicial de consumo...');
+            console.log('Fazendo salvamento inicial de consumo...');
             updateAllConsumptions();
         }, 10000);
         
@@ -2065,9 +1966,32 @@ async function inicializarDashboard() {
     }
 }
 
-// ========== EVENT LISTENERS GLOBAIS ==========
-
 document.addEventListener('DOMContentLoaded', inicializarDashboard);
+
+const confirmPriceBtnElement = document.getElementById('confirmPriceBtn');
+const cancelPriceBtnElement = document.getElementById('cancelPriceBtn');
+
+if (confirmPriceBtnElement) {
+    confirmPriceBtnElement.addEventListener('mouseenter', () => {
+        confirmPriceBtnElement.style.transform = 'translateY(-2px)';
+        confirmPriceBtnElement.style.boxShadow = '0 4px 12px rgba(0, 255, 42, 0.3)';
+    });
+    
+    confirmPriceBtnElement.addEventListener('mouseleave', () => {
+        confirmPriceBtnElement.style.transform = '';
+        confirmPriceBtnElement.style.boxShadow = '';
+    });
+}
+
+if (cancelPriceBtnElement) {
+    cancelPriceBtnElement.addEventListener('mouseenter', () => {
+        cancelPriceBtnElement.style.backgroundColor = 'var(--border-dark)';
+    });
+    
+    cancelPriceBtnElement.addEventListener('mouseleave', () => {
+        cancelPriceBtnElement.style.backgroundColor = 'var(--bg-secondary)';
+    });
+}
 
 window.addEventListener('click', (event) => {
     if (event.target === deviceModal) {
@@ -2112,8 +2036,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
-// ========== EXPORTAÇÕES PARA O HTML ==========
 
 window.logout = logout;
 window.openLocationModal = openLocationModal;
