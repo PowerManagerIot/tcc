@@ -578,25 +578,17 @@ function calculateSmartDeviceUptimeSinceLastUpdate(device) {
 function calculateEnergyConsumption(device, uptime) {
     const watts = device.number || 0;
     
-    const newHours = uptime.newUptimeMs / (1000 * 60 * 60);
-    const newKwh = (watts * newHours) / 1000;
-    const newCost = newKwh * energyPrice;
-    
-    const previousKwh = device.consumption?.totalKwh || 0;
-    const previousCost = device.consumption?.totalCost || 0;
-    
-    const totalKwh = previousKwh + newKwh;
-    const totalCost = previousCost + newCost;
-    
-    const hours = uptime.totalMs / (1000 * 60 * 60);
+    // CORREÇÃO: Calcular o consumo total baseado no tempo total de uso
+    // Em vez de usar newUptimeMs (incremental), agora usa totalMs (total)
+    const totalHours = uptime.totalMs / (1000 * 60 * 60);
+    const totalKwh = (watts * totalHours) / 1000;
+    const totalCost = totalKwh * energyPrice;
     
     return {
         kWh: totalKwh,
         cost: totalCost,
         watts: watts,
-        hours: hours,
-        newKwh: newKwh,
-        newCost: newCost
+        hours: totalHours
     };
 }
 
@@ -1128,8 +1120,18 @@ function updateMonthlyCard(statsData) {
                 const now = new Date();
                 const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
                 
+                // CORREÇÃO: Pegar o valor correto do Firebase
                 const monthlyConsumption = statsData.mensal[monthKey] || 0;
                 const monthlyCost = monthlyConsumption * energyPrice;
+                
+                // LOG para debug
+                console.log('📊 Card Mensal:', {
+                    monthKey,
+                    monthlyConsumption,
+                    energyPrice,
+                    monthlyCost,
+                    rawData: statsData.mensal[monthKey]
+                });
                 
                 const monthlyLimitKwh = monthlyLimit || 700;
                 const percentage = monthlyLimitKwh > 0 ? (monthlyConsumption / monthlyLimitKwh) * 100 : 0;
@@ -1166,13 +1168,14 @@ function updateMonthlyCard(statsData) {
                 }
                 
                 if (consumptionElement) {
-                    consumptionElement.textContent = `${monthlyConsumption.toFixed(0)} kWh`;
+                    // CORREÇÃO: Usar 1 casa decimal para mostrar valor mais preciso
+                    consumptionElement.textContent = `${monthlyConsumption.toFixed(1)} kWh`;
                 }
                 
-                console.log('Card mensal atualizado:', { monthlyConsumption, monthlyCost, percentage });
+                console.log('✅ Card mensal atualizado:', { monthlyConsumption, monthlyCost, percentage });
             }
         } catch (error) {
-            console.error('Erro ao atualizar card mensal:', error);
+            console.error('❌ Erro ao atualizar card mensal:', error);
         }
     }
 }
@@ -1188,15 +1191,27 @@ function updateWeeklyCard(statsData) {
                 const now = new Date();
                 let weeklyConsumption = 0;
                 
+                // LOG para debug
+                console.log('📊 Calculando consumo semanal...');
+                
                 for (let i = 0; i < 7; i++) {
                     const date = new Date(now);
                     date.setDate(date.getDate() - i);
                     const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
                     
-                    weeklyConsumption += statsData.diario[dateKey] || 0;
+                    const dayConsumption = statsData.diario[dateKey] || 0;
+                    weeklyConsumption += dayConsumption;
+                    
+                    console.log(`  ${dateKey}: ${dayConsumption.toFixed(3)} kWh`);
                 }
                 
                 const weeklyCost = weeklyConsumption * energyPrice;
+                
+                console.log('📊 Card Semanal:', {
+                    weeklyConsumption,
+                    energyPrice,
+                    weeklyCost
+                });
                 
                 const weeklyLimitKwh = 100;
                 const percentage = weeklyLimitKwh > 0 ? (weeklyConsumption / weeklyLimitKwh) * 100 : 0;
@@ -1236,10 +1251,10 @@ function updateWeeklyCard(statsData) {
                     consumptionElement.textContent = `${weeklyConsumption.toFixed(1)} kWh`;
                 }
                 
-                console.log('Card semanal atualizado:', { weeklyConsumption, weeklyCost, percentage });
+                console.log('✅ Card semanal atualizado:', { weeklyConsumption, weeklyCost, percentage });
             }
         } catch (error) {
-            console.error('Erro ao atualizar card semanal:', error);
+            console.error('❌ Erro ao atualizar card semanal:', error);
         }
     }
 }
@@ -1252,11 +1267,55 @@ function updateDailyCard(statsData) {
         
         try {
             if (statsData.diario) {
+                // ====================================
+                // CORREÇÃO: Usar timezone de São Paulo
+                // ====================================
                 const now = new Date();
-                const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                 
-                const dailyConsumption = statsData.diario[dateKey] || 0;
+                // Opção 1: Forçar timezone de São Paulo
+                const brasiliaDate = new Date(now.toLocaleString('en-US', { 
+                    timeZone: 'America/Sao_Paulo' 
+                }));
+                
+                const year = brasiliaDate.getFullYear();
+                const month = String(brasiliaDate.getMonth() + 1).padStart(2, '0');
+                const day = String(brasiliaDate.getDate()).padStart(2, '0');
+                const dateKey = `${year}-${month}-${day}`;
+                
+                console.log('📊 Buscando consumo do dia:', dateKey);
+                console.log('📊 Timezone local:', now.toString());
+                console.log('📊 Timezone Brasília:', brasiliaDate.toString());
+                console.log('📊 Datas disponíveis no Firebase:', Object.keys(statsData.diario));
+                
+                let dailyConsumption = statsData.diario[dateKey] || 0;
+                
+                // ====================================
+                // FALLBACK: Se não encontrar hoje, tentar ontem
+                // ====================================
+                if (dailyConsumption === 0) {
+                    console.warn('⚠️ Não encontrou dados para', dateKey);
+                    
+                    // Tentar buscar a data mais recente disponível
+                    const availableDates = Object.keys(statsData.diario).sort().reverse();
+                    if (availableDates.length > 0) {
+                        const latestDate = availableDates[0];
+                        console.log('🔄 Usando data mais recente:', latestDate);
+                        dailyConsumption = statsData.diario[latestDate] || 0;
+                        
+                        // Adicionar indicador visual de que não é hoje
+                        console.warn('⚠️ Mostrando dados de', latestDate, 'em vez de hoje');
+                    }
+                }
+                
                 const dailyCost = dailyConsumption * energyPrice;
+                
+                console.log('📊 Card Diário:', {
+                    dateKey,
+                    dailyConsumption,
+                    energyPrice,
+                    dailyCost,
+                    rawData: statsData.diario[dateKey]
+                });
                 
                 const dailyLimitKwh = 20;
                 const percentage = dailyLimitKwh > 0 ? (dailyConsumption / dailyLimitKwh) * 100 : 0;
@@ -1296,10 +1355,14 @@ function updateDailyCard(statsData) {
                     consumptionElement.textContent = `${dailyConsumption.toFixed(1)} kWh`;
                 }
                 
-                console.log('Card diário atualizado:', { dailyConsumption, dailyCost, percentage });
+                if (dailyConsumption === 0) {
+                    console.warn('⚠️ Nenhum consumo registrado para', dateKey);
+                } else {
+                    console.log('✅ Card diário atualizado:', { dailyConsumption, dailyCost, percentage });
+                }
             }
         } catch (error) {
-            console.error('Erro ao atualizar card diário:', error);
+            console.error('❌ Erro ao atualizar card diário:', error);
         }
     }
 }
@@ -1936,32 +1999,78 @@ function startUptimeCounter() {
 
 async function inicializarDashboard() {
     try {
+        // PASSO 1: Autenticar e garantir USER_ID
+        console.log('🔐 Iniciando autenticação...');
         await verificarAutenticacao();
-        console.log('Dashboard inicializado para usuário:', USER_ID);
         
+        if (!USER_ID) {
+            throw new Error('USER_ID não foi definido após autenticação');
+        }
+        
+        console.log('✅ Dashboard inicializado para usuário:', USER_ID);
+        
+        // PASSO 2: Mostrar interface
         const loginForm = document.getElementById('loginForm');
         if (loginForm) loginForm.style.display = 'none';
         if (mainContent) mainContent.style.display = 'block';
         
+        // PASSO 3: Carregar preço da energia
+        console.log('💰 Carregando preço da energia...');
         await loadEnergyPrice();
+        console.log('✅ Preço da energia carregado:', energyPrice);
+        
+        // PASSO 4: Iniciar monitoramento de preço
         monitorEnergyPriceChanges();
         
+        // PASSO 5: Carregar limites e potência
+        console.log('⚡ Iniciando monitoramento de potência...');
         getAlertLimit();
         monitorPower();
+        
+        // PASSO 6: Carregar dispositivos
+        console.log('📱 Carregando dispositivos...');
         loadDevicesFromFirebase();
+        
+        // PASSO 7: Renderizar locais
         renderLocations();
         
-        loadStatisticsData();
-        startStatisticsMonitor();
+        // PASSO 8: CORREÇÃO - Carregar estatísticas com delay para garantir que USER_ID está disponível
+        console.log('📊 Preparando para carregar estatísticas...');
+        
+        // Verificar novamente se USER_ID está disponível
+        if (USER_ID) {
+            console.log('📊 USER_ID confirmado, carregando estatísticas...');
+            loadStatisticsData();
+            startStatisticsMonitor();
+        } else {
+            console.error('❌ USER_ID não disponível para carregar estatísticas');
+            // Tentar novamente após 1 segundo
+            setTimeout(() => {
+                if (USER_ID) {
+                    console.log('📊 Tentativa 2: Carregando estatísticas...');
+                    loadStatisticsData();
+                    startStatisticsMonitor();
+                } else {
+                    console.error('❌ USER_ID ainda não disponível após 1s');
+                }
+            }, 1000);
+        }
+        
+        // PASSO 9: Iniciar contador de uptime
         startUptimeCounter();
         
+        // PASSO 10: Salvamento inicial de consumo
         setTimeout(() => {
-            console.log('Fazendo salvamento inicial de consumo...');
-            updateAllConsumptions();
+            if (USER_ID) {
+                console.log('💾 Fazendo salvamento inicial de consumo...');
+                updateAllConsumptions();
+            }
         }, 10000);
         
+        console.log('✅ Dashboard totalmente inicializado!');
+        
     } catch (error) {
-        console.error('Erro ao inicializar dashboard:', error);
+        console.error('❌ Erro ao inicializar dashboard:', error);
         redirecionarParaLogin();
     }
 }
