@@ -52,6 +52,7 @@ let currentPowerValue = 0;
 let currentMonthlyValue = 0;
 let s1Power = 0;
 let s2Power = 0;
+let simulatedPower = 0;
 
 let energyPrice = 0.80;
 let chatHistory = [];
@@ -395,31 +396,69 @@ function getAlertLimit() {
     });
 }
 
+function calculateSimulatedPower() {
+    let totalSimulatedPower = 0;
+    
+    Object.keys(smartDevices).forEach(key => {
+        const device = smartDevices[key];
+        
+        if (key === '0' || key === '1' || key === '2') {
+            console.log(`⚠️ Dispositivo ${key} (${device.name}) ignorado - é do circuito físico`);
+            return;
+        }
+        
+        if (device.state === true) {
+            totalSimulatedPower += (device.number || 0);
+            console.log(`✅ Dispositivo ${key} (${device.name}) ligado: ${device.number}W`);
+        }
+    });
+    
+    console.log('💡 Potência simulada total:', totalSimulatedPower, 'W');
+    return totalSimulatedPower;
+}
+
+async function updateSimulatedPowerInFirebase(power) {
+    if (!USER_ID) return;
+    
+    try {
+        await database.ref(`users/${USER_ID}/esp32/simulado/potencia`).set(power);
+        console.log('📤 Potência simulada atualizada no Firebase:', power, 'W');
+    } catch (error) {
+        console.error('❌ Erro ao atualizar potência simulada no Firebase:', error);
+    }
+}
+
+function updatePowerDisplay() {
+    simulatedPower = calculateSimulatedPower();
+    currentPowerValue = s1Power + s2Power + simulatedPower;
+    
+    updateSimulatedPowerInFirebase(simulatedPower);
+    
+    if (currentValue) {
+        currentValue.textContent = currentPowerValue.toFixed(2);
+    }
+    if (lastUpdate) {
+        const now = new Date();
+        lastUpdate.textContent = `Última atualização: ${formatDateTime(now)}`;
+    }
+    
+    console.log('⚡ Atualização de Potência:', {
+        s1Power: s1Power.toFixed(2),
+        s2Power: s2Power.toFixed(2),
+        simulatedPower: simulatedPower.toFixed(2),
+        total: currentPowerValue.toFixed(2)
+    });
+    
+    updateBar(currentPowerValue, alertLimit);
+}
+
 function monitorPower() {
     const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
     const s2Ref = database.ref(`users/${USER_ID}/esp32/s2/potencia`);
     
-    function updateCurrentValue() {
-        currentPowerValue = s1Power + s2Power;
-        
-        if (currentValue) {
-            currentValue.textContent = currentPowerValue.toFixed(2);
-        }
-        if (lastUpdate) {
-            const now = new Date();
-            lastUpdate.textContent = `Última atualização: ${formatDateTime(now)}`;
-        }
-        if (connectionStatus) {
-            connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
-            connectionStatus.className = "status connected";
-        }
-        
-        updateBar(currentPowerValue, alertLimit);
-    }
-    
     s1Ref.on('value', (snapshot) => {
         s1Power = snapshot.val() || 0;
-        updateCurrentValue();
+        updatePowerDisplay();
     }, (error) => {
         console.error("Erro ao monitorar S1:", error);
         if (connectionStatus) {
@@ -430,7 +469,7 @@ function monitorPower() {
     
     s2Ref.on('value', (snapshot) => {
         s2Power = snapshot.val() || 0;
-        updateCurrentValue();
+        updatePowerDisplay();
     }, (error) => {
         console.error("Erro ao monitorar S2:", error);
         if (connectionStatus) {
@@ -439,6 +478,7 @@ function monitorPower() {
         }
     });
 }
+
 
 function monitorMonthlyConsumption() {
     const now = new Date();
@@ -763,6 +803,7 @@ function updateSmartDevicesCounter() {
     }
 }
 
+
 function loadDevicesFromFirebase() {
     if (!USER_ID) {
         console.error('USER_ID não definido');
@@ -784,6 +825,8 @@ function loadDevicesFromFirebase() {
                 regularDevices[key] = device;
             }
         });
+        
+        updatePowerDisplay();
         
         renderDevices();
         renderDynamicDeviceCards();
@@ -823,10 +866,15 @@ function toggleDeviceState(deviceKey) {
     
     database.ref(`users/${USER_ID}/devices/${deviceKey}`).update(updates)
         .then(() => {
+            updatePowerDisplay();
+            
             renderDevices();
             renderDynamicDeviceCards();
+            
             if (connectionStatus) {
-                connectionStatus.textContent = `Dispositivo ${action} em ${new Date().toLocaleTimeString('pt-BR')}`;
+                const deviceName = smartDevices[deviceKey].name;
+                const watts = smartDevices[deviceKey].number || 0;
+                connectionStatus.textContent = `${deviceName} ${action} (${watts}W) - ${new Date().toLocaleTimeString('pt-BR')}`;
                 connectionStatus.className = "status connected";
                 setTimeout(() => {
                     connectionStatus.textContent = "Conectado ao Firebase (leitura ativa)";
@@ -835,6 +883,7 @@ function toggleDeviceState(deviceKey) {
         })
         .catch((error) => console.error("Erro ao atualizar estado:", error));
 }
+
 
 function showDeleteConfirmation(deviceKey, deviceName, isSmart) {
     deviceToDelete = { key: deviceKey, name: deviceName, isSmart: isSmart };
