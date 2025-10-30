@@ -421,18 +421,22 @@ async function updateSimulatedPowerInFirebase(power) {
     if (!USER_ID) return;
     
     try {
-        await database.ref(`users/${USER_ID}/esp32/simulado/potencia`).set(power);
-        console.log('📤 Potência simulada atualizada no Firebase:', power, 'W');
+        // Agora atualiza s2/potencia em vez de simulado/potencia
+        await database.ref(`users/${USER_ID}/esp32/s2/potencia`).set(power);
+        console.log('📤 Potência de S2 atualizada no Firebase:', power, 'W');
     } catch (error) {
-        console.error('❌ Erro ao atualizar potência simulada no Firebase:', error);
+        console.error('❌ Erro ao atualizar potência de S2 no Firebase:', error);
     }
 }
 
 function updatePowerDisplay() {
     simulatedPower = calculateSimulatedPower();
-    currentPowerValue = s1Power + s2Power + simulatedPower;
     
+    // Escreve APENAS os dispositivos simulados em s2/potencia
     updateSimulatedPowerInFirebase(simulatedPower);
+    
+    // Calcula o total: s1 + dispositivos simulados
+    currentPowerValue = s1Power + simulatedPower;
     
     if (currentValue) {
         currentValue.textContent = currentPowerValue.toFixed(2);
@@ -444,7 +448,6 @@ function updatePowerDisplay() {
     
     console.log('⚡ Atualização de Potência:', {
         s1Power: s1Power.toFixed(2),
-        s2Power: s2Power.toFixed(2),
         simulatedPower: simulatedPower.toFixed(2),
         total: currentPowerValue.toFixed(2)
     });
@@ -454,7 +457,6 @@ function updatePowerDisplay() {
 
 function monitorPower() {
     const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
-    const s2Ref = database.ref(`users/${USER_ID}/esp32/s2/potencia`);
     
     s1Ref.on('value', (snapshot) => {
         s1Power = snapshot.val() || 0;
@@ -467,16 +469,8 @@ function monitorPower() {
         }
     });
     
-    s2Ref.on('value', (snapshot) => {
-        s2Power = snapshot.val() || 0;
-        updatePowerDisplay();
-    }, (error) => {
-        console.error("Erro ao monitorar S2:", error);
-        if (connectionStatus) {
-            connectionStatus.textContent = "✗ Erro na leitura de S2";
-            connectionStatus.className = "status disconnected";
-        }
-    });
+    // NÃO monitora s2/potencia mais para evitar loop!
+    // Apenas escreve os dispositivos simulados lá
 }
 
 
