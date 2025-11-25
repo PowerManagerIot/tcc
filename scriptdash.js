@@ -430,14 +430,13 @@ async function updateSimulatedPowerInFirebase(power) {
 }
 
 function updatePowerDisplay() {
+    // Calcular apenas os dispositivos simulados
     simulatedPower = calculateSimulatedPower();
     
-    // Escreve APENAS os dispositivos simulados em s2/potencia
-    updateSimulatedPowerInFirebase(simulatedPower);
+    // Soma S1 + S2 (potência real do Firebase)
+    currentPowerValue = s1Power + s2Power;
     
-    // Calcula o total: s1 + dispositivos simulados
-    currentPowerValue = s1Power + simulatedPower;
-    
+    // Atualizar display
     if (currentValue) {
         currentValue.textContent = currentPowerValue.toFixed(2);
     }
@@ -448,29 +447,36 @@ function updatePowerDisplay() {
     
     console.log('⚡ Atualização de Potência:', {
         s1Power: s1Power.toFixed(2),
-        simulatedPower: simulatedPower.toFixed(2),
+        s2Power: s2Power.toFixed(2),
         total: currentPowerValue.toFixed(2)
     });
     
+    // Atualizar a barra
     updateBar(currentPowerValue, alertLimit);
 }
 
 function monitorPower() {
+    // Monitorar S1
     const s1Ref = database.ref(`users/${USER_ID}/esp32/s1/potencia`);
-    
     s1Ref.on('value', (snapshot) => {
         s1Power = snapshot.val() || 0;
+        console.log('📊 S1 Power:', s1Power.toFixed(2), 'W');
+        updatePowerDisplay();
+    });
+    
+    // Monitorar S2 (potência real)
+    const s2Ref = database.ref(`users/${USER_ID}/esp32/s2/potencia`);
+    s2Ref.on('value', (snapshot) => {
+        s2Power = snapshot.val() || 0;
+        console.log('📊 S2 Power:', s2Power.toFixed(2), 'W');
         updatePowerDisplay();
     }, (error) => {
-        console.error("Erro ao monitorar S1:", error);
+        console.error("Erro ao monitorar potência:", error);
         if (connectionStatus) {
-            connectionStatus.textContent = "✗ Erro na leitura de S1";
+            connectionStatus.textContent = "✗ Erro na leitura de potência";
             connectionStatus.className = "status disconnected";
         }
     });
-    
-    // NÃO monitora s2/potencia mais para evitar loop!
-    // Apenas escreve os dispositivos simulados lá
 }
 
 
