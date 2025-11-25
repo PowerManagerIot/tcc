@@ -14,6 +14,7 @@ const functionUrl = `https://us-central1-${PROJECT_ID}.cloudfunctions.net/genera
 let USER_ID = null;
 let energyPrice = 0.80;
 let allStatistics = {
+    anual: {},
     mensal: {},
     diario: {},
     horario: {}
@@ -144,6 +145,10 @@ async function loadStatistics() {
     updateConnectionStatus('Carregando estatísticas...', true);
 
     try {
+        const annualRef = database.ref(`users/${USER_ID}/esp32/estatisticas/anual`);
+        const annualSnapshot = await annualRef.once('value');
+        allStatistics.anual = annualSnapshot.val() || {};
+
         // Carregar dados mensais
         const monthlyRef = database.ref(`users/${USER_ID}/esp32/estatisticas/mensal`);
         const monthlySnapshot = await monthlyRef.once('value');
@@ -683,10 +688,94 @@ async function generateAIAnalysis() {
 
 function prepareDataForAI() {
     const selectedPeriod = periodFilter.value;
-    const days = selectedPeriod === 'all' ? 'all' : parseInt(selectedPeriod);
-    const filteredDaily = getFilteredData(allStatistics.diario, days);
-    const stats = calculateStatistics(filteredDaily);
+    console.log('🤖 Preparando dados para IA - Período:', selectedPeriod);
     
+    // ========== CALCULAR STATS BASEADO NO PERÍODO (MESMA LÓGICA DO DISPLAY) ==========
+    let stats;
+    let filteredDaily;
+    
+    if (selectedPeriod === '365') {
+        // ÚLTIMO ANO
+        const currentYear = new Date().getFullYear();
+        const yearConsumption = allStatistics.anual[currentYear] || 0;
+        
+        stats = {
+            total: yearConsumption,
+            average: yearConsumption / 365,
+            peak: { value: yearConsumption, date: `Ano ${currentYear}` }
+        };
+        
+        filteredDaily = getFilteredData(allStatistics.diario, 365);
+        
+    } else if (selectedPeriod === '30') {
+        // ÚLTIMOS 30 DIAS (MÊS ATUAL)
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const monthConsumption = allStatistics.mensal[currentMonth] || 0;
+        
+        filteredDaily = getFilteredData(allStatistics.diario, 30);
+        const dailyStats = calculateStatistics(filteredDaily);
+        
+        stats = {
+            total: monthConsumption,
+            average: monthConsumption / 30,
+            peak: dailyStats.peak
+        };
+        
+    } else if (selectedPeriod === '90') {
+        // ÚLTIMOS 90 DIAS (3 MESES)
+        const now = new Date();
+        let total90Days = 0;
+        
+        for (let i = 0; i < 3; i++) {
+            const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+            const monthValue = allStatistics.mensal[monthKey] || 0;
+            total90Days += monthValue;
+        }
+        
+        filteredDaily = getFilteredData(allStatistics.diario, 90);
+        const dailyStats = calculateStatistics(filteredDaily);
+        
+        stats = {
+            total: total90Days,
+            average: total90Days / 90,
+            peak: dailyStats.peak
+        };
+        
+    } else if (selectedPeriod === 'all') {
+        // TODOS OS REGISTROS
+        const totalAnual = Object.values(allStatistics.anual).reduce((sum, val) => sum + val, 0);
+        
+        const allDailyValues = Object.entries(allStatistics.diario);
+        const peakDay = allDailyValues.reduce((max, [date, value]) => 
+            value > max.value ? { date, value } : max,
+            { date: '--', value: 0 }
+        );
+        
+        const totalDays = allDailyValues.length || 1;
+        
+        stats = {
+            total: totalAnual,
+            average: totalAnual / totalDays,
+            peak: {
+                value: peakDay.value,
+                date: formatDate(new Date(peakDay.date))
+            }
+        };
+        
+        filteredDaily = allStatistics.diario;
+        
+    } else {
+        // 7 DIAS ou outro período
+        const days = parseInt(selectedPeriod);
+        filteredDaily = getFilteredData(allStatistics.diario, days);
+        stats = calculateStatistics(filteredDaily);
+    }
+    
+    console.log('📊 Stats para IA:', stats);
+    
+    // ========== RESTO DOS CÁLCULOS ==========
     const hourlyData = allStatistics.horario || {};
     const hourlyValues = Object.values(hourlyData);
     const peakHour = Object.entries(hourlyData).reduce((max, [hour, value]) => 
@@ -711,7 +800,7 @@ function prepareDataForAI() {
         else if (change < -10) trend = 'decrescente';
     }
     
-    // ========== NOVO: ANÁLISE DETALHADA POR DISPOSITIVO ==========
+    // ========== ANÁLISE DETALHADA POR DISPOSITIVO ==========
     const devicesAnalysis = [];
     let totalDevicesCost = 0;
     let smartDevicesCount = 0;
@@ -725,15 +814,13 @@ function prepareDataForAI() {
         const totalCost = consumption.totalCost || 0;
         const uptime = consumption.totalUptimeMs || 0;
         
-        // Calcular consumo mensal estimado
         const hoursPerDay = isSmart 
-            ? (uptime / (1000 * 60 * 60)) / 30 // Média de horas por dia
-            : 24; // Dispositivo regular sempre ligado
+            ? (uptime / (1000 * 60 * 60)) / 30
+            : 24;
         
         const monthlyKwh = (power * hoursPerDay * 30) / 1000;
         const monthlyCost = monthlyKwh * energyPrice;
         
-        // Calcular percentual do consumo total
         const percentOfTotal = stats.total > 0 ? (totalKwh / stats.total) * 100 : 0;
         
         devicesAnalysis.push({
@@ -756,14 +843,10 @@ function prepareDataForAI() {
         else regularDevicesCount++;
     });
     
-    // Ordenar dispositivos por consumo (maior para menor)
     devicesAnalysis.sort((a, b) => parseFloat(b.consumoTotal) - parseFloat(a.consumoTotal));
-    
-    // Top 5 maiores consumidores
     const topConsumers = devicesAnalysis.slice(0, 5);
     
     return {
-        // Dados gerais (já existiam)
         periodo: selectedPeriod === '7' ? '7 dias' : 
                  selectedPeriod === '30' ? '30 dias' : 
                  selectedPeriod === '90' ? '90 dias' : 
@@ -781,8 +864,6 @@ function prepareDataForAI() {
         mediaMensal: monthlyAvg.toFixed(2),
         tendencia: trend,
         precokWh: energyPrice,
-        
-        // NOVOS dados de dispositivos
         totalDispositivos: devicesAnalysis.length,
         dispositivosInteligentes: smartDevicesCount,
         dispositivosRegulares: regularDevicesCount,
@@ -982,11 +1063,115 @@ function formatCurrency(value) {
 
 function processAndDisplayData() {
     const selectedPeriod = periodFilter.value;
-    const days = selectedPeriod === 'all' ? 'all' : parseInt(selectedPeriod);
+    console.log('🔍 Período selecionado:', selectedPeriod);
     
-    const filteredDaily = getFilteredData(allStatistics.diario, days);
-    const stats = calculateStatistics(filteredDaily);
+    let stats;
+    let filteredDaily;
     
+    // Escolher fonte de dados baseado no período
+    if (selectedPeriod === '365') {
+        // ÚLTIMO ANO - usar dados anuais
+        console.log('📅 Usando dados ANUAIS');
+        const currentYear = new Date().getFullYear();
+        const yearConsumption = allStatistics.anual[currentYear] || 0;
+        
+        stats = {
+            total: yearConsumption,
+            average: yearConsumption / 365,
+            peak: {
+                value: yearConsumption,
+                date: `Ano ${currentYear}`
+            }
+        };
+        
+        // Usar dados diários do último ano para os gráficos
+        filteredDaily = getFilteredData(allStatistics.diario, 365);
+        
+    } else if (selectedPeriod === '30') {
+        // ÚLTIMOS 30 DIAS - usar dados mensais (mês atual)
+        console.log('📅 Usando dados MENSAIS (último mês)');
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const monthConsumption = allStatistics.mensal[currentMonth] || 0;
+        
+        // Pegar dados diários do mês atual para pico
+        filteredDaily = getFilteredData(allStatistics.diario, 30);
+        const dailyStats = calculateStatistics(filteredDaily);
+        
+        stats = {
+            total: monthConsumption,
+            average: monthConsumption / 30,
+            peak: dailyStats.peak
+        };
+        
+    } else if (selectedPeriod === '90') {
+        // ÚLTIMOS 90 DIAS - somar últimos 3 meses
+        console.log('📅 Usando dados MENSAIS (últimos 3 meses)');
+        const now = new Date();
+        let total90Days = 0;
+        
+        // Somar os últimos 3 meses
+        for (let i = 0; i < 3; i++) {
+            const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+            const monthValue = allStatistics.mensal[monthKey] || 0;
+            total90Days += monthValue;
+            console.log(`  Mês ${monthKey}: ${monthValue} kWh`);
+        }
+        
+        console.log(`  Total 90 dias: ${total90Days} kWh`);
+        
+        // Pegar dados diários dos últimos 90 dias para pico
+        filteredDaily = getFilteredData(allStatistics.diario, 90);
+        const dailyStats = calculateStatistics(filteredDaily);
+        
+        stats = {
+            total: total90Days,
+            average: total90Days / 90,
+            peak: dailyStats.peak
+        };
+        
+    } else if (selectedPeriod === 'all') {
+        // TODOS OS REGISTROS - somar TUDO
+        console.log('📅 Usando TODOS os registros (anual + mensal + diário)');
+        
+        // Somar consumo de todos os anos
+        const totalAnual = Object.values(allStatistics.anual).reduce((sum, val) => sum + val, 0);
+        
+        // Pegar o maior pico de todos os tempos
+        const allDailyValues = Object.entries(allStatistics.diario);
+        const peakDay = allDailyValues.reduce((max, [date, value]) => 
+            value > max.value ? { date, value } : max,
+            { date: '--', value: 0 }
+        );
+        
+        // Calcular média considerando todos os dias registrados
+        const totalDays = allDailyValues.length || 1;
+        
+        stats = {
+            total: totalAnual,
+            average: totalAnual / totalDays,
+            peak: {
+                value: peakDay.value,
+                date: formatDate(new Date(peakDay.date))
+            }
+        };
+        
+        // Usar todos os dados diários
+        filteredDaily = allStatistics.diario;
+        
+    } else {
+        // 7, 30 ou 90 DIAS - usar dados diários filtrados
+        const days = parseInt(selectedPeriod);
+        console.log(`📅 Usando dados DIÁRIOS (últimos ${days} dias)`);
+        
+        filteredDaily = getFilteredData(allStatistics.diario, days);
+        stats = calculateStatistics(filteredDaily);
+    }
+    
+    console.log('📊 Estatísticas calculadas:', stats);
+    
+    // Atualizar cards de estatísticas
     if (totalConsumption) {
         totalConsumption.textContent = `${stats.total.toFixed(2)} kWh`;
     }
@@ -1003,6 +1188,7 @@ function processAndDisplayData() {
         peakDate.textContent = stats.peak.date;
     }
     
+    // Atualizar gráficos
     updateMonthlyChart();
     updateDailyChart(filteredDaily);
     updateHourlyChart();
